@@ -1,0 +1,24 @@
+name = "failover-monitor"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Agendamento do Cron Trigger para rodar a cada 1 minuto
+[triggers]
+crons = ["* * * * *"]
+
+# Variáveis de ambiente e Secrets (substitua ou configure via `wrangler secret put <NOME>`)
+[vars]
+PRIMARY_HEALTH_CHECK_URL = "https://api.seudominio.com/health"
+CLOUDFLARE_ZONE_ID = "SEU_CLOUDFLARE_ZONE_ID"
+CLOUDFLARE_DNS_RECORD_ID = "SEU_CLOUDFLARE_RECORD_ID"
+DOMAIN_NAME = "api.seudominio.com"
+DO_REGION = "nyc1"
+DO_SIZE = "s-1vcpu-2gb"
+DO_IMAGE = "ubuntu-22-04-x64"
+DO_DROPLET_NAME = "fallback-api-droplet"
+
+# IMPORTANTE: As variáveis sensíveis abaixo devem ser adicionadas como secrets no Cloudflare:
+# wrangler secret put CLOUDFLARE_API_TOKEN
+# wrangler secret put DIGITALOCEAN_TOKEN
+# wrangler secret put NOTIFICATION_WEBHOOK_URL
+# wrangler secret put CLOUD_INIT_BASE64
