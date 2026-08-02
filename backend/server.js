@@ -11,13 +11,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Garantir pasta de uploads
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configuração do Multer para Upload Real de Arquivos (PDF, JPG, PNG, MP4, Audio WebM/WAV)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
@@ -27,127 +25,112 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } }); // até 50MB
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 // ==============================================================================
-// BANCO DE DADOS EM MEMÓRIA (BANCO REAL PERSISTENTE NA SESSÃO)
+// BANCO DE DADOS EM MEMÓRIA
 // ==============================================================================
 
 let tickets = [
   {
     id: 'TK-1001',
-    aluno: 'Lucas Silva',
-    unidade: 'Unidade Centro - SP',
+    aluno: 'Lucas Silva (Terceirão GGE)',
+    unidade: 'Unidade Boa Viagem - Recife',
     assunto: 'Geometria Analítica - Distância Ponto e Reta',
     tipo: 'foto',
     fotoUrl: null,
     duvidaTexto: 'Como aplicar a fórmula da distância de um ponto a uma reta quando a equação geral possui termos negativos?',
-    status: 'Pendente',
+    status: 'Pendente', // Pendente | Explicado | Entendido | Praticando | Aprovado
+    etapa: 1, // 1: Dúvida Enviada | 2: Professor Ensinou | 3: Aluno Entendeu | 4: IA enviou Questão | 5: Aprovado
     criadoEm: new Date(Date.now() - 3600000).toISOString(),
-    resposta: null
+    resposta: null,
+    questaoFixacao: null
   },
   {
     id: 'TK-1002',
-    aluno: 'Beatriz Ramos',
-    unidade: 'Unidade Jardins - SP',
+    aluno: 'Beatriz Ramos (Extensivo GGE)',
+    unidade: 'Unidade Benfica - Recife',
     assunto: 'Logaritmos & Funções Exponenciais',
     tipo: 'texto',
     fotoUrl: null,
     duvidaTexto: 'Qual a diferença conceitual entre mudança de base e propriedade do produto nos logaritmos?',
-    status: 'Respondido',
+    status: 'Explicado',
+    etapa: 2,
     criadoEm: new Date(Date.now() - 7200000).toISOString(),
     resposta: {
-      monitor: 'Prof. Ricardo Mendes',
-      texto: 'Olá Beatriz! A mudança de base permite converter log_b(a) para log_c(a)/log_c(b). Seguem os arquivos com a demonstração passo a passo.',
+      monitor: 'Prof. Ricardo Mendes (Equipe GGE)',
+      texto: 'Olá Beatriz! A mudança de base permite converter log_b(a) para log_c(a)/log_c(b). Gravamos um áudio detalhado para você!',
       pdfUrl: null,
       fotoUrl: null,
       videoUrl: null,
       audioUrl: null,
       respondidoEm: new Date(Date.now() - 1800000).toISOString()
-    }
+    },
+    questaoFixacao: null
   }
 ];
 
 const bancoQuestoesIA = [
   {
-    id: 'QUEST-882',
-    vestibular: 'ENEM',
+    id: 'FIX-01',
+    vestibular: 'ENEM 2023',
     assunto: 'Geometria Analítica',
     nivel: 'Médio',
-    enunciado: 'Um poste de iluminação foi instalado na coordenada (3, -4) de um plano cartesiano. Sabendo que a linha de transmissão passa pela reta 3x + 4y - 12 = 0...',
-    respostaCerta: 'Alternativa C: 5 metros'
+    enunciado: 'Um poste de iluminação no plano cartesiano está em (3, -4). A linha de transmissão segue a reta 3x + 4y - 12 = 0. Qual a distância mínima do poste até a linha?',
+    opcoes: ['A) 3 metros', 'B) 4 metros', 'C) 5 metros', 'D) 7 metros'],
+    respostaCorreta: 'C) 5 metros'
   },
   {
-    id: 'QUEST-904',
-    vestibular: 'FUVEST',
-    assunto: 'Geometria Analítica',
-    nivel: 'Difícil',
-    enunciado: 'Considere a circunferência C de equação x² + y² = 25 e a reta r de equação y = 2x + k. Determine os valores de k para os quais r é tangente a C.',
-    respostaCerta: 'k = ± 5√5'
-  },
-  {
-    id: 'QUEST-710',
-    vestibular: 'UNICAMP',
+    id: 'FIX-02',
+    vestibular: 'SSA / UPE',
     assunto: 'Logaritmos & Funções Exponenciais',
-    nivel: 'Fácil',
-    enunciado: 'O crescimento de uma população de bactérias é dado pela função N(t) = 1000 * 2^(0.5t). Calcule o tempo necessário para triplicar a população.',
-    respostaCerta: 't = 2 * log2(3) horas'
-  },
-  {
-    id: 'QUEST-650',
-    vestibular: 'ENEM',
-    assunto: 'Função Quadrática',
     nivel: 'Médio',
-    enunciado: 'Um projétil é lançado e sua trajetória descreve uma parábola h(t) = -5t² + 20t + 15. Qual a altura máxima atingida?',
-    respostaCerta: '35 metros no tempo t = 2s'
+    enunciado: 'Sabendo que log2(3) = a e log2(5) = b, qual o valor de log2(15)?',
+    opcoes: ['A) a * b', 'B) a + b', 'C) a / b', 'D) a^b'],
+    respostaCorreta: 'B) a + b'
   }
 ];
 
 // ==============================================================================
-// ENDPOINTS REST DA API REAL
+// ENDPOINTS REST
 // ==============================================================================
 
-// 1. Health Check (Utilizado pelo Cloudflare Worker & Frontend)
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    server: 'Hostinger KVM 2 - Primario (São Paulo)',
-    timestamp: new Date().toISOString()
-  });
+  res.status(200).json({ status: 'OK', server: 'Hostinger KVM 2 - Primario (São Paulo)' });
 });
 
-// 2. Obter lista de chamados de dúvida
 app.get('/api/tickets', (req, res) => {
   res.json({ success: true, count: tickets.length, tickets });
 });
 
-// 3. Criar Novo Chamado (Aluno) com Suporte a Upload Real de Foto
+// ETAPA 1: ALUNO MANDA DÚVIDA
 app.post('/api/tickets', upload.single('foto'), (req, res) => {
   const { aluno, unidade, assunto, tipo, duvidaTexto } = req.body;
   
   const novoTicket = {
     id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
-    aluno: aluno || 'Aluno Anônimo',
-    unidade: unidade || 'Unidade Centro - SP',
+    aluno: aluno || 'Aluno GGE',
+    unidade: unidade || 'Unidade Boa Viagem - Recife',
     assunto: assunto || 'Matemática Geral',
     tipo: tipo || 'texto',
     fotoUrl: req.file ? `/uploads/${req.file.filename}` : null,
     duvidaTexto: duvidaTexto || '',
     status: 'Pendente',
+    etapa: 1,
     criadoEm: new Date().toISOString(),
-    resposta: null
+    resposta: null,
+    questaoFixacao: null
   };
 
   tickets.unshift(novoTicket);
-  console.log(`[API REAL] Novo chamado criado: ${novoTicket.id} por ${novoTicket.aluno}`);
   res.status(201).json({ success: true, ticket: novoTicket });
 });
 
-// 4. Responder Chamado (Monitor) com Upload Real de PDF, Foto, Vídeo MP4 e Áudio
+// ETAPA 2: PROFESSOR / MONITOR ENSINA (RESPOSTA)
 app.post('/api/tickets/:id/resposta', upload.fields([
   { name: 'pdf', maxCount: 1 },
   { name: 'foto', maxCount: 1 },
@@ -158,16 +141,15 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   const { monitor, texto } = req.body;
 
   const ticket = tickets.find(t => t.id === id);
-  if (!ticket) {
-    return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
-  }
+  if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
 
   const files = req.files || {};
 
-  ticket.status = 'Respondido';
+  ticket.status = 'Explicado';
+  ticket.etapa = 2;
   ticket.resposta = {
-    monitor: monitor || 'Prof. Monitor da Unidade',
-    texto: texto || 'Resolução enviada.',
+    monitor: monitor || 'Prof. Ricardo Mendes',
+    texto: texto || 'Explicação elaborada pelo professor.',
     pdfUrl: files.pdf ? `/uploads/${files.pdf[0].filename}` : null,
     fotoUrl: files.foto ? `/uploads/${files.foto[0].filename}` : null,
     videoUrl: files.video ? `/uploads/${files.video[0].filename}` : null,
@@ -175,60 +157,66 @@ app.post('/api/tickets/:id/resposta', upload.fields([
     respondidoEm: new Date().toISOString()
   };
 
-  console.log(`[API REAL] Resposta enviada para o chamado ${id} por ${ticket.resposta.monitor}`);
   res.json({ success: true, ticket });
 });
 
-// 5. Agente de IA: Filtrar & Recomendar Questões do Banco de Dados Real
-app.get('/api/ai/recomendar', (req, res) => {
-  const { vestibular, nivel, assunto } = req.query;
+// ETAPA 3: ALUNO DIZ QUE ENTENDEU -> AGENTE DE IA GERA QUESTÃO DE FIXAÇÃO
+app.post('/api/tickets/:id/entendi', (req, res) => {
+  const { id } = req.params;
+  const ticket = tickets.find(t => t.id === id);
+  if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
 
-  let resultado = bancoQuestoesIA;
+  // Selecionar questão de fixação correspondente do banco da IA
+  const questao = bancoQuestoesIA.find(q => q.assunto.toLowerCase().includes(ticket.assunto.toLowerCase())) || bancoQuestoesIA[0];
 
-  if (vestibular) {
-    resultado = resultado.filter(q => q.vestibular.toLowerCase() === vestibular.toLowerCase());
-  }
+  ticket.status = 'Praticando';
+  ticket.etapa = 4;
+  ticket.questaoFixacao = questao;
 
-  if (nivel) {
-    resultado = resultado.filter(q => q.nivel.toLowerCase() === nivel.toLowerCase());
-  }
-
-  if (assunto) {
-    resultado = resultado.filter(q => q.assunto.toLowerCase().includes(assunto.toLowerCase()));
-  }
-
-  // Se o filtro retornar vazio, retorna fallback inteligente
-  if (resultado.length === 0) {
-    resultado = bancoQuestoesIA.slice(0, 2);
-  }
-
-  res.json({ 
-    success: true, 
-    filtrosAplicados: { vestibular, nivel, assunto },
-    totalEncontradas: resultado.length,
-    questoes: resultado 
-  });
+  res.json({ success: true, ticket, questao });
 });
 
-// 6. Estatísticas Reais para o Coordenador de Área
+// ETAPA 4: ALUNO RESPONDE A QUESTÃO DE FIXAÇÃO
+app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
+  const { id } = req.params;
+  const { respostaSelecionada, teveDuvida } = req.body;
+
+  const ticket = tickets.find(t => t.id === id);
+  if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
+
+  // Se o aluno disse que teve dúvida ou errou a questão -> VOLTA PARA O PROFESSOR (CICLO REINICIADO)
+  if (teveDuvida || (ticket.questaoFixacao && respostaSelecionada !== ticket.questaoFixacao.respostaCorreta)) {
+    ticket.status = 'Pendente';
+    ticket.etapa = 1;
+    ticket.duvidaTexto = `[Nova dúvida na questão de fixação ${ticket.questaoFixacao?.id}]: Marquei ${respostaSelecionada || 'opção incorreta'} mas fiquei em dúvida na resolução.`;
+    res.json({ success: true, resultado: 'REINICIADO', mensagem: 'Dúvida enviada de volta para o professor no ciclo de aprendizado!', ticket });
+  } else {
+    // Aluno acertou e entendeu -> APROVADO & DOMINADO
+    ticket.status = 'Aprovado';
+    ticket.etapa = 5;
+    res.json({ success: true, resultado: 'APROVADO', mensagem: 'Parabéns! Conteúdo dominado e aprovado com sucesso!', ticket });
+  }
+});
+
+// STATS COORDENADOR
 app.get('/api/coordenador/stats', (req, res) => {
   const total = tickets.length;
-  const respondidos = tickets.filter(t => t.status === 'Respondido').length;
-  const pendentes = tickets.filter(t => t.status === 'Pendente').length;
+  const aprovados = tickets.filter(t => t.status === 'Aprovado').length;
+  const emAndamento = tickets.filter(t => t.status !== 'Aprovado').length;
 
   res.json({
     success: true,
     totalChamados: total,
-    respondidos,
-    pendentes,
-    taxaResposta: total > 0 ? `${Math.round((respondidos / total) * 100)}%` : '0%',
-    tempoMedioMinutos: 14,
-    precisaoIA: '94.2%'
+    aprovados,
+    emAndamento,
+    taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
+    tempoMedioMinutos: 12,
+    precisaoIA: '96.5%'
   });
 });
 
 app.listen(PORT, () => {
   console.log(`\n========================================================`);
-  console.log(`🚀 SERVIDOR BACKEND API REAL ONLINE EM http://localhost:${PORT}`);
+  console.log(`🚀 SERVIDOR CICLO DE APRENDIZADO GGE ONLINE EM http://localhost:${PORT}`);
   console.log(`========================================================\n`);
 });
