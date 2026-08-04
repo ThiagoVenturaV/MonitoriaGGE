@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 /* ============================================================================== */
-/* GGE DESIGN SYSTEM - VANILLA CSS WITH SYSTEM DARK / LIGHT MODE AUTOMATIC SUPPORT */
+/* GGE DESIGN SYSTEM - PURE VANILLA CSS WITH MOBILE-FIRST OPTIMIZATIONS */
 /* ============================================================================== */
 
 :root {
@@ -101,7 +101,13 @@ body {
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
+}
+
+@media (min-width: 768px) {
+  .gge-container {
+    padding: 20px;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -115,7 +121,7 @@ body {
 }
 
 /* ============================================================================== */
-/* HEADER STYLES */
+/* HEADER STYLES (MOBILE OPTIMIZED) */
 /* ============================================================================== */
 
 .gge-header {
@@ -126,7 +132,7 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--gge-navy-border);
-  padding: 14px 20px;
+  padding: 10px 16px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -136,92 +142,101 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .gge-brand-group {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .gge-brand-logo-img {
-  height: 42px;
+  height: 38px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
-.gge-brand-logo {
-  width: 46px;
-  height: 46px;
-  background: linear-gradient(135deg, #C8102E 0%, #9E0B22 100%);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1.2rem;
-  color: #ffffff;
-  letter-spacing: 1px;
-  box-shadow: var(--shadow-red);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+@media (min-width: 640px) {
+  .gge-brand-logo-img {
+    height: 44px;
+  }
 }
 
 .gge-brand-text h1 {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--gge-text-main);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .gge-brand-text h1 {
+    font-size: 1.1rem;
+    gap: 8px;
+  }
 }
 
 .gge-brand-tag {
   background: #C8102E;
   color: #ffffff;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: var(--radius-full);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .gge-brand-text p {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--gge-text-muted);
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .gge-brand-text p {
+    display: block;
+    font-size: 0.75rem;
+  }
 }
 
 .gge-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* User Profile Badge Header */
 .gge-user-header-badge {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--gge-navy-bg);
   border: 1px solid var(--gge-navy-border);
-  padding: 4px 6px 4px 12px;
+  padding: 4px 8px;
   border-radius: var(--radius-md);
 }
 
 .gge-user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
   background: #C8102E;
   color: #ffffff;
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(200, 16, 46, 0.4);
+  flex-shrink: 0;
 }
 
 .gge-user-info-text {
@@ -256,10 +271,17 @@ body {
   background: var(--gge-navy-surface);
   border: 1px solid var(--gge-navy-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 16px;
   box-shadow: var(--shadow-md);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .gge-card {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
 }
 
 .gge-card:hover {
@@ -271,13 +293,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--gge-navy-border);
 }
 
 .gge-card-title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: var(--gge-text-main);
   display: flex;
@@ -295,14 +317,15 @@ body {
   justify-content: center;
   gap: 8px;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.775rem;
   font-weight: 700;
-  padding: 10px 20px;
+  padding: 9px 16px;
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .gge-btn-primary {
@@ -363,12 +386,12 @@ body {
 /* ============================================================================== */
 
 .gge-form-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .gge-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   font-weight: 700;
   color: var(--gge-text-muted);
   margin-bottom: 6px;
@@ -383,7 +406,7 @@ body {
   background: var(--gge-navy-bg);
   border: 1px solid var(--gge-navy-border);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 10px 12px;
   font-family: inherit;
   font-size: 0.825rem;
   color: var(--gge-text-main);
@@ -400,7 +423,7 @@ body {
 
 .gge-textarea {
   resize: vertical;
-  min-height: 90px;
+  min-height: 85px;
 }
 
 .gge-user-banner {
@@ -408,27 +431,27 @@ body {
   border: 1px solid var(--gge-navy-border);
   border-left: 4px solid #C8102E;
   border-radius: var(--radius-md);
-  padding: 12px 16px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .gge-user-banner-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .gge-user-banner-info .name {
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   font-weight: 800;
   color: var(--gge-text-main);
 }
 
 .gge-user-banner-info .unit {
-  font-size: 0.725rem;
+  font-size: 0.7rem;
   color: var(--gge-text-muted);
 }
 
@@ -444,9 +467,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.7rem;
+  font-size: 0.675rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: var(--radius-full);
 }
 
@@ -474,6 +497,20 @@ body {
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+/* Horizontal Chip Filter Scroll for Mobile */
+.gge-mobile-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gge-mobile-chips::-webkit-scrollbar {
+  display: none;
+}
+
 /* ============================================================================== */
 /* TICKET FEED & LEARNING CYCLE TIMELINE */
 /* ============================================================================== */
@@ -482,38 +519,46 @@ body {
   background: var(--gge-navy-surface);
   border: 1px solid var(--gge-navy-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .gge-ticket-card {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
 }
 
 .gge-ticket-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   border-bottom: 1px solid var(--gge-navy-border);
-  padding-bottom: 12px;
+  padding-bottom: 10px;
 }
 
 .gge-ticket-id {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   font-weight: 700;
   color: #C8102E;
 }
 
 .gge-ticket-subject {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: var(--gge-text-main);
   margin-top: 2px;
+  word-break: break-word;
 }
 
 .gge-ticket-meta {
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   color: var(--gge-text-muted);
   margin-top: 4px;
 }
@@ -522,15 +567,17 @@ body {
   background: var(--gge-navy-bg);
   border: 1px solid var(--gge-navy-border);
   border-radius: var(--radius-md);
-  padding: 14px;
-  font-size: 0.825rem;
+  padding: 12px;
+  font-size: 0.8rem;
   color: var(--gge-text-main);
-  line-height: 1.6;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .gge-ticket-image {
   margin-top: 10px;
-  max-height: 240px;
+  max-height: 220px;
+  max-width: 100%;
   border-radius: var(--radius-md);
   border: 1px solid var(--gge-navy-border);
   object-fit: contain;
@@ -542,17 +589,17 @@ body {
   background: rgba(2, 132, 199, 0.08);
   border: 1px solid rgba(2, 132, 199, 0.25);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .gge-response-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #38BDF8;
 }
@@ -568,17 +615,17 @@ body {
   background: rgba(139, 92, 246, 0.08);
   border: 1px solid rgba(139, 92, 246, 0.25);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .gge-ia-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #C084FC;
 }
@@ -599,13 +646,14 @@ body {
   background: var(--gge-navy-bg);
   border: 1px solid var(--gge-navy-border);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 0.775rem;
+  padding: 10px 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--gge-text-main);
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
+  word-break: break-word;
 }
 
 .gge-option-btn:hover {
@@ -629,9 +677,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   font-weight: 700;
   background: var(--gge-navy-bg);
   color: var(--gge-text-muted);
@@ -656,9 +704,9 @@ body {
 
 .gge-filter-count {
   background: rgba(255, 255, 255, 0.2);
-  font-size: 0.675rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
 }
 
@@ -666,25 +714,25 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .gge-stat-card {
   background: var(--gge-navy-bg);
   border: 1px solid var(--gge-navy-border);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: 10px;
   text-align: center;
 }
 
 .gge-stat-number {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--gge-text-main);
 }
 
 .gge-stat-label {
-  font-size: 0.65rem;
+  font-size: 0.625rem;
   font-weight: 800;
   color: var(--gge-text-muted);
   text-transform: uppercase;
@@ -699,7 +747,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 68px;
+  height: 64px;
   background: var(--gge-navy-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -721,14 +769,15 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   background: transparent;
   border: none;
   color: var(--gge-text-dim);
-  font-size: 0.675rem;
+  font-size: 0.65rem;
   font-weight: 700;
   cursor: pointer;
   transition: color 0.15s ease;
+  padding: 4px 12px;
 }
 
 .gge-nav-item.active {
@@ -736,41 +785,44 @@ body {
 }
 
 /* ============================================================================== */
-/* AUTH MODAL STYLES */
+/* AUTH MODAL STYLES (RESPONSIVE FOR MOBILE) */
 /* ============================================================================== */
 
 .gge-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 12px;
 }
 
 .gge-modal-card {
-  width: 100%;
+  width: min(440px, 94vw);
   max-width: 440px;
   background: var(--gge-navy-surface);
   border: 1px solid var(--gge-navy-border);
   border-top: 4px solid #C8102E;
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 20px 16px;
   box-shadow: var(--shadow-lg);
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .gge-modal-close {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 14px;
+  right: 14px;
   background: transparent;
   border: none;
   color: var(--gge-text-muted);
   cursor: pointer;
+  padding: 4px;
 }
 
 .gge-modal-close:hover {
@@ -778,8 +830,8 @@ body {
 }
 
 .gge-demo-accounts {
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--gge-navy-border);
   text-align: center;
 }
@@ -787,7 +839,8 @@ body {
 .gge-demo-btns {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 8px;
 }
 
@@ -795,11 +848,14 @@ body {
   background: var(--gge-navy-bg);
   border: 1px solid var(--gge-navy-border);
   color: var(--gge-text-muted);
-  font-size: 0.675rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 90px;
+  text-align: center;
 }
 
 .gge-demo-btn:hover {

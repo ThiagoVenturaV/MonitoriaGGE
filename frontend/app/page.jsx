@@ -22,8 +22,7 @@ import {
   Layers,
   X,
   BarChart3,
-  CheckCircle2,
-  BookOpen
+  CheckCircle2
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8080';
@@ -46,7 +45,7 @@ export default function PlataformaMonitoriaGGE() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Navegação Mobile & Filtros
-  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'nova_duvida'
+  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'nova_duvida' | 'perfil'
   const [statusFilter, setStatusFilter] = useState('todos');
 
   // Dados dos Chamados & Estatísticas
@@ -200,7 +199,7 @@ export default function PlataformaMonitoriaGGE() {
     }
   };
 
-  // ETAPA 1: ALUNO MANDA DÚVIDA (Com campo de Assunto LIVRE!)
+  // ETAPA 1: ALUNO MANDA DÚVIDA
   const handleCriarChamado = async (e) => {
     e.preventDefault();
     if (!novoChamado.assunto.trim()) {
@@ -335,10 +334,31 @@ export default function PlataformaMonitoriaGGE() {
     }
   };
 
+  const handleMobileNavClick = (tab) => {
+    setMobileTab(tab);
+    if (tab === 'feed') {
+      document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+    } else if (tab === 'nova_duvida') {
+      const formEl = document.getElementById('form-duvida');
+      if (formEl) {
+        formEl.scrollIntoView({ behavior: 'smooth' });
+      } else if (!user) {
+        setShowAuthModal(true);
+      }
+    } else if (tab === 'perfil') {
+      if (user) {
+        document.getElementById('perfil-section')?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        setShowAuthModal(true);
+      }
+    }
+  };
+
   const filteredTickets = tickets.filter(t => {
     if (statusFilter === 'todos') return true;
     if (statusFilter === 'pendente') return t.status === 'Pendente';
     if (statusFilter === 'explicado') return t.status === 'Explicado';
+    if (statusFilter === 'entendido') return t.etapa >= 3;
     if (statusFilter === 'praticando') return t.status === 'Praticando';
     if (statusFilter === 'aprovado') return t.status === 'Aprovado';
     return true;
@@ -363,7 +383,6 @@ export default function PlataformaMonitoriaGGE() {
             <div className="gge-brand-text">
               <h1>
                 Monitoria GGE
-                <span className="gge-brand-tag">Todas as Disciplinas</span>
               </h1>
               <p>Ciclo de Aprendizado • Ensino Médio, SSA & ENEM</p>
             </div>
@@ -407,7 +426,7 @@ export default function PlataformaMonitoriaGGE() {
         {/* ---------------------------------------------------------------------------- */}
         <aside className="gge-sidebar">
           {/* Card Perfil do Usuário */}
-          <div className="gge-card">
+          <div className="gge-card" id="perfil-section">
             <div className="gge-card-header">
               <span className="gge-card-title">
                 <User size={16} /> Perfil do Usuário
@@ -461,7 +480,7 @@ export default function PlataformaMonitoriaGGE() {
             )}
           </div>
 
-          {/* Filtro do Ciclo de Aprendizado */}
+          {/* Filtro do Ciclo de Aprendizado (ETAPAS 1 A 5 COMPLETAS!) */}
           <div className="gge-card">
             <div className="gge-card-header">
               <span className="gge-card-title">
@@ -473,6 +492,7 @@ export default function PlataformaMonitoriaGGE() {
               { id: 'todos', label: 'Todas as Dúvidas', count: tickets.length },
               { id: 'pendente', label: '1. Dúvida Enviada', count: tickets.filter(t => t.status === 'Pendente').length },
               { id: 'explicado', label: '2. Resposta do Professor', count: tickets.filter(t => t.status === 'Explicado').length },
+              { id: 'entendido', label: '3. Aluno Entendeu', count: tickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
               { id: 'praticando', label: '4. Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
               { id: 'aprovado', label: '5. Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
             ].map(f => (
@@ -493,7 +513,7 @@ export default function PlataformaMonitoriaGGE() {
               <BrainCircuit size={16} /> Metodologia Pedagógica
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)', lineHeight: '1.5' }}>
-              Dúvidas de qualquer matéria (Exatas, Humanas, Biológicas, Linguagens) resolvidas por professores e fixadas com Inteligência Artificial.
+              Dúvidas de qualquer matéria (Exatas, Humanas, Biológicas, Linguagens) resolvidas por professores e fixadas com IA.
             </p>
           </div>
         </aside>
@@ -503,14 +523,13 @@ export default function PlataformaMonitoriaGGE() {
         {/* ---------------------------------------------------------------------------- */}
         <main className="gge-main-content">
 
-          {/* FORMULÁRIO DE NOVA DÚVIDA (CAMPO DE ASSUNTO/TÓPICO 100% LIVRE) */}
+          {/* FORMULÁRIO DE NOVA DÚVIDA */}
           {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
-            <div className="gge-card" style={{ borderLeft: '4px solid #C8102E' }}>
+            <div className="gge-card" id="form-duvida" style={{ borderLeft: '4px solid #C8102E' }}>
               <div className="gge-card-header">
                 <span className="gge-card-title">
                   <PlusCircle size={18} style={{ color: '#C8102E' }} /> Nova Dúvida Acadêmica
                 </span>
-                <span className="gge-badge gge-badge-pendente">Todas as Matérias</span>
               </div>
 
               {/* BANNER DO USUÁRIO LOGADO */}
@@ -536,7 +555,6 @@ export default function PlataformaMonitoriaGGE() {
               </div>
 
               <form onSubmit={handleCriarChamado}>
-                {/* CAMPO LIVRE DE DIGITAÇÃO PARA MATÉRIA E ASSUNTO */}
                 <div className="gge-form-group">
                   <label className="gge-label">Matéria e Assunto / Tópico da Dúvida</label>
                   <input
@@ -559,7 +577,7 @@ export default function PlataformaMonitoriaGGE() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', itemsAlign: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                   <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.75rem', cursor: 'pointer' }}>
                     <Camera size={15} style={{ color: 'var(--gge-gold-primary)' }} />
                     <span>{fotoFile ? 'Foto Anexada ✓' : 'Anexar Foto da Questão'}</span>
@@ -661,7 +679,7 @@ export default function PlataformaMonitoriaGGE() {
           )}
 
           {/* LISTA E TIMELINE DAS DÚVIDAS E CICLO DE APRENDIZADO */}
-          <div>
+          <div id="feed-section">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--gge-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Clock size={16} style={{ color: '#C8102E' }} /> Feed de Dúvidas & Ciclo de Aprendizado
@@ -700,6 +718,7 @@ export default function PlataformaMonitoriaGGE() {
                     <div>
                       {ticket.status === 'Pendente' && <span className="gge-badge gge-badge-pendente">1. Dúvida Pendente</span>}
                       {ticket.status === 'Explicado' && <span className="gge-badge gge-badge-explicado">2. Resposta do Professor</span>}
+                      {ticket.etapa === 3 && <span className="gge-badge gge-badge-explicado" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34D399' }}>3. Aluno Entendeu</span>}
                       {ticket.status === 'Praticando' && <span className="gge-badge gge-badge-praticando">4. Fixação com IA</span>}
                       {ticket.status === 'Aprovado' && <span className="gge-badge gge-badge-aprovado">5. Conteúdo Dominado ✓</span>}
                     </div>
@@ -871,20 +890,20 @@ export default function PlataformaMonitoriaGGE() {
       {/* ============================================================================== */}
       <nav className="gge-bottom-nav">
         <button
-          onClick={() => setMobileTab('feed')}
+          onClick={() => handleMobileNavClick('feed')}
           className={`gge-nav-item ${mobileTab === 'feed' ? 'active' : ''}`}
         >
           <Clock size={18} /> Feed
         </button>
         <button
-          onClick={() => setMobileTab('nova_duvida')}
+          onClick={() => handleMobileNavClick('nova_duvida')}
           className={`gge-nav-item ${mobileTab === 'nova_duvida' ? 'active' : ''}`}
         >
           <PlusCircle size={18} /> Nova Dúvida
         </button>
         <button
-          onClick={() => setShowAuthModal(true)}
-          className={`gge-nav-item ${user ? 'active' : ''}`}
+          onClick={() => handleMobileNavClick('perfil')}
+          className={`gge-nav-item ${mobileTab === 'perfil' ? 'active' : ''}`}
         >
           <User size={18} /> {user ? user.name.split(' ')[0] : 'Entrar'}
         </button>
