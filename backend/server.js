@@ -4,12 +4,15 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const JWT_SECRET = process.env.JWT_SECRET || 'gge-monitoria-secret-key-2026';
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -32,8 +35,53 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 // ==============================================================================
-// BANCO DE DADOS EM MEMÓRIA
+// REVOGAÇÃO DE TOKENS & BANCO DE DADOS EM MEMÓRIA (bcrypt & jwt)
 // ==============================================================================
+
+// Set em memória para blacklist de tokens revogados no logout
+const revokedTokens = new Set();
+
+// Usuários iniciais com senhas criptografadas por bcrypt
+const defaultPasswordHash = bcrypt.hashSync('123456', 10);
+
+let users = [
+  {
+    id: 'USR-01',
+    name: 'Lucas Silva',
+    email: 'lucas@gge.com.br',
+    passwordHash: defaultPasswordHash,
+    role: 'aluno', // aluno | monitor | coordenador
+    unidade: 'Unidade Boa Viagem - Recife',
+    turma: '3º Ano Terceirão - Medicina'
+  },
+  {
+    id: 'USR-02',
+    name: 'Beatriz Ramos',
+    email: 'beatriz@gge.com.br',
+    passwordHash: defaultPasswordHash,
+    role: 'aluno',
+    unidade: 'Unidade Benfica - Recife',
+    turma: 'Extensivo GGE'
+  },
+  {
+    id: 'USR-03',
+    name: 'Prof. Ricardo Mendes',
+    email: 'professor@gge.com.br',
+    passwordHash: defaultPasswordHash,
+    role: 'monitor',
+    unidade: 'GGE Recife (Todas as Unidades)',
+    disciplina: 'Matemática & Física'
+  },
+  {
+    id: 'USR-04',
+    name: 'Prof. Fernando Santos',
+    email: 'coordenador@gge.com.br',
+    passwordHash: defaultPasswordHash,
+    role: 'coordenador',
+    unidade: 'Coordenação Geral GGE',
+    cargo: 'Coordenador Pedagógico'
+  }
+];
 
 let tickets = [
   {
@@ -96,7 +144,140 @@ const bancoQuestoesIA = [
 ];
 
 // ==============================================================================
-// ENDPOINTS REST
+// MIDDLEWARES DE AUTENTICAÇÃO E REVOGAÇÃO
+// ==============================================================================
+
+const extractToken = (req) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return null;
+  const parts = authHeader.split(' ');
+  return parts.length === 2 && parts[0] === 'Bearer' ? parts[1] : null;
+};
+
+const authenticateToken = (req, res, next) => {
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Acesso negado. Token de autenticação não fornecido.' });
+  }
+
+  // Verifica se o token foi revogado no logout
+  if (revokedTokens.has(token)) {
+    return res.status(401).json({ success: false, error: 'Token revogado (Sessão encerrada via Logout).' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = users.find(u => u.id === decoded.id);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Usuário não encontrado.' });
+    }
+    req.user = user;
+    req.token = token;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Token inválido ou expirado.' });
+  }
+};
+
+const optionalToken = (req, res, next) => {
+  const token = extractToken(req);
+  if (token && !revokedTokens.has(token)) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = users.find(u => u.id === decoded.id);
+      if (user) {
+        req.user = user;
+        req.token = token;
+      }
+    } catch (e) {}
+  }
+  next();
+};
+
+// ==============================================================================
+// ENDPOINTS REST DE AUTENTICAÇÃO (bcrypt & jwt & logout revocation)
+// ==============================================================================
+
+// AUTENTICAÇÃO: CADASTRO
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password, role, unidade, turma } = req.body;
+
+  if (!email || !password || !name) {
+    return res.status(400).json({ success: false, error: 'Preencha nome, e-mail e senha.' });
+  }
+
+  const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    return res.status(400).json({ success: false, error: 'Este e-mail já está cadastrado.' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const newUser = {
+    id: `USR-${Math.floor(100 + Math.random() * 900)}`,
+    name,
+    email: email.toLowerCase(),
+    passwordHash,
+    role: role || 'aluno',
+    unidade: unidade || 'Unidade Boa Viagem - Recife',
+    turma: turma || 'Ensino Médio GGE'
+  };
+
+  users.push(newUser);
+
+  const token = jwt.sign(
+    { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, unidade: newUser.unidade },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+
+  const { passwordHash: _, ...userWithoutPassword } = newUser;
+  res.status(201).json({ success: true, token, user: userWithoutPassword });
+});
+
+// AUTENTICAÇÃO: LOGIN
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: 'Informe e-mail e senha.' });
+  }
+
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) {
+    return res.status(401).json({ success: false, error: 'E-mail ou senha incorretos.' });
+  }
+
+  const match = await bcrypt.compare(password, user.passwordHash);
+  if (!match) {
+    return res.status(401).json({ success: false, error: 'E-mail ou senha incorretos.' });
+  }
+
+  const token = jwt.sign(
+    { id: user.id, name: user.name, email: user.email, role: user.role, unidade: user.unidade },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+
+  const { passwordHash: _, ...userWithoutPassword } = user;
+  res.json({ success: true, token, user: userWithoutPassword });
+});
+
+// AUTENTICAÇÃO: LOGOUT (REVOGAÇÃO DO TOKEN JWT)
+app.post('/api/auth/logout', authenticateToken, (req, res) => {
+  if (req.token) {
+    revokedTokens.add(req.token);
+  }
+  res.json({ success: true, message: 'Logout realizado com sucesso. Token revogado.' });
+});
+
+// AUTENTICAÇÃO: OBTER USUÁRIO ATUAL ME
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+  const { passwordHash: _, ...userWithoutPassword } = req.user;
+  res.json({ success: true, user: userWithoutPassword });
+});
+
+// ==============================================================================
+// ENDPOINTS REST DE DÚVIDAS E MONITORIA
 // ==============================================================================
 
 app.get('/health', (req, res) => {
@@ -107,14 +288,18 @@ app.get('/api/tickets', (req, res) => {
   res.json({ success: true, count: tickets.length, tickets });
 });
 
-// ETAPA 1: ALUNO MANDA DÚVIDA
-app.post('/api/tickets', upload.single('foto'), (req, res) => {
-  const { aluno, unidade, assunto, tipo, duvidaTexto } = req.body;
+// ETAPA 1: ALUNO MANDA DÚVIDA (Usando autenticação para preencher nome automaticamente)
+app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
+  const { assunto, tipo, duvidaTexto } = req.body;
   
+  // Se o aluno estiver logado via JWT, extrai o nome e a unidade do usuário autenticado!
+  const nomeAluno = req.user ? req.user.name : (req.body.aluno || 'Aluno GGE');
+  const unidadeAluno = req.user ? req.user.unidade : (req.body.unidade || 'Unidade Boa Viagem - Recife');
+
   const novoTicket = {
     id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
-    aluno: aluno || 'Aluno GGE',
-    unidade: unidade || 'Unidade Boa Viagem - Recife',
+    aluno: nomeAluno,
+    unidade: unidadeAluno,
     assunto: assunto || 'Matemática Geral',
     tipo: tipo || 'texto',
     fotoUrl: req.file ? `/uploads/${req.file.filename}` : null,
@@ -148,7 +333,7 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   ticket.status = 'Explicado';
   ticket.etapa = 2;
   ticket.resposta = {
-    monitor: monitor || 'Prof. Ricardo Mendes',
+    monitor: monitor || 'Prof. Ricardo Mendes (Equipe GGE)',
     texto: texto || 'Explicação elaborada pelo professor.',
     pdfUrl: files.pdf ? `/uploads/${files.pdf[0].filename}` : null,
     fotoUrl: files.foto ? `/uploads/${files.foto[0].filename}` : null,
@@ -166,7 +351,6 @@ app.post('/api/tickets/:id/entendi', (req, res) => {
   const ticket = tickets.find(t => t.id === id);
   if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
 
-  // Selecionar questão de fixação correspondente do banco da IA
   const questao = bancoQuestoesIA.find(q => q.assunto.toLowerCase().includes(ticket.assunto.toLowerCase())) || bancoQuestoesIA[0];
 
   ticket.status = 'Praticando';
@@ -184,14 +368,12 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   const ticket = tickets.find(t => t.id === id);
   if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
 
-  // Se o aluno disse que teve dúvida ou errou a questão -> VOLTA PARA O PROFESSOR (CICLO REINICIADO)
   if (teveDuvida || (ticket.questaoFixacao && respostaSelecionada !== ticket.questaoFixacao.respostaCorreta)) {
     ticket.status = 'Pendente';
     ticket.etapa = 1;
     ticket.duvidaTexto = `[Nova dúvida na questão de fixação ${ticket.questaoFixacao?.id}]: Marquei ${respostaSelecionada || 'opção incorreta'} mas fiquei em dúvida na resolução.`;
     res.json({ success: true, resultado: 'REINICIADO', mensagem: 'Dúvida enviada de volta para o professor no ciclo de aprendizado!', ticket });
   } else {
-    // Aluno acertou e entendeu -> APROVADO & DOMINADO
     ticket.status = 'Aprovado';
     ticket.etapa = 5;
     res.json({ success: true, resultado: 'APROVADO', mensagem: 'Parabéns! Conteúdo dominado e aprovado com sucesso!', ticket });

@@ -1,99 +1,182 @@
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.02); }
-}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --gge-navy: #002B49;
+  --gge-navy-dark: #051626;
+  --gge-navy-card: #092038;
+  --gge-red: #C8102E;
+  --gge-red-light: #EF4444;
+  --gge-gold: #F59E0B;
+  --gge-emerald: #10B981;
+  --gge-slate-50: #F8FAFC;
+  --gge-slate-100: #F1F5F9;
+  --gge-slate-800: #1E293B;
+  --gge-border: rgba(255, 255, 255, 0.12);
+  
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #070b14;
+  background-color: #040e19;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(225, 29, 72, 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.06) 0px, transparent 50%),
-    radial-gradient(at 50% 50%, rgba(99, 102, 241, 0.04) 0px, transparent 60%);
+    radial-gradient(at 0% 0%, rgba(200, 16, 46, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(0, 43, 73, 0.4) 0px, transparent 60%),
+    radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.05) 0px, transparent 60%);
   background-attachment: fixed;
   min-height: 100vh;
   color: #f8fafc;
+  padding-bottom: 72px; /* Espaço para Bottom Bar no Mobile */
 }
 
-.glass-card {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
 }
 
-.glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
-}
-
-.glass-nav {
-  background: rgba(11, 17, 32, 0.85);
+.gge-glass-header {
+  background: rgba(4, 14, 25, 0.88);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.gge-badge {
-  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
-  color: #ffffff;
-  font-weight: 700;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.3);
+.gge-card {
+  background: rgba(9, 32, 56, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.tab-btn {
-  padding: 0.65rem 1.25rem;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
+.gge-card:hover {
+  border-color: rgba(200, 16, 46, 0.35);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+.gge-btn-primary {
+  background: linear-gradient(135deg, #C8102E 0%, #9E0B22 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 4px 15px rgba(200, 16, 46, 0.35);
   transition: all 0.2s ease;
-  border: 1px solid transparent;
-  display: flex;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
-.tab-btn-active {
-  background: linear-gradient(135deg, rgba(225, 29, 72, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%);
-  border-color: rgba(225, 29, 72, 0.5);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+.gge-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(200, 16, 46, 0.5);
+  filter: brightness(1.1);
 }
 
-.tab-btn-inactive {
-  background: rgba(30, 41, 59, 0.4);
-  color: #94a3b8;
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-.tab-btn-inactive:hover {
-  background: rgba(30, 41, 59, 0.8);
+.gge-btn-secondary {
+  background: rgba(255, 255, 255, 0.07);
   color: #f8fafc;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.font-mono {
-  font-family: 'JetBrains Mono', monospace;
+.gge-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.gge-badge-red {
+  background: linear-gradient(135deg, #C8102E 0%, #9E0B22 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.3);
+}
+
+.gge-badge-blue {
+  background: rgba(0, 43, 73, 0.8);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.gge-badge-gold {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.gge-badge-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.gge-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: rgba(5, 22, 38, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 50;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(4, 14, 25, 0.5);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(200, 16, 46, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(200, 16, 46, 0.6); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s infinite ease-in-out;
 }
