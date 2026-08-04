@@ -1,41 +1,75 @@
-# 🎓 Monitoria GGE • Plataforma de Monitoria de Matemática
+# 🎓 Monitoria GGE — Plataforma de Monitoria
 
-Plataforma oficial de monitoria de matemática do **Colégio GGE**, construída em **Next.js 14** e **Node.js REST API**, integrada a uma arquitetura resiliente com automação de **Failover Automático (Hostinger → DigitalOcean)** via Cloudflare Workers.
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 14" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare Workers" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+</p>
 
----
-
-## 🌟 Funcionalidades por Perfil de Usuário
-
-### 1. 🎓 Portal do Aluno
-* **Envio de Dúvidas**: Suporte a envio por **Texto (Conceitual)** ou upload de **Foto da Questão**.
-* **Assistente de Estudos IA**: Recomendador de questões do banco filtradas por **Vestibular** (ENEM, FUVEST, UNICAMP, SSA/UPE) e **Nível de Dificuldade** (Fácil, Médio, Difícil).
-* **Acompanhamento de Dúvidas**: Visualização do status em tempo real e das respostas multimídia dos monitores.
-
-### 2. 👨‍🏫 Painel do Monitor / Professor
-* **Fila de Atendimento**: Organização das dúvidas por Unidades do Colégio GGE.
-* **Respostas Multimídia**:
-  - Upload de **PDF Explicativo**.
-  - Upload de **Foto da Lousa / Manuscrito (.jpg/.png)**.
-  - Upload de **Vídeo (.mp4)**.
-  - **Gravação de Áudio Real** pelo microfone do dispositivo com explicação passo a passo.
-
-### 3. 🏆 Coordenação Acadêmica
-* Painel analítico com tempo médio de resposta por unidade, índice de resolutividade pedagógica e taxa de precisão das sugestões da IA.
+Plataforma completa e resiliente de monitoria acadêmica do **Colégio GGE**. O sistema oferece uma experiência integrada para alunos, monitores e coordenação, contando com uma arquitetura de alta disponibilidade com **Failover Automático (Hostinger KVM 2 → DigitalOcean)** via Cloudflare Workers.
 
 ---
 
-## 💻 Como Executar o Deploy Local
+## 🎯 Principais Recursos por Perfil
 
-Siga as instruções abaixo para rodar a aplicação completa na sua máquina local.
+### 🎓 Portal do Aluno
+* 📝 **Envio de Dúvidas**: Suporte a envio por texto (dúvida conceitual) ou anexo de fotos da questão.
+* 🤖 **Assistente de Estudos IA**: Recomendador de questões por vestibular (ENEM, FUVEST, UNICAMP, SSA/UPE) e nível de dificuldade (Fácil, Médio, Difícil).
+* ⏱️ **Acompanhamento em Tempo Real**: Status das dúvidas enviadas e acesso a resoluções multimídia.
+
+### 👨‍🏫 Painel do Monitor / Professor
+* 📥 **Fila por Unidade**: Organização de dúvidas filtradas por unidades do Colégio GGE.
+* 🎙️ **Respostas Multimídia**: Envio de explicativos em PDF, imagens de lousa/manuscritos, vídeos (`.mp4`) e gravação de áudio em tempo real pelo navegador.
+
+### 🏆 Coordenação Acadêmica
+* 📊 **Painel Analítico**: Métricas de tempo médio de resposta por unidade, taxa de resolutividade pedagógica e precisão das recomendações da IA.
+
+---
+
+## 🏗️ Arquitetura & Failover
+
+```
+                      ┌───────────────────────┐
+                      │    Usuário / Cliente  │
+                      └───────────┬───────────┘
+                                  │
+                       [ api.seudominio.com ]
+                                  │
+                                  ▼
+                      ┌───────────────────────┐
+                      │    Cloudflare DNS     │
+                      └───────────┬───────────┘
+                                  │
+      ┌───────────────────────────┴───────────────────────────┐
+      │ (Normal: Aponta para Hostinger)                       │ (Queda: Worker altera para DO)
+      ▼                                                       ▼
+┌─────────────────────────┐   ⚡ Worker HealthCheck    ┌─────────────────────────┐
+│ Hostinger KVM 2 (VPS)   │ ◄───────────────────────── │ Cloudflare Worker       │
+│  - API Node.js/Express  │   Verifica a cada 1 min    │  - Dispara droplet DO   │
+│  - Nginx Reverse Proxy  │                            │  - Atualiza registro A  │
+└─────────────────────────┘                            └───────────┬─────────────┘
+                                                                   │
+                                                                   ▼
+                                                       ┌─────────────────────────┐
+                                                       │  DigitalOcean Droplet   │
+                                                       │  (Fallback sob demanda) │
+                                                       └─────────────────────────┘
+```
+
+---
+
+## 🚀 Como Executar Localmente
 
 ### 📋 Pré-requisitos
-* **Node.js** (versão 18 ou superior)
-* **NPM** (gerenciador de pacotes)
+* **Node.js** v18+
+* **NPM** ou **Yarn**
 * **Git**
 
 ---
 
-### 1️⃣ Passo 1: Clonar o Repositório
+### 1️⃣ Clonar o Repositório
 
 ```bash
 git clone https://github.com/ThiagoVenturaV/MonitoriaGGE.git
@@ -44,84 +78,68 @@ cd MonitoriaGGE
 
 ---
 
-### 2️⃣ Passo 2: Iniciar a API REST do Backend (Porta 8080)
-
-Abra um terminal na pasta raiz do projeto e execute:
+### 2️⃣ Iniciar o Backend (Porta 8080)
 
 ```bash
 cd backend
 npm install
 node server.js
 ```
-
-> **Verificação:** O terminal mostrará:  
-> `🚀 SERVIDOR BACKEND API REAL ONLINE EM http://localhost:8080`
+> 📍 **API Backend**: `http://localhost:8080`
 
 ---
 
-### 3️⃣ Passo 3: Iniciar o Frontend em Next.js (Porta 3000)
+### 3️⃣ Iniciar o Frontend Next.js (Porta 3000)
 
-Abra um **segundo terminal** na pasta raiz do projeto e execute:
+Em um **novo terminal**, navegue até a raiz do projeto e execute:
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-> **Verificação:** O terminal mostrará:  
-> ` Ready in 2s - Local: http://localhost:3000`
+> 📍 **Interface Web**: `http://localhost:3000`
 
 ---
 
-### 4️⃣ Passo 4: Acessar a Aplicação no Navegador
+### 4️⃣ Simulação Local de Failover (Opcional)
 
-Abra o seu navegador e acesse:
-
-👉 **[http://localhost:3000](http://localhost:3000)**
-
----
-
-## 🧪 Como Testar a Simulação Local do Failover
-
-Para visualizar a lógica de monitoramento do **Cloudflare Worker** e a resposta a uma simulação de queda da API primária:
-
-Na pasta raiz do projeto, execute:
+Para testar a lógica do Worker e simulação de queda do servidor primário:
 
 ```bash
+# Na raiz do projeto:
 node test-local.js
 ```
 
-O script irá:
-1. Iniciar um servidor primário mock na porta `8080`.
-2. Validar o **Cenário 1 (ONLINE - HTTP 200 OK)**.
-3. Simular a queda no **Cenário 2 (OFFLINE)**, disparando os logs de criação de contingência.
+---
+
+## 📁 Estrutura do Projeto
+
+```text
+MonitoriaGGE/
+├── frontend/             # Interface Web em Next.js 14 (App Router & Glassmorphism)
+│   ├── app/              # Páginas, componentes e rotas da aplicação
+│   └── package.json
+├── backend/              # REST API em Node.js / Express com rotas de upload
+│   ├── server.js         # Servidor Express e armazenamento de mídias
+│   └── uploads/          # Diretório local de mídias enviadas
+├── worker/               # Cloudflare Worker para monitoramento contínuo (Cron 1 min)
+│   └── src/index.js
+├── docker/               # Arquivos de orquestração Docker & Nginx
+├── scripts/              # Scripts de automação (cloud-init.sh e failback.sh)
+├── test-local.js         # Script para simulação local do motor de failover
+└── DEPLOY_GUIDE.md       # Guia completo de deploy em produção (Hostinger + DigitalOcean)
+```
 
 ---
 
-## 📂 Estrutura do Repositório
+## 📖 Guias & Documentações Adicionais
 
-```
-MonitoriaGGE/
-├── frontend/             # Aplicação Web em Next.js 14 (App Router) para o Colégio GGE
-│   ├── app/
-│   │   ├── layout.jsx    # Layout base
-│   │   ├── page.jsx      # Interface dos 3 Perfis de Usuário
-│   │   └── globals.css   # Estilização Glassmorphism & GGE Branding
-│   └── package.json
-├── backend/              # API REST em Node.js / Express
-│   ├── server.js         # Endpoints REST e Upload de Arquivos
-│   └── uploads/          # Diretório onde os uploads são armazenados
-├── worker/               # Cloudflare Worker para monitoramento a cada 1 min
-│   └── src/index.js
-├── docker/               # Arquivos Docker Compose e Nginx Proxy
-├── scripts/              # Scripts de automação (cloud-init.sh e failback.sh)
-├── test-local.js         # Script de testes de simulação local
-└── DEPLOY_GUIDE.md       # Guia de deploy em servidores de Produção (Hostinger + DigitalOcean)
-```
+* 🚀 [Guia de Deploy em Produção & Failover](DEPLOY_GUIDE.md): Instruções passo a passo para configurar os tokens da Cloudflare, DigitalOcean e publicar a infraestrutura.
 
 ---
 
 ## 📄 Licença
 
 Desenvolvido para o **Colégio GGE**. Todos os direitos reservados.
+
