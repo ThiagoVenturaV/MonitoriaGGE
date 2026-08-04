@@ -5,7 +5,9 @@ import {
   UserCheck, Send, Camera, FileText, Sparkles, Mic, Video, Clock,
   Building2, BrainCircuit, RefreshCw, HelpCircle, RotateCcw, LogOut,
   LogIn, User, PlusCircle, Layers, X, BarChart3, CheckCircle2, BookOpen,
-  Image as ImageIcon, Trash2, Square
+  Image as ImageIcon, Trash2, Square, Smartphone, Share, PlusSquare,
+  MoreVertical, Download, MonitorDown, Filter, PieChart, TrendingUp, Award,
+  Laptop, Check, ChevronRight, LayoutDashboard
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8080';
@@ -37,11 +39,91 @@ export default function PlataformaMonitoriaGGE() {
   const [audioUrl, setAudioUrl] = useState(null);
   const mediaRecorderRef = useRef(null);
 
+  // PWA State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showPwaModal, setShowPwaModal] = useState(false);
+  const [deviceType, setDeviceType] = useState('desktop'); // 'ios' | 'android' | 'desktop'
+  const [browserName, setBrowserName] = useState('other');
+
+  // Coordinator Dashboards State
+  const [activeTab, setActiveTab] = useState('atendimento'); // 'atendimento' | 'dashboards'
+  const [filterProfessor, setFilterProfessor] = useState('todos');
+  const [filterUnidade, setFilterUnidade] = useState('todas');
+  const [filterPeriodo, setFilterPeriodo] = useState('7d');
+  const [dashboardsData, setDashboardsData] = useState(null);
+  const [loadingDashboards, setLoadingDashboards] = useState(false);
+
   useEffect(() => {
     const savedToken = localStorage.getItem('gge_token');
     if (savedToken) { setToken(savedToken); validarSessaoToken(savedToken); }
     carregarDados();
+
+    // PWA Detection
+    const checkStandalone = () => {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    };
+    setIsStandalone(checkStandalone());
+
+    const ua = navigator.userAgent || '';
+    let dev = 'desktop';
+    if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+      dev = 'ios';
+    } else if (/android/i.test(ua)) {
+      dev = 'android';
+    }
+    setDeviceType(dev);
+
+    let browser = 'other';
+    if (/CriOS|Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'chrome';
+    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'safari';
+    else if (/Edg/i.test(ua)) browser = 'edge';
+    setBrowserName(browser);
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'dashboards' || (user && user.role === 'coordenador')) {
+      carregarDashboards();
+    }
+  }, [activeTab, filterProfessor, filterUnidade, filterPeriodo]);
+
+  const carregarDashboards = async () => {
+    setLoadingDashboards(true);
+    try {
+      const query = `professor=${encodeURIComponent(filterProfessor)}&unidade=${encodeURIComponent(filterUnidade)}&periodo=${encodeURIComponent(filterPeriodo)}`;
+      const res = await fetch(`${API_BASE}/api/coordenador/dashboards?${query}`);
+      const data = await res.json();
+      if (data.success) {
+        setDashboardsData(data);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dashboards da coordenação:', err);
+    } finally {
+      setLoadingDashboards(false);
+    }
+  };
+
+  const handleInstallPwa = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowPwaModal(true);
+    }
+  };
 
   const validarSessaoToken = async (authToken) => {
     try {
@@ -271,6 +353,26 @@ export default function PlataformaMonitoriaGGE() {
             </div>
           </div>
           <div className="gge-header-actions">
+            
+            {/* Botão de Instalar PWA */}
+            {!isStandalone && (
+              <button onClick={handleInstallPwa} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.725rem', color: 'var(--amber)', gap: '5px' }}>
+                <Smartphone size={14} /> <span>Instalar App</span>
+              </button>
+            )}
+
+            {/* Alternador de Aba para Coordenadores */}
+            {currentUserRole === 'coordenador' && (
+              <div style={{ display: 'flex', gap: '4px', background: 'var(--surface-2)', padding: '3px', borderRadius: 'var(--r-md)' }}>
+                <button onClick={() => setActiveTab('atendimento')} className={`gge-btn ${activeTab === 'atendimento' ? 'gge-btn-primary' : 'gge-btn-secondary'}`} style={{ fontSize: '0.675rem', padding: '5px 10px' }}>
+                  Atendimento
+                </button>
+                <button onClick={() => setActiveTab('dashboards')} className={`gge-btn ${activeTab === 'dashboards' ? 'gge-btn-primary' : 'gge-btn-secondary'}`} style={{ fontSize: '0.675rem', padding: '5px 10px', gap: '4px' }}>
+                  <LayoutDashboard size={13} /> <span>Dashboards</span>
+                </button>
+              </div>
+            )}
+
             {user ? (
               <div className="gge-user-header-badge">
                 <div className="gge-user-info-text">
@@ -292,477 +394,672 @@ export default function PlataformaMonitoriaGGE() {
       {/* ─── MAIN GRID ─── */}
       <div className="gge-container">
 
-        {/* ─── LEFT SIDEBAR ─── */}
-        <aside className="gge-sidebar">
+        {/* SE ABA DASHBOARDS FOR ATIVADA PELO COORDENADOR */}
+        {activeTab === 'dashboards' && currentUserRole === 'coordenador' ? (
+          <main style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            
+            {/* Header com Filtros do Dashboard */}
+            <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-0)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <LayoutDashboard size={20} style={{ color: 'var(--brand)' }} /> Painel de Gestão & Analytics
+                  </h2>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-2)', marginTop: '2px' }}>
+                    Acompanhamento em tempo real de KPIs pedagógicas, SLAs de resposta e produtividade por professor.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="gge-badge gge-badge-aprovado">Dados Atualizados ✓</span>
+                </div>
+              </div>
 
-          {/* Profile */}
-          <div className="gge-card" id="perfil-section">
-            <div className="gge-card-header">
-              <span className="gge-card-title"><User size={15} /> Perfil</span>
+              {/* Filtros Interativos */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)' }}>
+                <div>
+                  <label className="gge-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <User size={12} /> Professor / Monitor
+                  </label>
+                  <select value={filterProfessor} onChange={(e) => setFilterProfessor(e.target.value)} className="gge-select" style={{ fontSize: '0.75rem' }}>
+                    <option value="todos">Todos os Professores</option>
+                    <option value="Ricardo">Prof. Ricardo Mendes</option>
+                    <option value="Ana Clara">Prof. Ana Clara Vilela</option>
+                    <option value="Carlos">Prof. Carlos Eduardo</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="gge-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Building2 size={12} /> Unidade GGE
+                  </label>
+                  <select value={filterUnidade} onChange={(e) => setFilterUnidade(e.target.value)} className="gge-select" style={{ fontSize: '0.75rem' }}>
+                    <option value="todas">Todas as Unidades</option>
+                    <option value="Boa Viagem">Boa Viagem — Recife</option>
+                    <option value="Benfica">Benfica — Recife</option>
+                    <option value="Parnamirim">Parnamirim — Recife</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="gge-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={12} /> Período de Análise
+                  </label>
+                  <select value={filterPeriodo} onChange={(e) => setFilterPeriodo(e.target.value)} className="gge-select" style={{ fontSize: '0.75rem' }}>
+                    <option value="7d">Últimos 7 dias</option>
+                    <option value="30d">Este Mês (30 dias)</option>
+                    <option value="semestre">Semestre Letivo Atual</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            {user ? (
+
+            {/* CARDS DE RESUMO DE METRICAS E SLA */}
+            {dashboardsData ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                  <div className="gge-user-avatar" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>{user.name.charAt(0)}</div>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-0)' }}>{user.name}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)' }}>{user.turma || user.unidade}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Volume de Dúvidas</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--text-0)', marginTop: '4px' }}>{dashboardsData.resumo.totalChamados}</div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--emerald)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <TrendingUp size={12} /> {dashboardsData.resumo.taxaAprovacao} resolvidas no ciclo
+                    </div>
+                  </div>
+
+                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>SLA Médio de Resposta</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--amber)', marginTop: '4px' }}>{dashboardsData.resumo.slaMedio}</div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--text-2)', marginTop: '4px' }}>
+                      Meta Institucional: <strong style={{ color: 'var(--text-1)' }}>{dashboardsData.resumo.slaAlvo}</strong>
+                    </div>
+                  </div>
+
+                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Resolutividade Pedagógica</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--sky)', marginTop: '4px' }}>{dashboardsData.resumo.resolutividade}</div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--sky)', marginTop: '4px' }}>
+                      Cumprimento do SLA: {dashboardsData.resumo.slaCumprimento}
+                    </div>
+                  </div>
+
+                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Satisfação dos Alunos (CSAT)</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--violet)', marginTop: '4px' }}>{dashboardsData.resumo.csatGeral}</div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--violet)', marginTop: '4px' }}>
+                      Precisão IA: {dashboardsData.resumo.precisaoIA}
+                    </div>
                   </div>
                 </div>
-                <div className="gge-card-divider" />
-                <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-2)' }}>Função</span>
-                    <strong style={{ color: 'var(--brand)', textTransform: 'capitalize' }}>{user.role}</strong>
+
+                {/* TABELA DE DESEMPENHO DOS PROFESSORES */}
+                <div className="gge-card">
+                  <div className="gge-card-header" style={{ justifyContent: 'space-between', marginBottom: '14px' }}>
+                    <span className="gge-card-title"><UserCheck size={16} style={{ color: 'var(--brand)' }} /> Desempenho por Professor / Monitor</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-2)' }}>{dashboardsData.monitores.length} monitores ativos</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-2)' }}>Unidade</span>
-                    <strong style={{ color: 'var(--text-0)' }}>{user.unidade?.replace('Unidade ', '')}</strong>
+
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-default)', color: 'var(--text-2)' }}>
+                          <th style={{ padding: '8px 12px' }}>Professor</th>
+                          <th style={{ padding: '8px 12px' }}>Disciplina</th>
+                          <th style={{ padding: '8px 12px' }}>Atendidos</th>
+                          <th style={{ padding: '8px 12px' }}>Tempo Médio (SLA)</th>
+                          <th style={{ padding: '8px 12px' }}>Resolutividade</th>
+                          <th style={{ padding: '8px 12px' }}>Avaliação</th>
+                          <th style={{ padding: '8px 12px' }}>Status SLA</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboardsData.monitores.map((m, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-1)' }}>
+                            <td style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-0)' }}>{m.name}</td>
+                            <td style={{ padding: '10px 12px' }}>{m.disciplina}</td>
+                            <td style={{ padding: '10px 12px', fontWeight: '700' }}>{m.atendidos}</td>
+                            <td style={{ padding: '10px 12px', color: 'var(--brand-soft)' }}>{m.tempoMedio}</td>
+                            <td style={{ padding: '10px 12px', color: 'var(--emerald)' }}>{m.resolutividade}</td>
+                            <td style={{ padding: '10px 12px', color: 'var(--amber)' }}>{m.csat}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span className="gge-badge gge-badge-aprovado" style={{ fontSize: '0.625rem' }}>{m.statusSla} ✓</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-                <div className="gge-card-divider" />
-                <button onClick={handleLogout} className="gge-btn gge-btn-secondary" style={{ width: '100%', fontSize: '0.725rem', color: 'var(--brand)' }}>
-                  <LogOut size={13} /> Sair da Conta
-                </button>
+
+                {/* DESEMPENHO POR UNIDADE E POR MATÉRIA */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                  
+                  {/* Desempenho por Unidade */}
+                  <div className="gge-card">
+                    <div className="gge-card-header" style={{ marginBottom: '14px' }}>
+                      <span className="gge-card-title"><Building2 size={16} style={{ color: 'var(--sky)' }} /> Métricas por Unidade GGE</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {dashboardsData.unidades.map((u, i) => (
+                        <div key={i} style={{ background: 'var(--surface-2)', padding: '10px 12px', borderRadius: 'var(--r-md)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>
+                            <span>{u.unidade}</span>
+                            <span style={{ color: 'var(--brand)' }}>{u.sla}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.675rem', color: 'var(--text-2)' }}>
+                            <span>Chamados: {u.chamados}</span>
+                            <span>Resolutividade: {u.resolutividade}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Desempenho por Matéria */}
+                  <div className="gge-card">
+                    <div className="gge-card-header" style={{ marginBottom: '14px' }}>
+                      <span className="gge-card-title"><BookOpen size={16} style={{ color: 'var(--amber)' }} /> Distribuição por Matéria</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {dashboardsData.materias.map((m, i) => (
+                        <div key={i} style={{ fontSize: '0.725rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                            <strong style={{ color: 'var(--text-0)' }}>{m.materia}</strong>
+                            <span style={{ color: 'var(--text-2)' }}>{m.resolvidas}/{m.total} resolvidas ({m.sla})</span>
+                          </div>
+                          <div style={{ background: 'var(--surface-3)', height: '6px', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
+                            <div style={{ width: `${Math.round((m.resolvidas / m.total) * 100)}%`, height: '100%', background: 'var(--brand)' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-2)', marginBottom: '14px', lineHeight: '1.5' }}>
-                  Acesse sua conta para enviar dúvidas e acompanhar seu progresso.
-                </p>
-                <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
-                  Acessar Conta
-                </button>
+              <div className="gge-card" style={{ textAlign: 'center', padding: '40px' }}>
+                <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--brand)', margin: '0 auto 10px' }} />
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>Carregando dados dos dashboards...</p>
               </div>
             )}
-          </div>
+          </main>
+        ) : (
+          <>
+            {/* ─── LEFT SIDEBAR ─── */}
+            <aside className="gge-sidebar">
 
-          {/* Cycle Filter */}
-          <div className="gge-card">
-            <div className="gge-card-header">
-              <span className="gge-card-title"><Layers size={15} /> Ciclo de Aprendizado</span>
-            </div>
-            {[
-              { id: 'todos', label: 'Todas', count: tickets.length },
-              { id: 'pendente', label: 'Dúvida Enviada', count: tickets.filter(t => t.status === 'Pendente').length },
-              { id: 'explicado', label: 'Resposta do Professor', count: tickets.filter(t => t.status === 'Explicado').length },
-              { id: 'entendido', label: 'Aluno Entendeu', count: tickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
-              { id: 'praticando', label: 'Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
-              { id: 'aprovado', label: 'Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
-            ].map(f => (
-              <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
-                <span>{f.label}</span>
-                <span className="gge-filter-count">{f.count}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Methodology */}
-          <div className="gge-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <BrainCircuit size={15} style={{ color: 'var(--brand)' }} />
-              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-0)' }}>Metodologia</span>
-            </div>
-            <p style={{ fontSize: '0.725rem', color: 'var(--text-2)', lineHeight: '1.6' }}>
-              Dúvidas de qualquer matéria resolvidas por professores e fixadas com Inteligência Artificial.
-            </p>
-          </div>
-        </aside>
-
-        {/* ─── CENTER — MAIN CONTENT ─── */}
-        <main className="gge-main-content">
-
-          {/* New doubt form */}
-          {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
-            <div className="gge-card" id="form-duvida">
-              <div className="gge-card-header">
-                <span className="gge-card-title">
-                  <PlusCircle size={16} style={{ color: 'var(--brand)' }} /> Nova Dúvida
-                </span>
-              </div>
-
-              <div className="gge-user-banner">
-                <div className="gge-user-banner-left">
-                  <div className="gge-user-avatar">{user ? user.name.charAt(0) : 'A'}</div>
-                  <div className="gge-user-banner-info">
-                    <div className="name">{user ? user.name : 'Visitante'}</div>
-                    <div className="unit">{user ? user.unidade : 'Faça login para enviar'}</div>
-                  </div>
+              {/* Profile */}
+              <div className="gge-card" id="perfil-section">
+                <div className="gge-card-header">
+                  <span className="gge-card-title"><User size={15} /> Perfil</span>
                 </div>
-                {!user && (
-                  <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.7rem', padding: '5px 10px' }}>
-                    Entrar
-                  </button>
+                {user ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                      <div className="gge-user-avatar" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>{user.name.charAt(0)}</div>
+                      <div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-0)' }}>{user.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-2)' }}>{user.turma || user.unidade}</div>
+                      </div>
+                    </div>
+                    <div className="gge-card-divider" />
+                    <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-2)' }}>Função</span>
+                        <strong style={{ color: 'var(--brand)', textTransform: 'capitalize' }}>{user.role}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-2)' }}>Unidade</span>
+                        <strong style={{ color: 'var(--text-0)' }}>{user.unidade?.replace('Unidade ', '')}</strong>
+                      </div>
+                    </div>
+                    <div className="gge-card-divider" />
+                    <button onClick={handleLogout} className="gge-btn gge-btn-secondary" style={{ width: '100%', fontSize: '0.725rem', color: 'var(--brand)' }}>
+                      <LogOut size={13} /> Sair da Conta
+                    </button>
+                  </>
+                ) : (
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-2)', marginBottom: '14px', lineHeight: '1.5' }}>
+                      Acesse sua conta para enviar dúvidas e acompanhar seu progresso.
+                    </p>
+                    <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
+                      Acessar Conta
+                    </button>
+                  </div>
                 )}
               </div>
 
-              <form onSubmit={handleCriarChamado}>
-                <div className="gge-form-group">
-                  <label className="gge-label">Matéria e Assunto</label>
-                  <input type="text" required placeholder="Ex: Física — Leis de Ohm, Redação — Proposta de Intervenção..."
-                    value={novoChamado.assunto} onChange={(e) => setNovoChamado({ ...novoChamado, assunto: e.target.value })} className="gge-input" />
+              {/* Cycle Filter */}
+              <div className="gge-card">
+                <div className="gge-card-header">
+                  <span className="gge-card-title"><Layers size={15} /> Ciclo de Aprendizado</span>
                 </div>
-                <div className="gge-form-group">
-                  <label className="gge-label">Sua Dúvida</label>
-                  <textarea placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
-                    value={novoChamado.duvidaTexto} onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })} className="gge-textarea" />
+                {[
+                  { id: 'todos', label: 'Todas', count: tickets.length },
+                  { id: 'pendente', label: 'Dúvida Enviada', count: tickets.filter(t => t.status === 'Pendente').length },
+                  { id: 'explicado', label: 'Resposta do Professor', count: tickets.filter(t => t.status === 'Explicado').length },
+                  { id: 'entendido', label: 'Aluno Entendeu', count: tickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
+                  { id: 'praticando', label: 'Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
+                  { id: 'aprovado', label: 'Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
+                ].map(f => (
+                  <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
+                    <span>{f.label}</span>
+                    <span className="gge-filter-count">{f.count}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Methodology */}
+              <div className="gge-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <BrainCircuit size={15} style={{ color: 'var(--brand)' }} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-0)' }}>Metodologia</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                    <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.75rem' }}>
-                      <Camera size={14} style={{ color: 'var(--amber)' }} />
-                      <span>{fotosAluno.length > 0 ? `+ Anexar Fotos (${fotosAluno.length})` : 'Anexar Foto(s)'}</span>
-                      <input type="file" accept="image/*" multiple onChange={handleAddFotosAluno} style={{ display: 'none' }} />
-                    </label>
-                    <button type="submit" className="gge-btn gge-btn-primary">
-                      <Send size={14} /> Enviar Dúvida
-                    </button>
+                <p style={{ fontSize: '0.725rem', color: 'var(--text-2)', lineHeight: '1.6' }}>
+                  Dúvidas de qualquer matéria resolvidas por professores e fixadas com Inteligência Artificial.
+                </p>
+              </div>
+            </aside>
+
+            {/* ─── CENTER — MAIN CONTENT ─── */}
+            <main className="gge-main-content">
+
+              {/* New doubt form */}
+              {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
+                <div className="gge-card" id="form-duvida">
+                  <div className="gge-card-header">
+                    <span className="gge-card-title">
+                      <PlusCircle size={16} style={{ color: 'var(--brand)' }} /> Nova Dúvida
+                    </span>
                   </div>
 
-                  {fotosAluno.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                      {fotosAluno.map((file, idx) => (
-                        <span key={idx} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)', padding: '4px 8px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <ImageIcon size={12} style={{ color: 'var(--amber)' }} /> {file.name}
-                          <button type="button" onClick={() => handleRemoveFotoAluno(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '0 2px' }}>
-                            <X size={13} />
-                          </button>
-                        </span>
-                      ))}
+                  <div className="gge-user-banner">
+                    <div className="gge-user-banner-left">
+                      <div className="gge-user-avatar">{user ? user.name.charAt(0) : 'A'}</div>
+                      <div className="gge-user-banner-info">
+                        <div className="name">{user ? user.name : 'Visitante'}</div>
+                        <div className="unit">{user ? user.unidade : 'Faça login para enviar'}</div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Monitor response form */}
-          {(currentUserRole === 'monitor' || currentUserRole === 'coordenador') && (
-            <div className="gge-card">
-              <div className="gge-card-header">
-                <span className="gge-card-title"><UserCheck size={16} style={{ color: 'var(--sky)' }} /> Responder Dúvida</span>
-              </div>
-              <form onSubmit={handleEnviarResposta}>
-                <div className="gge-form-group">
-                  <label className="gge-label">Chamado</label>
-                  <select value={respostaMonitor.ticketId} onChange={(e) => setRespostaMonitor({ ...respostaMonitor, ticketId: e.target.value })} className="gge-select">
-                    {tickets.map(t => <option key={t.id} value={t.id}>[{t.id}] {t.aluno} — {t.assunto}</option>)}
-                  </select>
-                </div>
-                <div className="gge-form-group">
-                  <label className="gge-label">Explicação</label>
-                  <textarea placeholder="Resolução passo a passo..." value={respostaMonitor.textoExplicativo}
-                    onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })} className="gge-textarea" />
-                </div>
-                
-                {/* Formas de Enviar Conteudo (Recursos) */}
-                <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-lg)', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-1)' }}>Formas de Enviar Conteúdo (Recursos)</span>
-                    {recording ? (
-                      <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.675rem', padding: '4px 10px', background: 'var(--brand)' }}>
-                        <Square size={12} fill="white" /> Parar Gravação 🔴
-                      </button>
-                    ) : (
-                      <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px', color: audioBlob ? 'var(--emerald)' : 'var(--text-1)' }}>
-                        <Mic size={13} style={{ color: audioBlob ? 'var(--emerald)' : 'var(--sky)' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
+                    {!user && (
+                      <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.7rem', padding: '5px 10px' }}>
+                        Entrar
                       </button>
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
-                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
-                      <FileText size={13} style={{ color: 'var(--rose)' }} /> <span>+ PDF</span>
-                      <input type="file" accept=".pdf" multiple onChange={handleAddPdfs} style={{ display: 'none' }} />
-                    </label>
-                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
-                      <ImageIcon size={13} style={{ color: 'var(--amber)' }} /> <span>+ Imagem</span>
-                      <input type="file" accept="image/*" multiple onChange={handleAddFotos} style={{ display: 'none' }} />
-                    </label>
-                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
-                      <Video size={13} style={{ color: 'var(--emerald)' }} /> <span>+ Vídeo</span>
-                      <input type="file" accept="video/*" multiple onChange={handleAddVideos} style={{ display: 'none' }} />
-                    </label>
-                  </div>
-
-                  {/* Player de áudio com opção de reouvir e apagar */}
-                  {audioUrl && (
-                    <div style={{ background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 'var(--r-md)', marginBottom: '10px', border: '1px solid var(--border-default)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.675rem', fontWeight: '700', color: 'var(--sky)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Mic size={12} /> Áudio gravado — Ouça antes de enviar:
-                        </span>
-                        <button type="button" onClick={clearAudio} className="gge-btn-icon" style={{ color: 'var(--rose)', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Descartar e apagar áudio">
-                          <Trash2 size={13} /> <span style={{ fontSize: '0.65rem' }}>Apagar</span>
+                  <form onSubmit={handleCriarChamado}>
+                    <div className="gge-form-group">
+                      <label className="gge-label">Matéria e Assunto</label>
+                      <input type="text" required placeholder="Ex: Física — Leis de Ohm, Redação — Proposta de Intervenção..."
+                        value={novoChamado.assunto} onChange={(e) => setNovoChamado({ ...novoChamado, assunto: e.target.value })} className="gge-input" />
+                    </div>
+                    <div className="gge-form-group">
+                      <label className="gge-label">Sua Dúvida</label>
+                      <textarea placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
+                        value={novoChamado.duvidaTexto} onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })} className="gge-textarea" />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                        <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.75rem' }}>
+                          <Camera size={14} style={{ color: 'var(--amber)' }} />
+                          <span>{fotosAluno.length > 0 ? `+ Anexar Fotos (${fotosAluno.length})` : 'Anexar Foto(s)'}</span>
+                          <input type="file" accept="image/*" multiple onChange={handleAddFotosAluno} style={{ display: 'none' }} />
+                        </label>
+                        <button type="submit" className="gge-btn gge-btn-primary">
+                          <Send size={14} /> Enviar Dúvida
                         </button>
                       </div>
-                      <audio controls src={audioUrl} style={{ width: '100%', height: '36px' }} />
+
+                      {fotosAluno.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                          {fotosAluno.map((file, idx) => (
+                            <span key={idx} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)', padding: '4px 8px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <ImageIcon size={12} style={{ color: 'var(--amber)' }} /> {file.name}
+                              <button type="button" onClick={() => handleRemoveFotoAluno(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '0 2px' }}>
+                                <X size={13} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Lista de anexos selecionados */}
-                  {(monitorPdfs.length > 0 || monitorFotos.length > 0 || monitorVideos.length > 0) && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-2)', fontWeight: '600' }}>Anexos selecionados ({monitorPdfs.length + monitorFotos.length + monitorVideos.length}):</span>
-                      
-                      {monitorFotos.map((file, idx) => (
-                        <div key={`foto-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <ImageIcon size={13} style={{ color: 'var(--amber)', flexShrink: 0 }} />
-                            <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
-                            <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / 1024).toFixed(1)} KB)</span>
-                          </span>
-                          <button type="button" onClick={() => handleRemoveFoto(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover imagem">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-
-                      {monitorPdfs.map((file, idx) => (
-                        <div key={`pdf-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <FileText size={13} style={{ color: 'var(--rose)', flexShrink: 0 }} />
-                            <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
-                            <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / 1024).toFixed(1)} KB)</span>
-                          </span>
-                          <button type="button" onClick={() => handleRemovePdf(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover PDF">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-
-                      {monitorVideos.map((file, idx) => (
-                        <div key={`vid-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <Video size={13} style={{ color: 'var(--emerald)', flexShrink: 0 }} />
-                            <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
-                            <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
-                          </span>
-                          <button type="button" onClick={() => handleRemoveVideo(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover vídeo">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  </form>
                 </div>
-
-                <button type="submit" className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
-                  <Send size={14} /> Enviar Explicação
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* ─── FEED ─── */}
-          <div id="feed-section">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-0)', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.2px' }}>
-                <BookOpen size={16} style={{ color: 'var(--brand)' }} /> Feed de Dúvidas
-              </h2>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '500' }}>
-                {filteredTickets.length} {filteredTickets.length === 1 ? 'chamado' : 'chamados'}
-              </span>
-            </div>
-
-            {loading ? (
-              <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <RefreshCw size={22} style={{ animation: 'spin 1s linear infinite', color: 'var(--brand)', marginBottom: '10px' }} />
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>Carregando dúvidas...</p>
-              </div>
-            ) : filteredTickets.length === 0 ? (
-              <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <HelpCircle size={28} style={{ color: 'var(--text-3)', marginBottom: '10px' }} />
-                <p style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>Nenhuma dúvida encontrada</p>
-                <p style={{ fontSize: '0.725rem', color: 'var(--text-2)' }}>Selecione outro filtro ou envie uma nova dúvida.</p>
-              </div>
-            ) : (
-              filteredTickets.map(ticket => (
-                <div key={ticket.id} className="gge-ticket-card">
-
-                  {/* Ticket header */}
-                  <div className="gge-ticket-header">
-                    <div style={{ minWidth: 0 }}>
-                      <div className="gge-ticket-id">{ticket.id}</div>
-                      <div className="gge-ticket-subject">{ticket.assunto}</div>
-                      <div className="gge-ticket-meta">por <strong>{ticket.aluno}</strong> · {ticket.unidade}</div>
-                    </div>
-                    {statusBadge(ticket)}
-                  </div>
-
-                  {/* Doubt text */}
-                  <div className="gge-ticket-body">
-                    {ticket.duvidaTexto}
-                    {ticket.fotoUrls && ticket.fotoUrls.length > 0 ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: ticket.fotoUrls.length > 1 ? 'repeat(auto-fit, minmax(180px, 1fr))' : '1fr', gap: '8px', marginTop: '10px' }}>
-                        {ticket.fotoUrls.map((url, idx) => (
-                          <img key={idx} src={`${API_BASE}${url}`} alt={`Foto da Questão ${idx + 1}`} className="gge-ticket-image" />
-                        ))}
-                      </div>
-                    ) : ticket.fotoUrl ? (
-                      <img src={`${API_BASE}${ticket.fotoUrl}`} alt="Foto da Questão" className="gge-ticket-image" />
-                    ) : null}
-                  </div>
-
-                  {/* Teacher response */}
-                  {ticket.resposta && (
-                    <div className="gge-response-box">
-                      <div className="gge-response-header">
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><UserCheck size={13} /> {ticket.resposta.monitor}</span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-2)' }}>
-                          {new Date(ticket.resposta.respondidoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      {ticket.resposta.texto && <p style={{ fontSize: '0.8rem', color: 'var(--text-1)', lineHeight: '1.6', marginBottom: '8px' }}>{ticket.resposta.texto}</p>}
-                      
-                      {/* Audio */}
-                      {ticket.resposta.audioUrl && (
-                        <div style={{ marginBottom: '10px' }}>
-                          <div style={{ fontSize: '0.675rem', fontWeight: '600', color: 'var(--sky)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Mic size={11} /> Áudio do professor
-                          </div>
-                          <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} className="gge-audio-player" />
-                        </div>
-                      )}
-
-                      {/* Photos */}
-                      {((ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0) || ticket.resposta.fotoUrl) && (
-                        <div style={{ display: 'grid', gridTemplateColumns: (ticket.resposta.fotoUrls?.length > 1) ? 'repeat(auto-fit, minmax(200px, 1fr))' : '1fr', gap: '8px', marginBottom: '10px' }}>
-                          {(ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0 ? ticket.resposta.fotoUrls : [ticket.resposta.fotoUrl]).map((url, i) => (
-                            <img key={i} src={`${API_BASE}${url}`} alt={`Imagem explicativa ${i + 1}`} className="gge-ticket-image" />
-                          ))}
-                        </div>
-                      )}
-
-                      {/* PDFs */}
-                      {((ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0) || ticket.resposta.pdfUrl) && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
-                          {(ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0 ? ticket.resposta.pdfUrls : [ticket.resposta.pdfUrl]).map((url, i) => (
-                            <a key={i} href={`${API_BASE}${url}`} target="_blank" rel="noreferrer" className="gge-btn gge-btn-secondary" style={{ fontSize: '0.725rem', width: 'fit-content' }}>
-                              <FileText size={14} style={{ color: 'var(--rose)' }} /> <span>PDF Explicativo {i > 0 ? `#${i+1}` : ''}</span>
-                            </a>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Videos */}
-                      {((ticket.resposta.videoUrls && ticket.resposta.videoUrls.length > 0) || ticket.resposta.videoUrl) && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-                          {(ticket.resposta.videoUrls && ticket.resposta.videoUrls.length > 0 ? ticket.resposta.videoUrls : [ticket.resposta.videoUrl]).map((url, i) => (
-                            <video key={i} controls src={`${API_BASE}${url}`} style={{ width: '100%', borderRadius: 'var(--r-md)', maxHeight: '320px' }} />
-                          ))}
-                        </div>
-                      )}
-
-                      {ticket.etapa === 2 && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-                          <button onClick={() => handleAlunoEntendeu(ticket.id)} className="gge-btn gge-btn-success" style={{ fontSize: '0.75rem' }}>
-                            <CheckCircle2 size={14} /> Entendi! Ir para Fixação
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* AI fixation */}
-                  {ticket.questaoFixacao && ticket.etapa >= 4 && (
-                    <div className="gge-ia-question-box">
-                      <div className="gge-ia-header">
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <Sparkles size={13} style={{ color: 'var(--brand)' }} /> IA GGE · Fixação [{ticket.questaoFixacao.vestibular}]
-                        </span>
-                        <span style={{ fontSize: '0.625rem', background: 'rgba(167,139,250,.15)', padding: '2px 7px', borderRadius: 'var(--r-full)' }}>
-                          Nível {ticket.questaoFixacao.nivel}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.8rem', fontWeight: '500', color: 'var(--text-0)', lineHeight: '1.6' }}>{ticket.questaoFixacao.enunciado}</p>
-                      <div className="gge-options-grid">
-                        {ticket.questaoFixacao.opcoes.map((opcao, idx) => (
-                          <button key={idx} onClick={() => handleResponderFixacao(ticket.id, opcao)} disabled={ticket.etapa === 5}
-                            className={`gge-option-btn ${ticket.etapa === 5 && opcao === ticket.questaoFixacao.respostaCorreta ? 'correct' : ''}`}>
-                            {opcao}
-                          </button>
-                        ))}
-                      </div>
-                      {ticket.etapa !== 5 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(167,139,250,.12)' }}>
-                          <span style={{ fontSize: '0.675rem', color: 'var(--text-2)' }}>Ainda tem dúvida?</span>
-                          <button onClick={() => handleResponderFixacao(ticket.id, null, true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px', color: 'var(--brand)' }}>
-                            <RotateCcw size={12} /> Voltar ao Professor
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </main>
-
-        {/* ─── RIGHT SIDEBAR ─── */}
-        <aside className="gge-sidebar">
-
-          {/* Painel Exclusivo da Coordenação (Métricas, KPIs & SLA) */}
-          {currentUserRole === 'coordenador' && (
-            <div className="gge-card">
-              <div className="gge-card-header" style={{ justifyContent: 'space-between' }}>
-                <span className="gge-card-title"><BarChart3 size={15} style={{ color: 'var(--brand)' }} /> Painel do Coordenador</span>
-                <span className="gge-badge gge-badge-aprovado" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>Gestão & KPIs</span>
-              </div>
-              {coordenadorStats ? (
-                <>
-                  <div className="gge-stats-grid">
-                    <div className="gge-stat-card">
-                      <div className="gge-stat-number">{coordenadorStats.totalChamados}</div>
-                      <div className="gge-stat-label">Total Dúvidas</div>
-                    </div>
-                    <div className="gge-stat-card">
-                      <div className="gge-stat-number" style={{ color: 'var(--emerald)' }}>{coordenadorStats.taxaAprovacao}</div>
-                      <div className="gge-stat-label" style={{ color: 'var(--emerald)' }}>Aprovação</div>
-                    </div>
-                  </div>
-                  
-                  <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                      <span style={{ color: 'var(--text-2)' }}>SLA Atendimento</span>
-                      <strong style={{ color: 'var(--amber)' }}>{coordenadorStats.slaAtendimento}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                      <span style={{ color: 'var(--text-2)' }}>Cumprimento SLA</span>
-                      <strong style={{ color: 'var(--emerald)' }}>{coordenadorStats.slaCumprimento}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                      <span style={{ color: 'var(--text-2)' }}>Resolutividade</span>
-                      <strong style={{ color: 'var(--sky)' }}>{coordenadorStats.resolutividadePedagogica}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                      <span style={{ color: 'var(--text-2)' }}>Precisão da IA</span>
-                      <strong style={{ color: 'var(--violet)' }}>{coordenadorStats.precisaoIA}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                      <span style={{ color: 'var(--text-2)' }}>Satisfação Alunos</span>
-                      <strong style={{ color: 'var(--amber)' }}>{coordenadorStats.satisfacaoAlunos}</strong>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p style={{ fontSize: '0.725rem', color: 'var(--text-2)' }}>Carregando métricas...</p>
               )}
-            </div>
-          )}
 
-          <div className="gge-card">
-            <div className="gge-card-header">
-              <span className="gge-card-title"><Building2 size={15} style={{ color: 'var(--brand)' }} /> Unidades GGE</span>
-            </div>
-            <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-2)' }}>
-              <div>📍 <strong style={{ color: 'var(--text-1)' }}>Boa Viagem</strong> — Av. Conselheiro Aguiar</div>
-              <div>📍 <strong style={{ color: 'var(--text-1)' }}>Benfica</strong> — Rua Benfica, Madalena</div>
-              <div>📍 <strong style={{ color: 'var(--text-1)' }}>Parnamirim</strong> — Rua Parnamirim</div>
-            </div>
-          </div>
-        </aside>
+              {/* Monitor response form */}
+              {(currentUserRole === 'monitor' || currentUserRole === 'coordenador') && (
+                <div className="gge-card">
+                  <div className="gge-card-header">
+                    <span className="gge-card-title"><UserCheck size={16} style={{ color: 'var(--sky)' }} /> Responder Dúvida</span>
+                  </div>
+                  <form onSubmit={handleEnviarResposta}>
+                    <div className="gge-form-group">
+                      <label className="gge-label">Chamado</label>
+                      <select value={respostaMonitor.ticketId} onChange={(e) => setRespostaMonitor({ ...respostaMonitor, ticketId: e.target.value })} className="gge-select">
+                        {tickets.map(t => <option key={t.id} value={t.id}>[{t.id}] {t.aluno} — {t.assunto}</option>)}
+                      </select>
+                    </div>
+                    <div className="gge-form-group">
+                      <label className="gge-label">Explicação</label>
+                      <textarea placeholder="Resolução passo a passo..." value={respostaMonitor.textoExplicativo}
+                        onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })} className="gge-textarea" />
+                    </div>
+                    
+                    {/* Formas de Enviar Conteudo (Recursos) */}
+                    <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-lg)', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-1)' }}>Formas de Enviar Conteúdo (Recursos)</span>
+                        {recording ? (
+                          <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.675rem', padding: '4px 10px', background: 'var(--brand)' }}>
+                            <Square size={12} fill="white" /> Parar Gravação 🔴
+                          </button>
+                        ) : (
+                          <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px', color: audioBlob ? 'var(--emerald)' : 'var(--text-1)' }}>
+                            <Mic size={13} style={{ color: audioBlob ? 'var(--emerald)' : 'var(--sky)' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
+                          </button>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                        <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
+                          <FileText size={13} style={{ color: 'var(--rose)' }} /> <span>+ PDF</span>
+                          <input type="file" accept=".pdf" multiple onChange={handleAddPdfs} style={{ display: 'none' }} />
+                        </label>
+                        <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
+                          <ImageIcon size={13} style={{ color: 'var(--amber)' }} /> <span>+ Imagem</span>
+                          <input type="file" accept="image/*" multiple onChange={handleAddFotos} style={{ display: 'none' }} />
+                        </label>
+                        <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
+                          <Video size={13} style={{ color: 'var(--emerald)' }} /> <span>+ Vídeo</span>
+                          <input type="file" accept="video/*" multiple onChange={handleAddVideos} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+
+                      {/* Player de áudio com opção de reouvir e apagar */}
+                      {audioUrl && (
+                        <div style={{ background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 'var(--r-md)', marginBottom: '10px', border: '1px solid var(--border-default)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '0.675rem', fontWeight: '700', color: 'var(--sky)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Mic size={12} /> Áudio gravado — Ouça antes de enviar:
+                            </span>
+                            <button type="button" onClick={clearAudio} className="gge-btn-icon" style={{ color: 'var(--rose)', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Descartar e apagar áudio">
+                              <Trash2 size={13} /> <span style={{ fontSize: '0.65rem' }}>Apagar</span>
+                            </button>
+                          </div>
+                          <audio controls src={audioUrl} style={{ width: '100%', height: '36px' }} />
+                        </div>
+                      )}
+
+                      {/* Lista de anexos selecionados */}
+                      {(monitorPdfs.length > 0 || monitorFotos.length > 0 || monitorVideos.length > 0) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <span style={{ fontSize: '0.65rem', color: 'var(--text-2)', fontWeight: '600' }}>Anexos selecionados ({monitorPdfs.length + monitorFotos.length + monitorVideos.length}):</span>
+                          
+                          {monitorFotos.map((file, idx) => (
+                            <div key={`foto-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <ImageIcon size={13} style={{ color: 'var(--amber)', flexShrink: 0 }} />
+                                <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
+                                <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / 1024).toFixed(1)} KB)</span>
+                              </span>
+                              <button type="button" onClick={() => handleRemoveFoto(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover imagem">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+
+                          {monitorPdfs.map((file, idx) => (
+                            <div key={`pdf-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <FileText size={13} style={{ color: 'var(--rose)', flexShrink: 0 }} />
+                                <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
+                                <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / 1024).toFixed(1)} KB)</span>
+                              </span>
+                              <button type="button" onClick={() => handleRemovePdf(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover PDF">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+
+                          {monitorVideos.map((file, idx) => (
+                            <div key={`vid-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <Video size={13} style={{ color: 'var(--emerald)', flexShrink: 0 }} />
+                                <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
+                                <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                              </span>
+                              <button type="button" onClick={() => handleRemoveVideo(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover vídeo">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button type="submit" className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
+                      <Send size={14} /> Enviar Explicação
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* ─── FEED ─── */}
+              <div id="feed-section">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <h2 style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-0)', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.2px' }}>
+                    <BookOpen size={16} style={{ color: 'var(--brand)' }} /> Feed de Dúvidas
+                  </h2>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '500' }}>
+                    {filteredTickets.length} {filteredTickets.length === 1 ? 'chamado' : 'chamados'}
+                  </span>
+                </div>
+
+                {loading ? (
+                  <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                    <RefreshCw size={22} style={{ animation: 'spin 1s linear infinite', color: 'var(--brand)', marginBottom: '10px' }} />
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>Carregando dúvidas...</p>
+                  </div>
+                ) : filteredTickets.length === 0 ? (
+                  <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                    <HelpCircle size={28} style={{ color: 'var(--text-3)', marginBottom: '10px' }} />
+                    <p style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>Nenhuma dúvida encontrada</p>
+                    <p style={{ fontSize: '0.725rem', color: 'var(--text-2)' }}>Selecione outro filtro ou envie uma nova dúvida.</p>
+                  </div>
+                ) : (
+                  filteredTickets.map(ticket => (
+                    <div key={ticket.id} className="gge-ticket-card">
+
+                      {/* Ticket header */}
+                      <div className="gge-ticket-header">
+                        <div style={{ minWidth: 0 }}>
+                          <div className="gge-ticket-id">{ticket.id}</div>
+                          <div className="gge-ticket-subject">{ticket.assunto}</div>
+                          <div className="gge-ticket-meta">por <strong>{ticket.aluno}</strong> · {ticket.unidade}</div>
+                        </div>
+                        {statusBadge(ticket)}
+                      </div>
+
+                      {/* Doubt text */}
+                      <div className="gge-ticket-body">
+                        {ticket.duvidaTexto}
+                        {ticket.fotoUrls && ticket.fotoUrls.length > 0 ? (
+                          <div style={{ display: 'grid', gridTemplateColumns: ticket.fotoUrls.length > 1 ? 'repeat(auto-fit, minmax(180px, 1fr))' : '1fr', gap: '8px', marginTop: '10px' }}>
+                            {ticket.fotoUrls.map((url, idx) => (
+                              <img key={idx} src={`${API_BASE}${url}`} alt={`Foto da Questão ${idx + 1}`} className="gge-ticket-image" />
+                            ))}
+                          </div>
+                        ) : ticket.fotoUrl ? (
+                          <img src={`${API_BASE}${ticket.fotoUrl}`} alt="Foto da Questão" className="gge-ticket-image" />
+                        ) : null}
+                      </div>
+
+                      {/* Teacher response */}
+                      {ticket.resposta && (
+                        <div className="gge-response-box">
+                          <div className="gge-response-header">
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><UserCheck size={13} /> {ticket.resposta.monitor}</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-2)' }}>
+                              {new Date(ticket.resposta.respondidoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {ticket.resposta.texto && <p style={{ fontSize: '0.8rem', color: 'var(--text-1)', lineHeight: '1.6', marginBottom: '8px' }}>{ticket.resposta.texto}</p>}
+                          
+                          {/* Audio */}
+                          {ticket.resposta.audioUrl && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <div style={{ fontSize: '0.675rem', fontWeight: '600', color: 'var(--sky)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Mic size={11} /> Áudio do professor
+                              </div>
+                              <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} className="gge-audio-player" />
+                            </div>
+                          )}
+
+                          {/* Photos */}
+                          {((ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0) || ticket.resposta.fotoUrl) && (
+                            <div style={{ display: 'grid', gridTemplateColumns: (ticket.resposta.fotoUrls?.length > 1) ? 'repeat(auto-fit, minmax(200px, 1fr))' : '1fr', gap: '8px', marginBottom: '10px' }}>
+                              {(ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0 ? ticket.resposta.fotoUrls : [ticket.resposta.fotoUrl]).map((url, i) => (
+                                <img key={i} src={`${API_BASE}${url}`} alt={`Imagem explicativa ${i + 1}`} className="gge-ticket-image" />
+                              ))}
+                            </div>
+                          )}
+
+                          {/* PDFs */}
+                          {((ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0) || ticket.resposta.pdfUrl) && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                              {(ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0 ? ticket.resposta.pdfUrls : [ticket.resposta.pdfUrl]).map((url, i) => (
+                                <a key={i} href={`${API_BASE}${url}`} target="_blank" rel="noreferrer" className="gge-btn gge-btn-secondary" style={{ fontSize: '0.725rem', width: 'fit-content' }}>
+                                  <FileText size={14} style={{ color: 'var(--rose)' }} /> <span>PDF Explicativo {i > 0 ? `#${i+1}` : ''}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Videos */}
+                          {((ticket.resposta.videoUrls && ticket.resposta.videoUrls.length > 0) || ticket.resposta.videoUrl) && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                              {(ticket.resposta.videoUrls && ticket.resposta.videoUrls.length > 0 ? ticket.resposta.videoUrls : [ticket.resposta.videoUrl]).map((url, i) => (
+                                <video key={i} controls src={`${API_BASE}${url}`} style={{ width: '100%', borderRadius: 'var(--r-md)', maxHeight: '320px' }} />
+                              ))}
+                            </div>
+                          )}
+
+                          {ticket.etapa === 2 && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                              <button onClick={() => handleAlunoEntendeu(ticket.id)} className="gge-btn gge-btn-success" style={{ fontSize: '0.75rem' }}>
+                                <CheckCircle2 size={14} /> Entendi! Ir para Fixação
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* AI fixation */}
+                      {ticket.questaoFixacao && ticket.etapa >= 4 && (
+                        <div className="gge-ia-question-box">
+                          <div className="gge-ia-header">
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <Sparkles size={13} style={{ color: 'var(--brand)' }} /> IA GGE · Fixação [{ticket.questaoFixacao.vestibular}]
+                            </span>
+                            <span style={{ fontSize: '0.625rem', background: 'rgba(167,139,250,.15)', padding: '2px 7px', borderRadius: 'var(--r-full)' }}>
+                              Nível {ticket.questaoFixacao.nivel}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '0.8rem', fontWeight: '500', color: 'var(--text-0)', lineHeight: '1.6' }}>{ticket.questaoFixacao.enunciado}</p>
+                          <div className="gge-options-grid">
+                            {ticket.questaoFixacao.opcoes.map((opcao, idx) => (
+                              <button key={idx} onClick={() => handleResponderFixacao(ticket.id, opcao)} disabled={ticket.etapa === 5}
+                                className={`gge-option-btn ${ticket.etapa === 5 && opcao === ticket.questaoFixacao.respostaCorreta ? 'correct' : ''}`}>
+                                {opcao}
+                              </button>
+                            ))}
+                          </div>
+                          {ticket.etapa !== 5 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(167,139,250,.12)' }}>
+                              <span style={{ fontSize: '0.675rem', color: 'var(--text-2)' }}>Ainda tem dúvida?</span>
+                              <button onClick={() => handleResponderFixacao(ticket.id, null, true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px', color: 'var(--brand)' }}>
+                                <RotateCcw size={12} /> Voltar ao Professor
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </main>
+
+            {/* ─── RIGHT SIDEBAR ─── */}
+            <aside className="gge-sidebar">
+
+              {/* Painel Exclusivo da Coordenação (Métricas, KPIs & SLA) */}
+              {currentUserRole === 'coordenador' && (
+                <div className="gge-card">
+                  <div className="gge-card-header" style={{ justifyContent: 'space-between' }}>
+                    <span className="gge-card-title"><BarChart3 size={15} style={{ color: 'var(--brand)' }} /> Painel do Coordenador</span>
+                    <span className="gge-badge gge-badge-aprovado" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>Gestão & KPIs</span>
+                  </div>
+                  {coordenadorStats ? (
+                    <>
+                      <div className="gge-stats-grid">
+                        <div className="gge-stat-card">
+                          <div className="gge-stat-number">{coordenadorStats.totalChamados}</div>
+                          <div className="gge-stat-label">Total Dúvidas</div>
+                        </div>
+                        <div className="gge-stat-card">
+                          <div className="gge-stat-number" style={{ color: 'var(--emerald)' }}>{coordenadorStats.taxaAprovacao}</div>
+                          <div className="gge-stat-label" style={{ color: 'var(--emerald)' }}>Aprovação</div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                          <span style={{ color: 'var(--text-2)' }}>SLA Atendimento</span>
+                          <strong style={{ color: 'var(--amber)' }}>{coordenadorStats.slaAtendimento}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                          <span style={{ color: 'var(--text-2)' }}>Cumprimento SLA</span>
+                          <strong style={{ color: 'var(--emerald)' }}>{coordenadorStats.slaCumprimento}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                          <span style={{ color: 'var(--text-2)' }}>Resolutividade</span>
+                          <strong style={{ color: 'var(--sky)' }}>{coordenadorStats.resolutividadePedagogica}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                          <span style={{ color: 'var(--text-2)' }}>Precisão da IA</span>
+                          <strong style={{ color: 'var(--violet)' }}>{coordenadorStats.precisaoIA}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                          <span style={{ color: 'var(--text-2)' }}>Satisfação Alunos</span>
+                          <strong style={{ color: 'var(--amber)' }}>{coordenadorStats.satisfacaoAlunos}</strong>
+                        </div>
+                      </div>
+
+                      <button onClick={() => setActiveTab('dashboards')} className="gge-btn gge-btn-primary" style={{ width: '100%', marginTop: '10px', fontSize: '0.7rem' }}>
+                        Ver Dashboards Completos
+                      </button>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: '0.725rem', color: 'var(--text-2)' }}>Carregando métricas...</p>
+                  )}
+                </div>
+              )}
+
+              <div className="gge-card">
+                <div className="gge-card-header">
+                  <span className="gge-card-title"><Building2 size={15} style={{ color: 'var(--brand)' }} /> Unidades GGE</span>
+                </div>
+                <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-2)' }}>
+                  <div>📍 <strong style={{ color: 'var(--text-1)' }}>Boa Viagem</strong> — Av. Conselheiro Aguiar</div>
+                  <div>📍 <strong style={{ color: 'var(--text-1)' }}>Benfica</strong> — Rua Benfica, Madalena</div>
+                  <div>📍 <strong style={{ color: 'var(--text-1)' }}>Parnamirim</strong> — Rua Parnamirim</div>
+                </div>
+              </div>
+            </aside>
+          </>
+        )}
       </div>
 
       {/* ─── MOBILE BOTTOM NAV ─── */}
@@ -846,6 +1143,116 @@ export default function PlataformaMonitoriaGGE() {
                 {authMode === 'login' ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Entrar'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── PWA SMART DEVICE TUTORIAL MODAL ─── */}
+      {showPwaModal && (
+        <div className="gge-modal-overlay">
+          <div className="gge-modal-card" style={{ maxWidth: '440px' }}>
+            <button onClick={() => setShowPwaModal(false)} className="gge-modal-close"><X size={16} /></button>
+
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ width: '48px', height: '48px', background: 'var(--brand-ghost)', borderRadius: 'var(--r-full)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                <Smartphone size={24} style={{ color: 'var(--brand)' }} />
+              </div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-0)' }}>
+                Instalar App Monitoria GGE
+              </h2>
+              <p style={{ fontSize: '0.725rem', color: 'var(--text-2)', marginTop: '4px' }}>
+                Dispositivo detectado: <strong style={{ color: 'var(--brand)', textTransform: 'uppercase' }}>{deviceType}</strong> ({browserName})
+              </p>
+            </div>
+
+            {/* TUTORIAL INTELIGENTE iOS */}
+            {deviceType === 'ios' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--sky)' }}>
+                    <Share size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 1: Compartilhar</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Toque no ícone de <strong>Compartilhar</strong> na barra de navegação do seu Safari.</p>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--emerald)' }}>
+                    <PlusSquare size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 2: Adicionar à Tela de Início</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Role o menu para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>.</p>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--brand)' }}>
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 3: Confirmar</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Toque em <strong>"Adicionar"</strong> no canto superior direito para finalizar!</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TUTORIAL INTELIGENTE ANDROID */}
+            {deviceType === 'android' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--amber)' }}>
+                    <MoreVertical size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 1: Menu do Navegador</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Toque no menu de <strong>3 Pontos (⋮)</strong> no canto superior do Chrome.</p>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--emerald)' }}>
+                    <Download size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 2: Instalar Aplicativo</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TUTORIAL INTELIGENTE DESKTOP */}
+            {deviceType === 'desktop' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--sky)' }}>
+                    <MonitorDown size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 1: Barra de Endereços</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Clique no ícone de <strong>Instalar App (⊕)</strong> no lado direito da barra de URLs do seu navegador.</p>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ background: 'var(--surface-3)', padding: '8px', borderRadius: 'var(--r-sm)', color: 'var(--emerald)' }}>
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: 'var(--text-0)' }}>Passo 2: Confirmar Instalação</strong>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-2)', marginTop: '2px' }}>Clique em <strong>"Instalar"</strong> para abrir a Monitoria GGE em uma janela exclusiva como app nativo!</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button onClick={() => setShowPwaModal(false)} className="gge-btn gge-btn-primary" style={{ width: '100%', marginTop: '16px' }}>
+              Entendi! Fechar
+            </button>
           </div>
         </div>
       )}

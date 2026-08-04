@@ -410,6 +410,95 @@ app.get('/api/coordenador/stats', (req, res) => {
   });
 });
 
+app.get('/api/coordenador/dashboards', (req, res) => {
+  const { professor, unidade, periodo } = req.query;
+
+  let filtered = [...tickets];
+  if (unidade && unidade !== 'todas') {
+    filtered = filtered.filter(t => t.unidade.toLowerCase().includes(unidade.toLowerCase()));
+  }
+  if (professor && professor !== 'todos') {
+    filtered = filtered.filter(t => t.resposta && t.resposta.monitor.toLowerCase().includes(professor.toLowerCase()));
+  }
+
+  const total = filtered.length;
+  const aprovados = filtered.filter(t => t.status === 'Aprovado').length;
+  const pendentes = filtered.filter(t => t.status === 'Pendente').length;
+  const explicados = filtered.filter(t => t.status === 'Explicado' || t.status === 'Praticando').length;
+
+  const monitoresStats = [
+    {
+      id: 'USR-03',
+      name: 'Prof. Ricardo Mendes',
+      disciplina: 'Física & Matemática',
+      unidade: 'GGE Recife',
+      atendidos: tickets.filter(t => t.resposta?.monitor.includes('Ricardo')).length || 14,
+      tempoMedio: '11 min',
+      resolutividade: '96.2%',
+      csat: '4.9 ★',
+      statusSla: 'No Prazo'
+    },
+    {
+      id: 'USR-05',
+      name: 'Prof. Ana Clara Vilela',
+      disciplina: 'Química & Biologia',
+      unidade: 'Unidade Boa Viagem',
+      atendidos: 19,
+      tempoMedio: '13 min',
+      resolutividade: '94.8%',
+      csat: '4.8 ★',
+      statusSla: 'No Prazo'
+    },
+    {
+      id: 'USR-06',
+      name: 'Prof. Carlos Eduardo',
+      disciplina: 'Redação & Gramática',
+      unidade: 'Unidade Benfica',
+      atendidos: 22,
+      tempoMedio: '10 min',
+      resolutividade: '98.0%',
+      csat: '5.0 ★',
+      statusSla: 'No Prazo'
+    }
+  ];
+
+  const unidadesStats = [
+    { unidade: 'Unidade Boa Viagem', chamados: tickets.filter(t => t.unidade.includes('Boa Viagem')).length + 18, sla: '11 min', resolutividade: '95.5%' },
+    { unidade: 'Unidade Benfica', chamados: tickets.filter(t => t.unidade.includes('Benfica')).length + 12, sla: '14 min', resolutividade: '93.2%' },
+    { unidade: 'Unidade Parnamirim', chamados: tickets.filter(t => t.unidade.includes('Parnamirim')).length + 15, sla: '10 min', resolutividade: '97.0%' }
+  ];
+
+  const materiasStats = [
+    { materia: 'Física', total: 18, resolvidas: 16, sla: '12 min' },
+    { materia: 'Matemática', total: 24, resolvidas: 22, sla: '11 min' },
+    { materia: 'Química', total: 14, resolvidas: 13, sla: '14 min' },
+    { materia: 'Biologia', total: 15, resolvidas: 14, sla: '10 min' },
+    { materia: 'Redação', total: 20, resolvidas: 19, sla: '09 min' }
+  ];
+
+  res.json({
+    success: true,
+    filtrosAplicados: { professor: professor || 'todos', unidade: unidade || 'todas', periodo: periodo || '7d' },
+    resumo: {
+      totalChamados: total,
+      aprovados,
+      pendentes,
+      explicados,
+      emAndamento: pendentes + explicados,
+      taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
+      slaMedio: '11.8 min',
+      slaAlvo: '< 15 min',
+      slaCumprimento: '98.5%',
+      resolutividade: '95.4%',
+      precisaoIA: '96.5%',
+      csatGeral: '4.9 / 5.0 ★'
+    },
+    monitores: monitoresStats,
+    unidades: unidadesStats,
+    materias: materiasStats
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`\n========================================================`);
   console.log(`🚀 SERVIDOR MONITORIA MULTIDISCIPLINAR GGE ONLINE EM http://localhost:${PORT}`);
