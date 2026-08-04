@@ -702,41 +702,59 @@ export default function PlataformaMonitoriaGGE() {
 
         {/* ─── RIGHT SIDEBAR ─── */}
         <aside className="gge-sidebar">
-          <div className="gge-card">
-            <div className="gge-card-header">
-              <span className="gge-card-title"><BarChart3 size={15} style={{ color: 'var(--brand)' }} /> Desempenho</span>
+
+          {/* Painel Exclusivo da Coordenação (Métricas, KPIs & SLA) */}
+          {currentUserRole === 'coordenador' && (
+            <div className="gge-card">
+              <div className="gge-card-header" style={{ justifyContent: 'space-between' }}>
+                <span className="gge-card-title"><BarChart3 size={15} style={{ color: 'var(--brand)' }} /> Painel do Coordenador</span>
+                <span className="gge-badge gge-badge-aprovado" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>Gestão & KPIs</span>
+              </div>
+              {coordenadorStats ? (
+                <>
+                  <div className="gge-stats-grid">
+                    <div className="gge-stat-card">
+                      <div className="gge-stat-number">{coordenadorStats.totalChamados}</div>
+                      <div className="gge-stat-label">Total Dúvidas</div>
+                    </div>
+                    <div className="gge-stat-card">
+                      <div className="gge-stat-number" style={{ color: 'var(--emerald)' }}>{coordenadorStats.taxaAprovacao}</div>
+                      <div className="gge-stat-label" style={{ color: 'var(--emerald)' }}>Aprovação</div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                      <span style={{ color: 'var(--text-2)' }}>SLA Atendimento</span>
+                      <strong style={{ color: 'var(--amber)' }}>{coordenadorStats.slaAtendimento}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                      <span style={{ color: 'var(--text-2)' }}>Cumprimento SLA</span>
+                      <strong style={{ color: 'var(--emerald)' }}>{coordenadorStats.slaCumprimento}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                      <span style={{ color: 'var(--text-2)' }}>Resolutividade</span>
+                      <strong style={{ color: 'var(--sky)' }}>{coordenadorStats.resolutividadePedagogica}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                      <span style={{ color: 'var(--text-2)' }}>Precisão da IA</span>
+                      <strong style={{ color: 'var(--violet)' }}>{coordenadorStats.precisaoIA}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                      <span style={{ color: 'var(--text-2)' }}>Satisfação Alunos</span>
+                      <strong style={{ color: 'var(--amber)' }}>{coordenadorStats.satisfacaoAlunos}</strong>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p style={{ fontSize: '0.725rem', color: 'var(--text-2)' }}>Carregando métricas...</p>
+              )}
             </div>
-            {coordenadorStats ? (
-              <>
-                <div className="gge-stats-grid">
-                  <div className="gge-stat-card">
-                    <div className="gge-stat-number">{coordenadorStats.totalChamados}</div>
-                    <div className="gge-stat-label">Dúvidas</div>
-                  </div>
-                  <div className="gge-stat-card">
-                    <div className="gge-stat-number" style={{ color: 'var(--emerald)' }}>{coordenadorStats.taxaAprovacao}</div>
-                    <div className="gge-stat-label" style={{ color: 'var(--emerald)' }}>Aprovação</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                    <span style={{ color: 'var(--text-2)' }}>Tempo Médio</span>
-                    <strong style={{ color: 'var(--brand)' }}>{coordenadorStats.tempoMedioMinutos} min</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
-                    <span style={{ color: 'var(--text-2)' }}>Precisão IA</span>
-                    <strong style={{ color: 'var(--violet)' }}>{coordenadorStats.precisaoIA}</strong>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p style={{ fontSize: '0.725rem', color: 'var(--text-2)' }}>Carregando...</p>
-            )}
-          </div>
+          )}
 
           <div className="gge-card">
             <div className="gge-card-header">
-              <span className="gge-card-title"><Building2 size={15} style={{ color: 'var(--brand)' }} /> Unidades</span>
+              <span className="gge-card-title"><Building2 size={15} style={{ color: 'var(--brand)' }} /> Unidades GGE</span>
             </div>
             <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-2)' }}>
               <div>📍 <strong style={{ color: 'var(--text-1)' }}>Boa Viagem</strong> — Av. Conselheiro Aguiar</div>
