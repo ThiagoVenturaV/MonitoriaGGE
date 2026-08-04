@@ -138,6 +138,10 @@ body::before {
   from { background-position: -200% center; }
   to   { background-position: 200% center; }
 }
+@keyframes fadeInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
 
 /* ============================================================================
    LAYOUT SHELL

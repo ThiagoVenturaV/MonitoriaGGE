@@ -7,7 +7,7 @@ import {
   LogIn, User, PlusCircle, Layers, X, BarChart3, CheckCircle2, BookOpen,
   Image as ImageIcon, Trash2, Square, Smartphone, Share, PlusSquare,
   MoreVertical, Download, MonitorDown, Filter, PieChart, TrendingUp, Award,
-  Laptop, Check, ChevronRight, LayoutDashboard
+  Laptop, Check, ChevronRight, LayoutDashboard, Menu, MessageSquare
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8080';
@@ -39,10 +39,11 @@ export default function PlataformaMonitoriaGGE() {
   const [audioUrl, setAudioUrl] = useState(null);
   const mediaRecorderRef = useRef(null);
 
-  // PWA State
+  // PWA State & Header Navigation
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showPwaModal, setShowPwaModal] = useState(false);
+  const [showMenuDrawer, setShowMenuDrawer] = useState(false);
   const [deviceType, setDeviceType] = useState('desktop'); // 'ios' | 'android' | 'desktop'
   const [browserName, setBrowserName] = useState('other');
 
@@ -352,27 +353,9 @@ export default function PlataformaMonitoriaGGE() {
               <p>Ciclo de Aprendizado · Ensino Médio, SSA & ENEM</p>
             </div>
           </div>
-          <div className="gge-header-actions">
+          <div className="gge-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             
-            {/* Botão de Instalar PWA */}
-            {!isStandalone && (
-              <button onClick={handleInstallPwa} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.725rem', color: 'var(--amber)', gap: '5px' }}>
-                <Smartphone size={14} /> <span>Instalar App</span>
-              </button>
-            )}
-
-            {/* Alternador de Aba para Coordenadores */}
-            {currentUserRole === 'coordenador' && (
-              <div style={{ display: 'flex', gap: '4px', background: 'var(--surface-2)', padding: '3px', borderRadius: 'var(--r-md)' }}>
-                <button onClick={() => setActiveTab('atendimento')} className={`gge-btn ${activeTab === 'atendimento' ? 'gge-btn-primary' : 'gge-btn-secondary'}`} style={{ fontSize: '0.675rem', padding: '5px 10px' }}>
-                  Atendimento
-                </button>
-                <button onClick={() => setActiveTab('dashboards')} className={`gge-btn ${activeTab === 'dashboards' ? 'gge-btn-primary' : 'gge-btn-secondary'}`} style={{ fontSize: '0.675rem', padding: '5px 10px', gap: '4px' }}>
-                  <LayoutDashboard size={13} /> <span>Dashboards</span>
-                </button>
-              </div>
-            )}
-
+            {/* Usuário Logado */}
             {user ? (
               <div className="gge-user-header-badge">
                 <div className="gge-user-info-text">
@@ -380,13 +363,36 @@ export default function PlataformaMonitoriaGGE() {
                   <div className="unit">{user.unidade?.split('-')[0]?.trim()}</div>
                 </div>
                 <div className="gge-user-avatar">{user.name.charAt(0)}</div>
-                <button onClick={handleLogout} title="Sair" className="gge-btn-icon"><LogOut size={15} /></button>
               </div>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary">
+              <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary" style={{ fontSize: '0.725rem', padding: '6px 12px' }}>
                 <LogIn size={14} /> <span>Entrar</span>
               </button>
             )}
+
+            {/* Menu Hambúrguer Único */}
+            <button
+              onClick={() => setShowMenuDrawer(!showMenuDrawer)}
+              className="gge-btn-icon"
+              style={{
+                background: showMenuDrawer ? 'var(--surface-3)' : 'var(--brand)',
+                color: '#ffffff',
+                width: '38px',
+                height: '38px',
+                borderRadius: 'var(--r-md)',
+                display: 'flex',
+                alignItems: 'center',
+                justify: 'center',
+                boxShadow: 'var(--shadow-sm)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                cursor: 'pointer',
+                transition: 'all .2s ease'
+              }}
+              title="Menu Principal"
+              aria-label="Abrir Menu Principal"
+            >
+              {showMenuDrawer ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
       </header>
@@ -1401,6 +1407,123 @@ export default function PlataformaMonitoriaGGE() {
             <button onClick={() => setShowPwaModal(false)} className="gge-btn gge-btn-primary" style={{ width: '100%', marginTop: '16px' }}>
               Entendi! Fechar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── HAMBURGER MENU DRAWER SLIDE-OVER ─── */}
+      {showMenuDrawer && (
+        <div className="gge-modal-overlay" style={{ justifyContent: 'flex-end', padding: 0, zIndex: 1100 }}>
+          <div className="gge-modal-card" style={{ maxWidth: '340px', width: '100%', height: '100vh', borderRadius: 0, padding: '20px', display: 'flex', flexDirection: 'column', animation: 'fadeInRight .25s ease-out' }}>
+            
+            {/* Drawer Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src="https://cdn.gge.com.br/web/wp-content/uploads/2023/09/logo-gge.png" alt="GGE" style={{ height: '30px', objectFit: 'contain' }} />
+                <div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-0)', lineHeight: 1 }}>Menu GGE</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-2)' }}>Navegação Rápida</div>
+                </div>
+              </div>
+              <button onClick={() => setShowMenuDrawer(false)} className="gge-modal-close"><X size={18} /></button>
+            </div>
+
+            {/* User Profile Banner inside Drawer */}
+            {user ? (
+              <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--border-subtle)' }}>
+                <div className="gge-user-avatar" style={{ width: '38px', height: '38px', fontSize: '0.9rem' }}>{user.name.charAt(0)}</div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-0)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                  <div style={{ fontSize: '0.675rem', color: 'var(--brand)', textTransform: 'capitalize', fontWeight: '600' }}>{user.role} · {user.unidade?.split('-')[0]}</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-md)', marginBottom: '16px', textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
+                <p style={{ fontSize: '0.725rem', color: 'var(--text-2)', marginBottom: '10px' }}>Acesse sua conta para utilizar o sistema.</p>
+                <button onClick={() => { setShowMenuDrawer(false); setShowAuthModal(true); }} className="gge-btn gge-btn-primary" style={{ width: '100%', fontSize: '0.75rem' }}>
+                  <LogIn size={14} /> Fazer Login
+                </button>
+              </div>
+            )}
+
+            {/* Navigation Options List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+              
+              {/* Option 1: Atendimento */}
+              <button
+                onClick={() => { setActiveTab('atendimento'); setShowMenuDrawer(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: activeTab === 'atendimento' ? 'var(--surface-3)' : 'var(--surface-2)',
+                  border: activeTab === 'atendimento' ? '1px solid var(--brand)' : '1px solid var(--border-subtle)',
+                  padding: '12px 14px', borderRadius: 'var(--r-md)', color: 'var(--text-0)',
+                  cursor: 'pointer', textAlign: 'left', transition: 'all .2s'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <MessageSquare size={18} style={{ color: 'var(--brand)' }} />
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: '700' }}>Atendimento & Dúvidas</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-2)' }}>Feed de Chamados e Respostas</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} style={{ color: 'var(--text-2)' }} />
+              </button>
+
+              {/* Option 2: Dashboards (Coordenador) */}
+              {currentUserRole === 'coordenador' && (
+                <button
+                  onClick={() => { setActiveTab('dashboards'); setShowMenuDrawer(false); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: activeTab === 'dashboards' ? 'var(--surface-3)' : 'var(--surface-2)',
+                    border: activeTab === 'dashboards' ? '1px solid var(--brand)' : '1px solid var(--border-subtle)',
+                    padding: '12px 14px', borderRadius: 'var(--r-md)', color: 'var(--text-0)',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all .2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <LayoutDashboard size={18} style={{ color: 'var(--sky)' }} />
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '700' }}>Dashboards & Gestão</div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-2)' }}>Gráficos, SLAs e Filtros</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} style={{ color: 'var(--text-2)' }} />
+                </button>
+              )}
+
+              {/* Option 3: PWA Install */}
+              {!isStandalone && (
+                <button
+                  onClick={() => { setShowMenuDrawer(false); handleInstallPwa(); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'var(--surface-2)', border: '1px solid var(--border-subtle)',
+                    padding: '12px 14px', borderRadius: 'var(--r-md)', color: 'var(--text-0)',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all .2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Smartphone size={18} style={{ color: 'var(--amber)' }} />
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '700' }}>Instalar Aplicativo (PWA)</div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--amber)' }}>Tutorial inteligente por aparelho</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} style={{ color: 'var(--text-2)' }} />
+                </button>
+              )}
+            </div>
+
+            {/* Footer Logout button */}
+            {user && (
+              <div style={{ paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
+                <button onClick={() => { setShowMenuDrawer(false); handleLogout(); }} className="gge-btn gge-btn-secondary" style={{ width: '100%', color: 'var(--rose)', fontSize: '0.75rem', justifyContent: 'center' }}>
+                  <LogOut size={14} /> Sair da Conta
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
