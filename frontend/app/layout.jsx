@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Monitoria de Matemática • Colégio GGE',
-  description: 'Plataforma oficial de monitoria de matemática e auxílio aos vestibulandos do Colégio GGE.',
+  title: 'Monitoria Pedagógica • Colégio GGE',
+  description: 'Plataforma oficial de monitoria e auxílio aos alunos do Colégio GGE em todas as disciplinas.',
   icons: {
     icon: 'https://cdn.gge.com.br/web/wp-content/uploads/2023/09/logo-gge.png',
     shortcut: 'https://cdn.gge.com.br/web/wp-content/uploads/2023/09/logo-gge.png',

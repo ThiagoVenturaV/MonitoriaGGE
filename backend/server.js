@@ -35,13 +35,10 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 // ==============================================================================
-// REVOGAÇÃO DE TOKENS & BANCO DE DADOS EM MEMÓRIA (bcrypt & jwt)
+// REVOGAÇÃO DE TOKENS & BANCO DE DADOS EM MEMÓRIA (MULTIDISCIPLINAR)
 // ==============================================================================
 
-// Set em memória para blacklist de tokens revogados no logout
 const revokedTokens = new Set();
-
-// Usuários iniciais com senhas criptografadas por bcrypt
 const defaultPasswordHash = bcrypt.hashSync('123456', 10);
 
 let users = [
@@ -50,7 +47,7 @@ let users = [
     name: 'Lucas Silva',
     email: 'lucas@gge.com.br',
     passwordHash: defaultPasswordHash,
-    role: 'aluno', // aluno | monitor | coordenador
+    role: 'aluno',
     unidade: 'Unidade Boa Viagem - Recife',
     turma: '3º Ano Terceirão - Medicina'
   },
@@ -70,7 +67,7 @@ let users = [
     passwordHash: defaultPasswordHash,
     role: 'monitor',
     unidade: 'GGE Recife (Todas as Unidades)',
-    disciplina: 'Matemática & Física'
+    disciplina: 'Física & Matemática'
   },
   {
     id: 'USR-04',
@@ -86,32 +83,32 @@ let users = [
 let tickets = [
   {
     id: 'TK-1001',
-    aluno: 'Lucas Silva (Terceirão GGE)',
+    aluno: 'Lucas Silva',
     unidade: 'Unidade Boa Viagem - Recife',
-    assunto: 'Geometria Analítica - Distância Ponto e Reta',
-    tipo: 'foto',
+    assunto: 'Física - Leis de Ohm e Circuitos Elétricos',
+    tipo: 'texto',
     fotoUrl: null,
-    duvidaTexto: 'Como aplicar a fórmula da distância de um ponto a uma reta quando a equação geral possui termos negativos?',
+    duvidaTexto: 'Como calcular a resistência equivalente em um circuito misto quando há resistores em ponte de Wheatstone?',
     status: 'Pendente', // Pendente | Explicado | Entendido | Praticando | Aprovado
-    etapa: 1, // 1: Dúvida Enviada | 2: Professor Ensinou | 3: Aluno Entendeu | 4: IA enviou Questão | 5: Aprovado
+    etapa: 1,
     criadoEm: new Date(Date.now() - 3600000).toISOString(),
     resposta: null,
     questaoFixacao: null
   },
   {
     id: 'TK-1002',
-    aluno: 'Beatriz Ramos (Extensivo GGE)',
+    aluno: 'Beatriz Ramos',
     unidade: 'Unidade Benfica - Recife',
-    assunto: 'Logaritmos & Funções Exponenciais',
+    assunto: 'Biologia - Genética e Leis de Mendel',
     tipo: 'texto',
     fotoUrl: null,
-    duvidaTexto: 'Qual a diferença conceitual entre mudança de base e propriedade do produto nos logaritmos?',
+    duvidaTexto: 'Qual a diferença entre herança autossômica dominante e recessiva em heredogramas do SSA/UPE?',
     status: 'Explicado',
     etapa: 2,
     criadoEm: new Date(Date.now() - 7200000).toISOString(),
     resposta: {
       monitor: 'Prof. Ricardo Mendes (Equipe GGE)',
-      texto: 'Olá Beatriz! A mudança de base permite converter log_b(a) para log_c(a)/log_c(b). Gravamos um áudio detalhado para você!',
+      texto: 'Olá Beatriz! Na herança dominante, o caráter se manifesta em todas as gerações sem salto. Gravamos uma explicação em áudio detalhando o heredograma!',
       pdfUrl: null,
       fotoUrl: null,
       videoUrl: null,
@@ -126,20 +123,20 @@ const bancoQuestoesIA = [
   {
     id: 'FIX-01',
     vestibular: 'ENEM 2023',
-    assunto: 'Geometria Analítica',
+    assunto: 'Física - Eletrodinâmica',
     nivel: 'Médio',
-    enunciado: 'Um poste de iluminação no plano cartesiano está em (3, -4). A linha de transmissão segue a reta 3x + 4y - 12 = 0. Qual a distância mínima do poste até a linha?',
-    opcoes: ['A) 3 metros', 'B) 4 metros', 'C) 5 metros', 'D) 7 metros'],
-    respostaCorreta: 'C) 5 metros'
+    enunciado: 'Em um circuito com gerador ideal de 12V e dois resistores iguais de 6 ohms ligados em paralelo, qual é a corrente total fornecida pela fonte?',
+    opcoes: ['A) 1 Ampère', 'B) 2 Ampères', 'C) 4 Ampères', 'D) 6 Ampères'],
+    respostaCorreta: 'C) 4 Ampères'
   },
   {
     id: 'FIX-02',
     vestibular: 'SSA / UPE',
-    assunto: 'Logaritmos & Funções Exponenciais',
+    assunto: 'Biologia - Genética',
     nivel: 'Médio',
-    enunciado: 'Sabendo que log2(3) = a e log2(5) = b, qual o valor de log2(15)?',
-    opcoes: ['A) a * b', 'B) a + b', 'C) a / b', 'D) a^b'],
-    respostaCorreta: 'B) a + b'
+    enunciado: 'No cruzamento entre dois indivíduos heterozigotos (Aa x Aa), qual a probabilidade de se obter um descendente recessivo (aa)?',
+    opcoes: ['A) 25%', 'B) 50%', 'C) 75%', 'D) 100%'],
+    respostaCorreta: 'A) 25%'
   }
 ];
 
@@ -160,9 +157,8 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ success: false, error: 'Acesso negado. Token de autenticação não fornecido.' });
   }
 
-  // Verifica se o token foi revogado no logout
   if (revokedTokens.has(token)) {
-    return res.status(401).json({ success: false, error: 'Token revogado (Sessão encerrada via Logout).' });
+    return res.status(401).json({ success: false, error: 'Sessão encerrada.' });
   }
 
   try {
@@ -175,7 +171,7 @@ const authenticateToken = (req, res, next) => {
     req.token = token;
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, error: 'Token inválido ou expirado.' });
+    return res.status(401).json({ success: false, error: 'Sessão expirada.' });
   }
 };
 
@@ -195,10 +191,9 @@ const optionalToken = (req, res, next) => {
 };
 
 // ==============================================================================
-// ENDPOINTS REST DE AUTENTICAÇÃO (bcrypt & jwt & logout revocation)
+// ENDPOINTS REST DE AUTENTICAÇÃO
 // ==============================================================================
 
-// AUTENTICAÇÃO: CADASTRO
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password, role, unidade, turma } = req.body;
 
@@ -234,7 +229,6 @@ app.post('/api/auth/register', async (req, res) => {
   res.status(201).json({ success: true, token, user: userWithoutPassword });
 });
 
-// AUTENTICAÇÃO: LOGIN
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -262,22 +256,20 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ success: true, token, user: userWithoutPassword });
 });
 
-// AUTENTICAÇÃO: LOGOUT (REVOGAÇÃO DO TOKEN JWT)
 app.post('/api/auth/logout', authenticateToken, (req, res) => {
   if (req.token) {
     revokedTokens.add(req.token);
   }
-  res.json({ success: true, message: 'Logout realizado com sucesso. Token revogado.' });
+  res.json({ success: true, message: 'Logout realizado com sucesso.' });
 });
 
-// AUTENTICAÇÃO: OBTER USUÁRIO ATUAL ME
 app.get('/api/auth/me', authenticateToken, (req, res) => {
   const { passwordHash: _, ...userWithoutPassword } = req.user;
   res.json({ success: true, user: userWithoutPassword });
 });
 
 // ==============================================================================
-// ENDPOINTS REST DE DÚVIDAS E MONITORIA
+// ENDPOINTS REST DE DÚVIDAS MULTIDISCIPLINARES
 // ==============================================================================
 
 app.get('/health', (req, res) => {
@@ -288,11 +280,9 @@ app.get('/api/tickets', (req, res) => {
   res.json({ success: true, count: tickets.length, tickets });
 });
 
-// ETAPA 1: ALUNO MANDA DÚVIDA (Usando autenticação para preencher nome automaticamente)
 app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
   const { assunto, tipo, duvidaTexto } = req.body;
   
-  // Se o aluno estiver logado via JWT, extrai o nome e a unidade do usuário autenticado!
   const nomeAluno = req.user ? req.user.name : (req.body.aluno || 'Aluno GGE');
   const unidadeAluno = req.user ? req.user.unidade : (req.body.unidade || 'Unidade Boa Viagem - Recife');
 
@@ -300,7 +290,7 @@ app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
     id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
     aluno: nomeAluno,
     unidade: unidadeAluno,
-    assunto: assunto || 'Matemática Geral',
+    assunto: assunto || 'Geral',
     tipo: tipo || 'texto',
     fotoUrl: req.file ? `/uploads/${req.file.filename}` : null,
     duvidaTexto: duvidaTexto || '',
@@ -315,7 +305,6 @@ app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
   res.status(201).json({ success: true, ticket: novoTicket });
 });
 
-// ETAPA 2: PROFESSOR / MONITOR ENSINA (RESPOSTA)
 app.post('/api/tickets/:id/resposta', upload.fields([
   { name: 'pdf', maxCount: 1 },
   { name: 'foto', maxCount: 1 },
@@ -345,7 +334,6 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   res.json({ success: true, ticket });
 });
 
-// ETAPA 3: ALUNO DIZ QUE ENTENDEU -> AGENTE DE IA GERA QUESTÃO DE FIXAÇÃO
 app.post('/api/tickets/:id/entendi', (req, res) => {
   const { id } = req.params;
   const ticket = tickets.find(t => t.id === id);
@@ -360,7 +348,6 @@ app.post('/api/tickets/:id/entendi', (req, res) => {
   res.json({ success: true, ticket, questao });
 });
 
-// ETAPA 4: ALUNO RESPONDE A QUESTÃO DE FIXAÇÃO
 app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   const { id } = req.params;
   const { respostaSelecionada, teveDuvida } = req.body;
@@ -380,7 +367,6 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   }
 });
 
-// STATS COORDENADOR
 app.get('/api/coordenador/stats', (req, res) => {
   const total = tickets.length;
   const aprovados = tickets.filter(t => t.status === 'Aprovado').length;
@@ -399,6 +385,6 @@ app.get('/api/coordenador/stats', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n========================================================`);
-  console.log(`🚀 SERVIDOR CICLO DE APRENDIZADO GGE ONLINE EM http://localhost:${PORT}`);
+  console.log(`🚀 SERVIDOR MONITORIA MULTIDISCIPLINAR GGE ONLINE EM http://localhost:${PORT}`);
   console.log(`========================================================\n`);
 });

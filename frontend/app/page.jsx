@@ -22,7 +22,8 @@ import {
   Layers,
   X,
   BarChart3,
-  CheckCircle2
+  CheckCircle2,
+  BookOpen
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8080';
@@ -53,9 +54,9 @@ export default function PlataformaMonitoriaGGE() {
   const [loading, setLoading] = useState(true);
   const [coordenadorStats, setCoordenadorStats] = useState(null);
 
-  // Form Novo Chamado Aluno (Sem campo de nome manual!)
+  // Form Novo Chamado Aluno (Com campo de Assunto/Tópico LIVRE para ser digitado!)
   const [novoChamado, setNovoChamado] = useState({
-    assunto: 'Geometria Analítica - Distância Ponto e Reta',
+    assunto: '',
     tipo: 'texto',
     duvidaTexto: '',
   });
@@ -126,7 +127,7 @@ export default function PlataformaMonitoriaGGE() {
     }
   };
 
-  // HANDLERS DE AUTENTICAÇÃO COM JWT E BCRYPT
+  // HANDLERS DE AUTENTICAÇÃO
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
@@ -199,9 +200,13 @@ export default function PlataformaMonitoriaGGE() {
     }
   };
 
-  // ETAPA 1: ALUNO MANDA DÚVIDA (Sem pedir o nome!)
+  // ETAPA 1: ALUNO MANDA DÚVIDA (Com campo de Assunto LIVRE!)
   const handleCriarChamado = async (e) => {
     e.preventDefault();
+    if (!novoChamado.assunto.trim()) {
+      alert('Por favor, informe a matéria e o assunto da sua dúvida.');
+      return;
+    }
     if (!novoChamado.duvidaTexto && !fotoFile) {
       alert('Por favor, digite sua dúvida ou anexe uma foto da questão.');
       return;
@@ -227,7 +232,7 @@ export default function PlataformaMonitoriaGGE() {
       const data = await res.json();
       if (data.success) {
         alert('Dúvida enviada com sucesso ao monitor! Acompanhe o Ciclo de Aprendizado GGE.');
-        setNovoChamado(prev => ({ ...prev, duvidaTexto: '' }));
+        setNovoChamado({ assunto: '', tipo: 'texto', duvidaTexto: '' });
         setFotoFile(null);
         setMobileTab('feed');
         carregarDados();
@@ -345,7 +350,7 @@ export default function PlataformaMonitoriaGGE() {
     <div className="gge-app-wrapper">
       
       {/* ============================================================================== */}
-      {/* HEADER PRINCIPAL - COLÉGIO GGE */}
+      {/* HEADER PRINCIPAL - COLÉGIO GGE MULTIDISCIPLINAR */}
       {/* ============================================================================== */}
       <header className="gge-header">
         <div className="gge-header-content">
@@ -358,14 +363,13 @@ export default function PlataformaMonitoriaGGE() {
             <div className="gge-brand-text">
               <h1>
                 Monitoria GGE
-                <span className="gge-brand-tag">Matemática</span>
+                <span className="gge-brand-tag">Todas as Disciplinas</span>
               </h1>
-              <p>Ciclo de Aprendizado • Vestibulares & ENEM</p>
+              <p>Ciclo de Aprendizado • Ensino Médio, SSA & ENEM</p>
             </div>
           </div>
 
           <div className="gge-header-actions">
-            {/* Usuário Logado ou Botão de Login (SEM OS 3 BOTOES AO LADO) */}
             {user ? (
               <div className="gge-user-header-badge">
                 <div className="gge-user-info-text">
@@ -375,7 +379,7 @@ export default function PlataformaMonitoriaGGE() {
                 <div className="gge-user-avatar">{user.name.charAt(0)}</div>
                 <button
                   onClick={handleLogout}
-                  title="Sair (Revogar Token JWT)"
+                  title="Sair da Conta"
                   className="gge-btn-icon"
                 >
                   <LogOut size={16} />
@@ -412,7 +416,7 @@ export default function PlataformaMonitoriaGGE() {
 
             {user ? (
               <div>
-                <div style={{ display: 'flex', itemsAlign: 'center', gap: '12px', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div className="gge-user-avatar" style={{ width: '42px', height: '42px', fontSize: '1.1rem' }}>
                     {user.name.charAt(0)}
                   </div>
@@ -424,7 +428,7 @@ export default function PlataformaMonitoriaGGE() {
 
                 <div style={{ fontSize: '0.75rem', borderTop: '1px solid var(--gge-navy-border)', paddingTop: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                    <span style={{ color: 'var(--gge-text-muted)' }}>Tipo de Conta:</span>
+                    <span style={{ color: 'var(--gge-text-muted)' }}>Função:</span>
                     <strong style={{ color: '#C8102E', textTransform: 'capitalize' }}>{user.role}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
@@ -438,13 +442,13 @@ export default function PlataformaMonitoriaGGE() {
                   className="gge-btn gge-btn-secondary"
                   style={{ width: '100%', marginTop: '14px', fontSize: '0.75rem', color: '#E53935' }}
                 >
-                  <LogOut size={14} /> Sair da Conta (Logout)
+                  <LogOut size={14} /> Sair da Conta
                 </button>
               </div>
             ) : (
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontSize: '0.775rem', color: 'var(--gge-text-muted)', marginBottom: '12px' }}>
-                  Com o login ativo, você não precisa mais digitar seu nome ao postar dúvidas!
+                  Acesse sua conta para enviar dúvidas em qualquer matéria e acompanhar seu progresso!
                 </p>
                 <button
                   onClick={() => setShowAuthModal(true)}
@@ -467,8 +471,8 @@ export default function PlataformaMonitoriaGGE() {
 
             {[
               { id: 'todos', label: 'Todas as Dúvidas', count: tickets.length },
-              { id: 'pendente', label: '1. Pendente Resposta', count: tickets.filter(t => t.status === 'Pendente').length },
-              { id: 'explicado', label: '2. Professor Explicou', count: tickets.filter(t => t.status === 'Explicado').length },
+              { id: 'pendente', label: '1. Dúvida Enviada', count: tickets.filter(t => t.status === 'Pendente').length },
+              { id: 'explicado', label: '2. Resposta do Professor', count: tickets.filter(t => t.status === 'Explicado').length },
               { id: 'praticando', label: '4. Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
               { id: 'aprovado', label: '5. Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
             ].map(f => (
@@ -489,7 +493,7 @@ export default function PlataformaMonitoriaGGE() {
               <BrainCircuit size={16} /> Metodologia Pedagógica
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)', lineHeight: '1.5' }}>
-              Garantimos aprendizado ativo: dúvida → explicação em vídeo/áudio → fixação com IA → domínio do conteúdo.
+              Dúvidas de qualquer matéria (Exatas, Humanas, Biológicas, Linguagens) resolvidas por professores e fixadas com Inteligência Artificial.
             </p>
           </div>
         </aside>
@@ -499,17 +503,17 @@ export default function PlataformaMonitoriaGGE() {
         {/* ---------------------------------------------------------------------------- */}
         <main className="gge-main-content">
 
-          {/* FORMULÁRIO DE NOVA DÚVIDA (ALUNO OU VISITANTE) */}
+          {/* FORMULÁRIO DE NOVA DÚVIDA (CAMPO DE ASSUNTO/TÓPICO 100% LIVRE) */}
           {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
             <div className="gge-card" style={{ borderLeft: '4px solid #C8102E' }}>
               <div className="gge-card-header">
                 <span className="gge-card-title">
-                  <PlusCircle size={18} style={{ color: '#C8102E' }} /> Enviar Nova Dúvida de Matemática
+                  <PlusCircle size={18} style={{ color: '#C8102E' }} /> Nova Dúvida Acadêmica
                 </span>
-                <span className="gge-badge gge-badge-pendente">Monitoria Ativa</span>
+                <span className="gge-badge gge-badge-pendente">Todas as Matérias</span>
               </div>
 
-              {/* BANNER DO USUÁRIO LOGADO - SEM PEDIR NOME DO ALUNO */}
+              {/* BANNER DO USUÁRIO LOGADO */}
               <div className="gge-user-banner">
                 <div className="gge-user-banner-left">
                   <div className="gge-user-avatar">
@@ -532,25 +536,23 @@ export default function PlataformaMonitoriaGGE() {
               </div>
 
               <form onSubmit={handleCriarChamado}>
+                {/* CAMPO LIVRE DE DIGITAÇÃO PARA MATÉRIA E ASSUNTO */}
                 <div className="gge-form-group">
-                  <label className="gge-label">Assunto / Tópico da Dúvida</label>
-                  <select
+                  <label className="gge-label">Matéria e Assunto / Tópico da Dúvida</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Física - Leis de Ohm ou Redação - Proposta de Intervenção ENEM..."
                     value={novoChamado.assunto}
                     onChange={(e) => setNovoChamado({ ...novoChamado, assunto: e.target.value })}
-                    className="gge-select"
-                  >
-                    <option value="Geometria Analítica - Distância Ponto e Reta">Geometria Analítica - Distância Ponto e Reta</option>
-                    <option value="Logaritmos & Funções Exponenciais">Logaritmos & Funções Exponenciais</option>
-                    <option value="Trigonometria & Ciclo Trigonométrico">Trigonometria & Ciclo Trigonométrico</option>
-                    <option value="Análise Combinatória & Probabilidade">Análise Combinatória & Probabilidade</option>
-                    <option value="Matrizes e Sistemas Lineares">Matrizes e Sistemas Lineares</option>
-                  </select>
+                    className="gge-input"
+                  />
                 </div>
 
                 <div className="gge-form-group">
                   <label className="gge-label">Descreva sua dúvida com detalhes</label>
                   <textarea
-                    placeholder="Ex: Não compreendi como aplicar a fórmula da distância de um ponto à reta quando os coeficientes são negativos..."
+                    placeholder="Escreva aqui a questão ou o ponto da matéria em que você ficou com dúvida..."
                     value={novoChamado.duvidaTexto}
                     onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })}
                     className="gge-textarea"
@@ -570,7 +572,7 @@ export default function PlataformaMonitoriaGGE() {
                   </label>
 
                   <button type="submit" className="gge-btn gge-btn-primary">
-                    <Send size={15} /> Enviar para a Monitoria GGE
+                    <Send size={15} /> Enviar Dúvida para a Monitoria
                   </button>
                 </div>
               </form>
@@ -697,7 +699,7 @@ export default function PlataformaMonitoriaGGE() {
                     {/* Status Badge */}
                     <div>
                       {ticket.status === 'Pendente' && <span className="gge-badge gge-badge-pendente">1. Dúvida Pendente</span>}
-                      {ticket.status === 'Explicado' && <span className="gge-badge gge-badge-explicado">2. Professor Explicou</span>}
+                      {ticket.status === 'Explicado' && <span className="gge-badge gge-badge-explicado">2. Resposta do Professor</span>}
                       {ticket.status === 'Praticando' && <span className="gge-badge gge-badge-praticando">4. Fixação com IA</span>}
                       {ticket.status === 'Aprovado' && <span className="gge-badge gge-badge-aprovado">5. Conteúdo Dominado ✓</span>}
                     </div>
@@ -889,7 +891,7 @@ export default function PlataformaMonitoriaGGE() {
       </nav>
 
       {/* ============================================================================== */}
-      {/* MODAL DE AUTENTICAÇÃO COM JWT / BCRYPT */}
+      {/* MODAL DE AUTENTICAÇÃO */}
       {/* ============================================================================== */}
       {showAuthModal && (
         <div className="gge-modal-overlay">
