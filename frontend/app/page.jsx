@@ -11,29 +11,20 @@ import {
   Sparkles, 
   Mic, 
   Video, 
-  Image as ImageIcon, 
-  CheckCircle2, 
   Clock, 
-  BookOpen, 
   Building2, 
   BrainCircuit, 
   RefreshCw, 
   HelpCircle, 
-  ArrowRight,
   RotateCcw,
-  Zap,
-  Check,
   LogOut,
   LogIn,
   User,
-  Lock,
-  Mail,
   PlusCircle,
   Layers,
-  ShieldCheck,
   X,
-  ChevronRight,
-  BarChart3
+  BarChart3,
+  CheckCircle2
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8080';
@@ -56,7 +47,7 @@ export default function PlataformaMonitoriaGGE() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Navegação Mobile & Filtros
-  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'nova_duvida' | 'stats' | 'perfil'
+  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'nova_duvida' | 'stats'
   const [activeRole, setActiveRole] = useState('aluno');
   const [statusFilter, setStatusFilter] = useState('todos');
 
@@ -88,7 +79,7 @@ export default function PlataformaMonitoriaGGE() {
   const [audioBlob, setAudioBlob] = useState(null);
   const mediaRecorderRef = useRef(null);
 
-  // Carregamento Inicial & Restauração de Sessão JWT
+  // Restauração de Sessão JWT
   useEffect(() => {
     const savedToken = localStorage.getItem('gge_token');
     if (savedToken) {
@@ -108,7 +99,6 @@ export default function PlataformaMonitoriaGGE() {
         setUser(data.user);
         setActiveRole(data.user.role || 'aluno');
       } else {
-        // Token inválido ou revogado
         localStorage.removeItem('gge_token');
         setToken(null);
         setUser(null);
@@ -134,13 +124,13 @@ export default function PlataformaMonitoriaGGE() {
       const statsData = await statsRes.json();
       if (statsData.success) setCoordenadorStats(statsData);
     } catch (err) {
-      console.error('Erro ao conectar ao serviço de monitoria GGE:', err);
+      console.error('Erro ao conectar ao serviço GGE:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // HANDLERS DE AUTENTICAÇÃO
+  // HANDLERS DE AUTENTICAÇÃO COM JWT E BCRYPT
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
@@ -161,7 +151,6 @@ export default function PlataformaMonitoriaGGE() {
         return;
       }
 
-      // Salva Token JWT no localStorage
       localStorage.setItem('gge_token', data.token);
       setToken(data.token);
       setUser(data.user);
@@ -182,15 +171,13 @@ export default function PlataformaMonitoriaGGE() {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         });
-      } catch (err) {
-        console.error('Erro ao revogar token no backend:', err);
-      }
+      } catch (err) {}
     }
     localStorage.removeItem('gge_token');
     setToken(null);
     setUser(null);
     setActiveRole('aluno');
-    alert('Você saiu da sua conta. Sessão e token revogados com sucesso!');
+    alert('Sessão encerrada com sucesso! Token JWT revogado.');
   };
 
   const handleFastDemoLogin = async (demoEmail) => {
@@ -360,147 +347,132 @@ export default function PlataformaMonitoriaGGE() {
   });
 
   return (
-    <div className="min-h-screen bg-[#040e19] text-slate-100 flex flex-col font-sans">
+    <div className="gge-app-wrapper">
       
       {/* ============================================================================== */}
-      {/* HEADER PRINCIPAL COM BRANDING COLÉGIO GGE */}
+      {/* HEADER PRINCIPAL - COLÉGIO GGE */}
       {/* ============================================================================== */}
-      <header className="gge-glass-header sticky top-0 z-40 px-4 lg:px-8 py-3 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center gap-3">
-          {/* Emblem GGE Logo */}
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C8102E] to-[#800A1D] flex items-center justify-center font-extrabold text-white text-lg tracking-wider shadow-lg shadow-[#C8102E]/30 border border-white/20">
-            GGE
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-base lg:text-lg tracking-tight text-white flex items-center gap-2">
+      <header className="gge-header">
+        <div className="gge-header-content">
+          <div className="gge-brand-group">
+            <div className="gge-brand-logo">GGE</div>
+            <div className="gge-brand-text">
+              <h1>
                 Monitoria GGE
-                <span className="text-[10px] bg-[#C8102E] text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Matemática
-                </span>
+                <span className="gge-brand-tag">Matemática</span>
               </h1>
+              <p>Ciclo de Aprendizado • Vestibulares & ENEM</p>
             </div>
-            <p className="text-xs text-slate-400 hidden sm:block">
-              Sistema de Aprendizado e Auxílio Aos Vestibulandos (ENEM / SSA)
-            </p>
-          </div>
-        </div>
-
-        {/* Right Side Header Action & User Profile */}
-        <div className="flex items-center gap-3">
-          {/* Seletor de Visão/Role */}
-          <div className="bg-[#092038] p-1 rounded-xl border border-white/10 hidden md:flex items-center gap-1">
-            <button
-              onClick={() => setActiveRole('aluno')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeRole === 'aluno'
-                  ? 'bg-[#C8102E] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <GraduationCap size={14} /> Aluno
-            </button>
-            <button
-              onClick={() => setActiveRole('monitor')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeRole === 'monitor'
-                  ? 'bg-[#C8102E] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <UserCheck size={14} /> Monitor
-            </button>
-            <button
-              onClick={() => setActiveRole('coordenador')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeRole === 'coordenador'
-                  ? 'bg-[#C8102E] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Award size={14} /> Coordenador
-            </button>
           </div>
 
-          {/* User Auth Profile Indicator */}
-          {user ? (
-            <div className="flex items-center gap-2 bg-[#092038] border border-white/10 pl-3 pr-1 py-1 rounded-xl">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs font-bold text-white leading-tight">{user.name}</p>
-                <p className="text-[10px] text-amber-400 font-semibold">{user.unidade?.split('-')[0]}</p>
-              </div>
-              <div className="w-8 h-8 rounded-lg bg-[#C8102E] text-white flex items-center justify-center font-bold text-xs shadow">
-                {user.name.charAt(0)}
-              </div>
+          <div className="gge-header-actions">
+            {/* Seletor de Visão/Role */}
+            <div className="gge-role-switcher">
               <button
-                onClick={handleLogout}
-                title="Sair (Revogar Token JWT)"
-                className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-white/5 transition"
+                onClick={() => setActiveRole('aluno')}
+                className={`gge-role-btn ${activeRole === 'aluno' ? 'active' : ''}`}
               >
-                <LogOut size={16} />
+                <GraduationCap size={14} /> Aluno
+              </button>
+              <button
+                onClick={() => setActiveRole('monitor')}
+                className={`gge-role-btn ${activeRole === 'monitor' ? 'active' : ''}`}
+              >
+                <UserCheck size={14} /> Monitor
+              </button>
+              <button
+                onClick={() => setActiveRole('coordenador')}
+                className={`gge-role-btn ${activeRole === 'coordenador' ? 'active' : ''}`}
+              >
+                <Award size={14} /> Coordenador
               </button>
             </div>
-          ) : (
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="gge-btn-primary text-xs py-2 px-3.5"
-            >
-              <LogIn size={15} /> Entrar / Cadastro
-            </button>
-          )}
+
+            {/* Usuário Logado ou Botão de Login */}
+            {user ? (
+              <div className="gge-user-header-badge">
+                <div className="gge-user-info-text">
+                  <div className="name">{user.name}</div>
+                  <div className="unit">{user.unidade?.split('-')[0]}</div>
+                </div>
+                <div className="gge-user-avatar">{user.name.charAt(0)}</div>
+                <button
+                  onClick={handleLogout}
+                  title="Sair (Revogar Token JWT)"
+                  className="gge-btn-icon"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="gge-btn gge-btn-primary"
+              >
+                <LogIn size={15} /> Entrar / Cadastro
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       {/* ============================================================================== */}
-      {/* CORPO PRINCIPAL - LAYOUT DESKTOP 12 COLUNAS & MOBILE RESPONSIVO */}
+      {/* CONTAINER PRINCIPAL (GRID NO DESKTOP, COLUNA ÚNICA NO MOBILE) */}
       {/* ============================================================================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="gge-container">
 
         {/* ---------------------------------------------------------------------------- */}
-        {/* COLUNA ESQUERDA: DESKTOP SIDEBAR (3 Colunas) */}
+        {/* COLUNA ESQUERDA: SIDEBAR DE PERFIL & FILTROS (DESKTOP) */}
         {/* ---------------------------------------------------------------------------- */}
-        <aside className="hidden lg:block lg:col-span-3 space-y-5">
+        <aside className="gge-sidebar">
           {/* Card Perfil do Usuário */}
-          <div className="gge-card p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#C8102E] to-[#002B49] p-0.5 flex items-center justify-center shadow-lg">
-                <div className="w-full h-full bg-[#092038] rounded-[14px] flex items-center justify-center font-extrabold text-white text-lg">
-                  {user ? user.name.charAt(0) : 'G'}
-                </div>
-              </div>
-              <div>
-                <h3 className="font-extrabold text-white text-sm">
-                  {user ? user.name : 'Visitante GGE'}
-                </h3>
-                <p className="text-xs text-amber-400 font-medium">
-                  {user ? (user.turma || user.unidade) : 'Acesse sua conta para enviar dúvidas'}
-                </p>
-              </div>
+          <div className="gge-card">
+            <div className="gge-card-header">
+              <span className="gge-card-title">
+                <User size={16} /> Perfil do Usuário
+              </span>
             </div>
 
             {user ? (
-              <div className="space-y-2 border-t border-white/10 pt-3 text-xs text-slate-300">
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-slate-400">Tipo de Conta:</span>
-                  <span className="font-bold text-emerald-400 capitalize">{user.role}</span>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                  <div className="gge-user-avatar" style={{ width: '42px', height: '42px', fontSize: '1.1rem' }}>
+                    {user.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: '800', color: '#ffffff' }}>{user.name}</div>
+                    <div style={{ fontSize: '0.725rem', color: 'var(--gge-gold)' }}>{user.turma || user.unidade}</div>
+                  </div>
                 </div>
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-slate-400">Unidade:</span>
-                  <span className="font-medium text-white">{user.unidade?.replace('Unidade ', '')}</span>
+
+                <div style={{ fontSize: '0.75rem', borderTop: '1px solid var(--gge-navy-border)', paddingTop: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                    <span style={{ color: 'var(--gge-text-muted)' }}>Tipo de Conta:</span>
+                    <strong style={{ color: 'var(--gge-[#])', textTransform: 'capitalize' }}>{user.role}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                    <span style={{ color: 'var(--gge-text-muted)' }}>Unidade:</span>
+                    <strong>{user.unidade?.replace('Unidade ', '')}</strong>
+                  </div>
                 </div>
+
                 <button 
                   onClick={handleLogout}
-                  className="w-full mt-3 gge-btn-secondary text-xs py-2 justify-center text-red-400 border-red-500/30 hover:bg-red-500/10"
+                  className="gge-btn gge-btn-secondary"
+                  style={{ width: '100%', marginTop: '14px', fontSize: '0.75rem', color: '#EF4444' }}
                 >
                   <LogOut size={14} /> Sair da Conta (Logout)
                 </button>
               </div>
             ) : (
-              <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-center">
-                <p className="text-xs text-slate-300 mb-2">Com o login ativo, você não precisa mais digitar seu nome ao postar dúvidas!</p>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '0.775rem', color: 'var(--gge-text-muted)', marginBottom: '12px' }}>
+                  Com o login ativo, você não precisa mais digitar seu nome ao postar dúvidas!
+                </p>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="w-full gge-btn-primary text-xs py-2 justify-center"
+                  className="gge-btn gge-btn-primary"
+                  style={{ width: '100%' }}
                 >
                   Fazer Login / Cadastrar
                 </button>
@@ -508,119 +480,87 @@ export default function PlataformaMonitoriaGGE() {
             )}
           </div>
 
-          {/* Filtro de Status das Dúvidas */}
-          <div className="gge-card p-5">
-            <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Layers size={14} className="text-[#C8102E]" /> Filtrar Ciclo
-            </h4>
-            <div className="space-y-1.5">
-              {[
-                { id: 'todos', label: 'Todas as Dúvidas', count: tickets.length },
-                { id: 'pendente', label: '1. Pendente de Resposta', count: tickets.filter(t => t.status === 'Pendente').length },
-                { id: 'explicado', label: '2. Professor Explicou', count: tickets.filter(t => t.status === 'Explicado').length },
-                { id: 'praticando', label: '4. Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
-                { id: 'aprovado', label: '5. Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
-              ].map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setStatusFilter(f.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    statusFilter === f.id
-                      ? 'bg-[#C8102E] text-white shadow-md'
-                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  <span>{f.label}</span>
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                    statusFilter === f.id ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-                  }`}>
-                    {f.count}
-                  </span>
-                </button>
-              ))}
+          {/* Filtro do Ciclo de Aprendizado */}
+          <div className="gge-card">
+            <div className="gge-card-header">
+              <span className="gge-card-title">
+                <Layers size={16} /> Ciclo de Aprendizado
+              </span>
             </div>
+
+            {[
+              { id: 'todos', label: 'Todas as Dúvidas', count: tickets.length },
+              { id: 'pendente', label: '1. Pendente Resposta', count: tickets.filter(t => t.status === 'Pendente').length },
+              { id: 'explicado', label: '2. Professor Explicou', count: tickets.filter(t => t.status === 'Explicado').length },
+              { id: 'praticando', label: '4. Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
+              { id: 'aprovado', label: '5. Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setStatusFilter(f.id)}
+                className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}
+              >
+                <span>{f.label}</span>
+                <span className="gge-filter-count">{f.count}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Resumo do Ciclo de Aprendizado GGE */}
-          <div className="gge-card p-5 bg-gradient-to-br from-[#092038] to-[#051626]">
-            <h4 className="text-xs font-extrabold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <BrainCircuit size={16} /> Metodologia GGE
-            </h4>
-            <p className="text-xs text-slate-300 leading-relaxed mb-3">
-              Garantimos o aprendizado completo: da dúvida inicial à resolução prática de vestibulares.
-            </p>
-            <div className="space-y-2 text-[11px] text-slate-400">
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#C8102E] text-white flex items-center justify-center font-bold text-[10px]">1</span>
-                <span>Dúvida enviada pelo Aluno</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">2</span>
-                <span>Vídeo/Áudio do Professor</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[10px]">4</span>
-                <span>Questão de Fixação com IA</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">5</span>
-                <span>Aprovação e Conteúdo Dominado</span>
-              </div>
+          {/* Metodologia GGE */}
+          <div className="gge-card" style={{ background: 'linear-gradient(135deg, var(--gge-navy-surface) 0%, var(--gge-navy-deep) 100%)' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--gge-[#])', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <BrainCircuit size={16} /> Metodologia Pedagógica
             </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)', lineHeight: '1.5' }}>
+              Garantimos aprendizado ativo: dúvida → explicação em vídeo/áudio → fixação com IA → domínio do conteúdo.
+            </p>
           </div>
         </aside>
 
         {/* ---------------------------------------------------------------------------- */}
-        {/* COLUNA CENTRAL: FORMULÁRIO & FEED PRINCIPAL (6 ou 9 Colunas) */}
+        {/* COLUNA CENTRAL: FORMULÁRIOS & FEED DE DÚVIDAS */}
         {/* ---------------------------------------------------------------------------- */}
-        <section className="lg:col-span-6 space-y-6">
+        <main className="gge-main-content">
 
-          {/* PAINEL PARA O ALUNO POSTAR NOVA DÚVIDA (MOBILE & DESKTOP) */}
+          {/* FORMULÁRIO DE NOVA DÚVIDA (Sem perdir o nome!) */}
           {(activeRole === 'aluno' || mobileTab === 'nova_duvida') && (
-            <div className="gge-card p-5 border-l-4 border-l-[#C8102E]">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
-                  <PlusCircle size={18} className="text-[#C8102E]" /> Enviar Nova Dúvida de Matemática
-                </h2>
-                <span className="text-xs bg-[#C8102E]/20 text-[#EF4444] border border-[#C8102E]/40 px-2.5 py-0.5 rounded-full font-bold">
-                  Monitoria Ativa
+            <div className="gge-card" style={{ borderLeft: '4px solid var(--gge-[#])' }}>
+              <div className="gge-card-header">
+                <span className="gge-card-title">
+                  <PlusCircle size={18} style={{ color: 'var(--gge-[#])' }} /> Enviar Nova Dúvida de Matemática
                 </span>
+                <span className="gge-badge gge-badge-pendente">Monitoria Ativa</span>
               </div>
 
-              {/* BANNER DO USUÁRIO LOGADO (NÃO PEDE NOME DO ALUNO DA DUVIDA) */}
-              <div className="mb-4 bg-slate-900/80 border border-white/10 p-3 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#C8102E] text-white flex items-center justify-center font-bold text-xs">
+              {/* BANNER DO USUÁRIO LOGADO - NENHUM CAMPO DE NOME É SOLICITADO */}
+              <div className="gge-user-banner">
+                <div className="gge-user-banner-left">
+                  <div className="gge-user-avatar">
                     {user ? user.name.charAt(0) : 'A'}
                   </div>
-                  <div>
-                    <p className="text-xs font-extrabold text-white">
-                      {user ? user.name : 'Aluno Não Autenticado'}
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Unidade: <span className="text-amber-400 font-semibold">{user ? user.unidade : 'Unidade Boa Viagem'}</span>
-                    </p>
+                  <div className="gge-user-banner-info">
+                    <div className="name">{user ? user.name : 'Aluno Não Autenticado'}</div>
+                    <div className="unit">Unidade: <strong>{user ? user.unidade : 'Unidade Boa Viagem'}</strong></div>
                   </div>
                 </div>
                 {!user && (
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="text-xs text-[#EF4444] hover:underline font-bold"
+                    className="gge-btn gge-btn-secondary"
+                    style={{ fontSize: '0.7rem', padding: '6px 10px' }}
                   >
                     Fazer Login
                   </button>
                 )}
               </div>
 
-              <form onSubmit={handleCriarChamado} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    Assunto / Tópico da Dúvida
-                  </label>
+              <form onSubmit={handleCriarChamado}>
+                <div className="gge-form-group">
+                  <label className="gge-label">Assunto / Tópico da Dúvida</label>
                   <select
                     value={novoChamado.assunto}
                     onChange={(e) => setNovoChamado({ ...novoChamado, assunto: e.target.value })}
-                    className="w-full bg-[#051626] border border-white/15 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#C8102E]"
+                    className="gge-select"
                   >
                     <option value="Geometria Analítica - Distância Ponto e Reta">Geometria Analítica - Distância Ponto e Reta</option>
                     <option value="Logaritmos & Funções Exponenciais">Logaritmos & Funções Exponenciais</option>
@@ -630,38 +570,30 @@ export default function PlataformaMonitoriaGGE() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    Descreva sua dúvida com detalhes
-                  </label>
+                <div className="gge-form-group">
+                  <label className="gge-label">Descreva sua dúvida com detalhes</label>
                   <textarea
-                    rows={3}
                     placeholder="Ex: Não compreendi como aplicar a fórmula da distância de um ponto à reta quando os coeficientes são negativos..."
                     value={novoChamado.duvidaTexto}
                     onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })}
-                    className="w-full bg-[#051626] border border-white/15 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#C8102E]"
+                    className="gge-textarea"
                   />
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <div className="flex items-center gap-2">
-                    <label className="gge-btn-secondary text-xs py-2 px-3 cursor-pointer">
-                      <Camera size={14} className="text-amber-400" />
-                      <span>{fotoFile ? 'Foto Anexada ✓' : 'Anexar Foto da Questão'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setFotoFile(e.target.files[0])}
-                        className="hidden"
-                      />
-                    </label>
-                    {fotoFile && (
-                      <span className="text-[10px] text-emerald-400 font-semibold">{fotoFile.name}</span>
-                    )}
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                  <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.75rem', cursor: 'pointer' }}>
+                    <Camera size={15} style={{ color: 'var(--gge-gold)' }} />
+                    <span>{fotoFile ? 'Foto Anexada ✓' : 'Anexar Foto da Questão'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFotoFile(e.target.files[0])}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
 
-                  <button type="submit" className="gge-btn-primary text-xs py-2.5 px-5">
-                    <Send size={14} /> Enviar para a Monitoria
+                  <button type="submit" className="gge-btn gge-btn-primary">
+                    <Send size={15} /> Enviar para a Monitoria GGE
                   </button>
                 </div>
               </form>
@@ -670,18 +602,20 @@ export default function PlataformaMonitoriaGGE() {
 
           {/* PAINEL PARA RESPOSTA DO PROFESSOR / MONITOR */}
           {activeRole === 'monitor' && (
-            <div className="gge-card p-5 border-l-4 border-l-blue-500">
-              <h2 className="text-sm font-extrabold text-white mb-3 flex items-center gap-2">
-                <UserCheck size={18} className="text-blue-400" /> Responder Dúvida do Aluno (Monitoria GGE)
-              </h2>
+            <div className="gge-card" style={{ borderLeft: '4px solid #0284C7' }}>
+              <div className="gge-card-header">
+                <span className="gge-card-title">
+                  <UserCheck size={18} style={{ color: '#0284C7' }} /> Responder Dúvida do Aluno
+                </span>
+              </div>
 
-              <form onSubmit={handleEnviarResposta} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Selecionar Chamado</label>
+              <form onSubmit={handleEnviarResposta}>
+                <div className="gge-form-group">
+                  <label className="gge-label">Selecionar Chamado</label>
                   <select
                     value={respostaMonitor.ticketId}
                     onChange={(e) => setRespostaMonitor({ ...respostaMonitor, ticketId: e.target.value })}
-                    className="w-full bg-[#051626] border border-white/15 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none"
+                    className="gge-select"
                   >
                     {tickets.map(t => (
                       <option key={t.id} value={t.id}>
@@ -691,191 +625,180 @@ export default function PlataformaMonitoriaGGE() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Explicação do Professor</label>
+                <div className="gge-form-group">
+                  <label className="gge-label">Explicação do Professor</label>
                   <textarea
-                    rows={3}
                     placeholder="Digite aqui a resolução passo a passo..."
                     value={respostaMonitor.textoExplicativo}
                     onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })}
-                    className="w-full bg-[#051626] border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none"
+                    className="gge-textarea"
                   />
                 </div>
 
-                {/* Gravação e Anexos de Mídia */}
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300">Recursos de Resposta Multimídia:</span>
+                {/* Mídia & Gravação de Áudio */}
+                <div style={{ background: 'rgba(3, 12, 22, 0.6)', padding: '12px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--gge-text-muted)' }}>Recursos Multimídia:</span>
                     {recording ? (
                       <button
                         type="button"
                         onClick={stopRecording}
-                        className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1 rounded-lg animate-pulse"
+                        className="gge-btn gge-btn-primary"
+                        style={{ fontSize: '0.7rem', padding: '4px 10px' }}
                       >
-                        🔴 Parar Gravação
+                        Parar Gravação 🔴
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={startRecording}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1 rounded-lg flex items-center gap-1"
+                        className="gge-btn gge-btn-secondary"
+                        style={{ fontSize: '0.7rem', padding: '4px 10px' }}
                       >
-                        <Mic size={14} /> {audioBlob ? 'Gravado ✓ (Regravar)' : 'Gravador de Áudio'}
+                        <Mic size={14} /> {audioBlob ? 'Áudio Gravado ✓' : 'Gravar Áudio'}
                       </button>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <label className="bg-white/5 hover:bg-white/10 p-2 rounded-lg border border-white/10 cursor-pointer flex items-center gap-2">
-                      <FileText size={14} className="text-red-400" />
-                      <span className="truncate">{monitorPdf ? monitorPdf.name : 'PDF Resolução'}</span>
-                      <input type="file" accept=".pdf" onChange={(e) => setMonitorPdf(e.target.files[0])} className="hidden" />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.7rem', justifyContent: 'flex-start', cursor: 'pointer' }}>
+                      <FileText size={14} style={{ color: '#EF4444' }} />
+                      <span>{monitorPdf ? monitorPdf.name : 'PDF Resolução'}</span>
+                      <input type="file" accept=".pdf" onChange={(e) => setMonitorPdf(e.target.files[0])} style={{ display: 'none' }} />
                     </label>
-                    <label className="bg-white/5 hover:bg-white/10 p-2 rounded-lg border border-white/10 cursor-pointer flex items-center gap-2">
-                      <Video size={14} className="text-emerald-400" />
-                      <span className="truncate">{monitorVideo ? monitorVideo.name : 'Vídeo Explicação'}</span>
-                      <input type="file" accept="video/*" onChange={(e) => setMonitorVideo(e.target.files[0])} className="hidden" />
+                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.7rem', justifyContent: 'flex-start', cursor: 'pointer' }}>
+                      <Video size={14} style={{ color: '#10B981' }} />
+                      <span>{monitorVideo ? monitorVideo.name : 'Vídeo Explicação'}</span>
+                      <input type="file" accept="video/*" onChange={(e) => setMonitorVideo(e.target.files[0])} style={{ display: 'none' }} />
                     </label>
                   </div>
                 </div>
 
-                <button type="submit" className="w-full gge-btn-primary text-xs py-2.5 justify-center">
-                  <Send size={14} /> Enviar Explicação ao Aluno
+                <button type="submit" className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
+                  <Send size={15} /> Enviar Explicação ao Aluno
                 </button>
               </form>
             </div>
           )}
 
           {/* LISTA E TIMELINE DAS DÚVIDAS E CICLO DE APRENDIZADO */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
-                <Clock size={16} className="text-[#C8102E]" /> Feed de Dúvidas & Ciclo de Aprendizado
-              </h2>
-              <span className="text-xs text-slate-400">
-                {filteredTickets.length} chamado(s) encontrado(s)
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={16} style={{ color: 'var(--gge-[#])' }} /> Feed de Dúvidas & Ciclo de Aprendizado
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)' }}>
+                {filteredTickets.length} chamado(s)
               </span>
             </div>
 
             {loading ? (
-              <div className="gge-card p-8 text-center text-slate-400 space-y-2">
-                <RefreshCw size={24} className="animate-spin mx-auto text-[#C8102E]" />
-                <p className="text-xs">Carregando chamados de monitoria...</p>
+              <div className="gge-card" style={{ textAlign: 'center', padding: '32px' }}>
+                <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--gge-[#])', margin: '0 auto 8px' }} />
+                <div style={{ fontSize: '0.8rem', color: 'var(--gge-text-muted)' }}>Carregando dúvidas de monitoria...</div>
               </div>
             ) : filteredTickets.length === 0 ? (
-              <div className="gge-card p-8 text-center text-slate-400">
-                <HelpCircle size={32} className="mx-auto mb-2 text-slate-600" />
-                <p className="text-xs font-bold text-white mb-1">Nenhuma dúvida nesta categoria</p>
-                <p className="text-xs text-slate-500">Selecione outro filtro ou envie uma nova dúvida.</p>
+              <div className="gge-card" style={{ textAlign: 'center', padding: '32px' }}>
+                <HelpCircle size={32} style={{ color: 'var(--gge-text-dim)', margin: '0 auto 8px' }} />
+                <div style={{ fontSize: '0.875rem', fontWeight: '800', color: '#ffffff' }}>Nenhuma dúvida nesta categoria</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)' }}>Selecione outro filtro ou envie uma nova dúvida.</div>
               </div>
             ) : (
               filteredTickets.map(ticket => (
-                <div key={ticket.id} className="gge-card p-5 space-y-4 relative">
+                <div key={ticket.id} className="gge-ticket-card">
                   
                   {/* Header do Chamado */}
-                  <div className="flex flex-wrap items-start justify-between gap-2 border-b border-white/10 pb-3">
+                  <div className="gge-ticket-header">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-xs text-amber-400 font-bold">{ticket.id}</span>
-                        <h3 className="font-bold text-white text-sm">{ticket.assunto}</h3>
+                      <div className="gge-ticket-id">{ticket.id}</div>
+                      <div className="gge-ticket-subject">{ticket.assunto}</div>
+                      <div className="gge-ticket-meta">
+                        Enviado por <strong>{ticket.aluno}</strong> • {ticket.unidade}
                       </div>
-                      <p className="text-xs text-slate-400 flex items-center gap-2">
-                        <User size={12} className="text-[#C8102E]" /> <strong className="text-slate-200">{ticket.aluno}</strong> • {ticket.unidade}
-                      </p>
                     </div>
 
                     {/* Status Badge */}
                     <div>
-                      {ticket.status === 'Pendente' && <span className="gge-badge-gold">1. Dúvida Pendente</span>}
-                      {ticket.status === 'Explicado' && <span className="gge-badge-blue">2. Professor Explicou</span>}
-                      {ticket.status === 'Praticando' && <span className="gge-badge-gold bg-purple-900/60 text-purple-300 border-purple-500/40">4. Fixação com IA</span>}
-                      {ticket.status === 'Aprovado' && <span className="gge-badge-green">5. Conteúdo Dominado ✓</span>}
+                      {ticket.status === 'Pendente' && <span className="gge-badge gge-badge-pendente">1. Dúvida Pendente</span>}
+                      {ticket.status === 'Explicado' && <span className="gge-badge gge-badge-explicado">2. Professor Explicou</span>}
+                      {ticket.status === 'Praticando' && <span className="gge-badge gge-badge-praticando">4. Fixação com IA</span>}
+                      {ticket.status === 'Aprovado' && <span className="gge-badge gge-badge-aprovado">5. Conteúdo Dominado ✓</span>}
                     </div>
                   </div>
 
-                  {/* Conteúdo da Dúvida */}
-                  <div className="bg-slate-900/60 p-3.5 rounded-xl border border-white/5 space-y-2">
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      "{ticket.duvidaTexto}"
-                    </p>
+                  {/* Texto da Dúvida */}
+                  <div className="gge-ticket-body">
+                    "{ticket.duvidaTexto}"
                     {ticket.fotoUrl && (
-                      <div className="mt-2">
+                      <div>
                         <img
                           src={`${API_BASE}${ticket.fotoUrl}`}
                           alt="Foto da Questão"
-                          className="max-h-56 rounded-lg border border-white/10 object-contain bg-black/40"
+                          className="gge-ticket-image"
                         />
                       </div>
                     )}
                   </div>
 
-                  {/* ETAPA 2: RESPOSTA DO PROFESSOR (SE EXISTIR) */}
+                  {/* Resposta do Professor (Etapa 2) */}
                   {ticket.resposta && (
-                    <div className="bg-blue-950/40 border border-blue-500/30 p-4 rounded-xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-blue-400 flex items-center gap-1.5">
-                          <UserCheck size={14} /> Resposta da Monitoria: {ticket.resposta.monitor}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
+                    <div className="gge-response-box">
+                      <div className="gge-response-header">
+                        <span><UserCheck size={14} /> Resposta do Professor: {ticket.resposta.monitor}</span>
+                        <span style={{ fontSize: '0.675rem', color: 'var(--gge-text-muted)' }}>
                           {new Date(ticket.resposta.respondidoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-200">
+                      <div style={{ fontSize: '0.8rem', color: '#E2E8F0' }}>
                         {ticket.resposta.texto}
-                      </p>
+                      </div>
 
-                      {/* Reprodutor de Áudio da Resposta */}
                       {ticket.resposta.audioUrl && (
-                        <div className="bg-blue-900/40 p-2 rounded-lg border border-blue-400/20">
-                          <p className="text-[10px] font-bold text-blue-300 mb-1 flex items-center gap-1">
-                            <Mic size={12} /> Áudio do Professor:
-                          </p>
-                          <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} className="w-full h-8" />
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#38BDF8', marginBottom: '4px' }}>
+                            <Mic size={12} /> Explicação em Áudio:
+                          </div>
+                          <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} className="gge-audio-player" />
                         </div>
                       )}
 
-                      {/* Ação do Aluno: Entendeu a resposta */}
                       {ticket.etapa === 2 && (
-                        <div className="pt-2 flex justify-end">
+                        <div style={{ textAlign: 'right', marginTop: '8px' }}>
                           <button
                             onClick={() => handleAlunoEntendeu(ticket.id)}
-                            className="gge-btn-primary text-xs py-2 px-4 bg-gradient-to-r from-emerald-600 to-teal-600"
+                            className="gge-btn gge-btn-success"
+                            style={{ fontSize: '0.75rem' }}
                           >
-                            <CheckCircle2 size={15} /> Entendi a Explicação! Ir para Questão de Fixação
+                            <CheckCircle2 size={15} /> Entendi! Ir para Questão de Fixação
                           </button>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* ETAPA 4: QUESTÃO DE FIXAÇÃO GERADA PELA IA */}
+                  {/* Questão de Fixação da IA (Etapa 4) */}
                   {ticket.questaoFixacao && ticket.etapa >= 4 && (
-                    <div className="bg-purple-950/40 border border-purple-500/30 p-4 rounded-xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-purple-300 flex items-center gap-1.5">
-                          <Sparkles size={14} className="text-amber-400" /> Agente de IA GGE • Questão de Fixação [{ticket.questaoFixacao.vestibular}]
-                        </span>
-                        <span className="text-[10px] bg-purple-900 text-purple-200 px-2 py-0.5 rounded font-bold">
+                    <div className="gge-ia-question-box">
+                      <div className="gge-ia-header">
+                        <span><Sparkles size={14} style={{ color: 'var(--gge-[#])' }} /> Agente de IA GGE • Questão de Fixação [{ticket.questaoFixacao.vestibular}]</span>
+                        <span style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '2px 6px', borderRadius: '4px' }}>
                           Nível {ticket.questaoFixacao.nivel}
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-200 font-medium">
+                      <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#ffffff' }}>
                         {ticket.questaoFixacao.enunciado}
-                      </p>
+                      </div>
 
-                      {/* Opções de Resposta */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div className="gge-options-grid">
                         {ticket.questaoFixacao.opcoes.map((opcao, idx) => (
                           <button
                             key={idx}
                             onClick={() => handleResponderFixacao(ticket.id, opcao)}
                             disabled={ticket.etapa === 5}
-                            className={`p-2.5 rounded-lg text-xs font-semibold text-left transition ${
-                              ticket.etapa === 5 && opcao === ticket.questaoFixacao.respostaCorreta
-                                ? 'bg-emerald-600 text-white font-bold'
-                                : 'bg-white/5 hover:bg-white/15 text-slate-200 border border-white/10'
+                            className={`gge-option-btn ${
+                              ticket.etapa === 5 && opcao === ticket.questaoFixacao.respostaCorreta ? 'correct' : ''
                             }`}
                           >
                             {opcao}
@@ -883,15 +806,15 @@ export default function PlataformaMonitoriaGGE() {
                         ))}
                       </div>
 
-                      {/* Botão de Dúvida Extra na Questão */}
                       {ticket.etapa !== 5 && (
-                        <div className="pt-2 flex justify-between items-center border-t border-purple-500/20">
-                          <span className="text-[10px] text-slate-400">Errou ou ficou com dúvida?</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--gge-text-muted)' }}>Ficou com dúvida na resolução?</span>
                           <button
                             onClick={() => handleResponderFixacao(ticket.id, null, true)}
-                            className="text-xs text-amber-400 hover:text-amber-300 font-bold underline flex items-center gap-1"
+                            className="gge-btn gge-btn-secondary"
+                            style={{ fontSize: '0.7rem', padding: '4px 10px', color: 'var(--gge-[#])' }}
                           >
-                            <RotateCcw size={13} /> Reiniciar Dúvida com o Professor
+                            <RotateCcw size={13} /> Voltar para o Professor
                           </button>
                         </div>
                       )}
@@ -902,176 +825,170 @@ export default function PlataformaMonitoriaGGE() {
               ))
             )}
           </div>
-        </section>
+        </main>
 
         {/* ---------------------------------------------------------------------------- */}
-        {/* COLUNA DIREITA: ESTATÍSTICAS E PAINEL COORDENADOR (3 Colunas) */}
+        {/* COLUNA DIREITA: ESTATÍSTICAS E PAINEL DA COORDENAÇÃO (DESKTOP) */}
         {/* ---------------------------------------------------------------------------- */}
-        <aside className="hidden lg:block lg:col-span-3 space-y-5">
+        <aside className="gge-sidebar">
           
-          {/* Card Estatísticas do Coordenador Pedagógico GGE */}
-          <div className="gge-card p-5 bg-gradient-to-br from-[#092038] to-[#040e19]">
-            <h3 className="text-xs font-extrabold text-white uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
-              <BarChart3 size={16} className="text-[#C8102E]" /> Métricas de Desempenho GGE
-            </h3>
+          {/* Métricas do Coordenador */}
+          <div className="gge-card">
+            <div className="gge-card-header">
+              <span className="gge-card-title">
+                <BarChart3 size={16} style={{ color: 'var(--gge-[#])' }} /> Desempenho Pedagógico
+              </span>
+            </div>
 
             {coordenadorStats ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-center">
-                    <p className="text-2xl font-extrabold text-white">{coordenadorStats.totalChamados}</p>
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">Total Chamados</p>
+              <div>
+                <div className="gge-stats-grid">
+                  <div className="gge-stat-card">
+                    <div className="gge-stat-number">{coordenadorStats.totalChamados}</div>
+                    <div className="gge-stat-label">Total Dúvidas</div>
                   </div>
-                  <div className="bg-emerald-950/40 p-3 rounded-xl border border-emerald-500/30 text-center">
-                    <p className="text-2xl font-extrabold text-emerald-400">{coordenadorStats.taxaAprovacao}</p>
-                    <p className="text-[10px] text-emerald-300 uppercase font-bold">Taxa Aprovação</p>
+                  <div className="gge-stat-card" style={{ borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                    <div className="gge-stat-number" style={{ color: '#34D399' }}>{coordenadorStats.taxaAprovacao}</div>
+                    <div className="gge-stat-label" style={{ color: '#34D399' }}>Aprovação</div>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
-                    <span className="text-slate-400">Tempo Médio Resposta:</span>
-                    <span className="font-bold text-amber-400">{coordenadorStats.tempoMedioMinutos} min</span>
+                <div style={{ fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--gge-text-muted)' }}>Tempo Médio Resposta:</span>
+                    <strong style={{ color: 'var(--gge-[#])' }}>{coordenadorStats.tempoMedioMinutos} min</strong>
                   </div>
-                  <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
-                    <span className="text-slate-400">Precisão da IA Fixação:</span>
-                    <span className="font-bold text-purple-400">{coordenadorStats.precisaoIA}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-sm)' }}>
+                    <span style={{ color: 'var(--gge-text-muted)' }}>Precisão da IA:</span>
+                    <strong style={{ color: '#C084FC' }}>{coordenadorStats.precisaoIA}</strong>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-slate-400">Carregando métricas...</p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)' }}>Carregando estatísticas...</div>
             )}
           </div>
 
-          {/* Banner Unidades Colégio GGE Recife */}
-          <div className="gge-card p-5 border border-amber-500/20">
-            <h4 className="text-xs font-extrabold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <Building2 size={15} /> Unidades GGE Recife
-            </h4>
-            <ul className="text-xs space-y-1.5 text-slate-300 font-medium">
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#C8102E]" /> Unidade Boa Viagem
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#C8102E]" /> Unidade Benfica (Madalena)
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#C8102E]" /> Unidade Parnamirim
-              </li>
-            </ul>
+          {/* Unidades Colégio GGE */}
+          <div className="gge-card">
+            <div className="gge-card-header">
+              <span className="gge-card-title">
+                <Building2 size={16} style={{ color: 'var(--gge-[#])' }} /> Unidades GGE Recife
+              </span>
+            </div>
+
+            <div style={{ fontSize: '0.775rem', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--gge-text-muted)' }}>
+              <div>📍 <strong>Boa Viagem:</strong> Av. Conselheiro Aguiar</div>
+              <div>📍 <strong>Benfica:</strong> Rua Benfica (Madalena)</div>
+              <div>📍 <strong>Parnamirim:</strong> Rua Parnamirim</div>
+            </div>
           </div>
         </aside>
-      </main>
+
+      </div>
 
       {/* ============================================================================== */}
-      {/* NAVEGAÇÃO INFERIOR PARA MOBILE (MOBILE-FIRST) */}
+      {/* NAVEGAÇÃO INFERIOR FIXA PARA MOBILE */}
       {/* ============================================================================== */}
-      <nav className="gge-bottom-nav md:hidden">
+      <nav className="gge-bottom-nav">
         <button
           onClick={() => setMobileTab('feed')}
-          className={`flex flex-col items-center justify-center gap-1 text-[11px] font-bold ${
-            mobileTab === 'feed' ? 'text-[#EF4444]' : 'text-slate-400'
-          }`}
+          className={`gge-nav-item ${mobileTab === 'feed' ? 'active' : ''}`}
         >
           <Clock size={18} /> Feed
         </button>
         <button
           onClick={() => setMobileTab('nova_duvida')}
-          className={`flex flex-col items-center justify-center gap-1 text-[11px] font-bold ${
-            mobileTab === 'nova_duvida' ? 'text-[#EF4444]' : 'text-slate-400'
-          }`}
+          className={`gge-nav-item ${mobileTab === 'nova_duvida' ? 'active' : ''}`}
         >
           <PlusCircle size={18} /> Nova Dúvida
         </button>
         <button
           onClick={() => setShowAuthModal(true)}
-          className={`flex flex-col items-center justify-center gap-1 text-[11px] font-bold ${
-            user ? 'text-emerald-400' : 'text-slate-400'
-          }`}
+          className={`gge-nav-item ${user ? 'active' : ''}`}
         >
           <User size={18} /> {user ? user.name.split(' ')[0] : 'Entrar'}
         </button>
       </nav>
 
       {/* ============================================================================== */}
-      {/* MODAL DE LOGIN / CADASTRO COM BCRYPT E JWT */}
+      {/* MODAL DE AUTENTICAÇÃO COM JWT / BCRYPT */}
       {/* ============================================================================== */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="gge-card max-w-md w-full p-6 relative border-t-4 border-t-[#C8102E]">
+        <div className="gge-modal-overlay">
+          <div className="gge-modal-card">
             
             <button
               onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              className="gge-modal-close"
             >
               <X size={20} />
             </button>
 
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-[#C8102E] text-white flex items-center justify-center font-black text-xl mx-auto mb-2 shadow-lg">
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div className="gge-brand-logo" style={{ margin: '0 auto 8px', width: '48px', height: '48px' }}>
                 GGE
               </div>
-              <h3 className="font-extrabold text-white text-lg">
+              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff' }}>
                 {authMode === 'login' ? 'Acessar Monitoria GGE' : 'Criar Conta no Portal GGE'}
-              </h3>
-              <p className="text-xs text-slate-400">
-                Autenticação segura com JWT e Bcrypt (com suporte a Logout Revogável)
-              </p>
+              </div>
+              <div style={{ fontSize: '0.725rem', color: 'var(--gge-text-muted)' }}>
+                Autenticação JWT com Bcrypt & Revogação no Logout
+              </div>
             </div>
 
             {authError && (
-              <div className="mb-4 bg-red-950/60 border border-red-500/40 text-red-300 text-xs p-3 rounded-xl font-medium">
+              <div style={{ background: 'rgba(200, 16, 46, 0.2)', border: '1px solid var(--gge-[#])', color: '#EF4444', fontSize: '0.75rem', padding: '10px', borderRadius: 'var(--radius-md)', marginBottom: '14px' }}>
                 {authError}
               </div>
             )}
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
+            <form onSubmit={handleAuthSubmit}>
               {authMode === 'register' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Nome Completo</label>
+                <div className="gge-form-group">
+                  <label className="gge-label">Nome Completo</label>
                   <input
                     type="text"
                     required
                     placeholder="Ex: Lucas Silva"
                     value={authForm.name}
                     onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
-                    className="w-full bg-[#051626] border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                    className="gge-input"
                   />
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">E-mail Institucional ou Pessoal</label>
+              <div className="gge-form-group">
+                <label className="gge-label">E-mail Institucional ou Pessoal</label>
                 <input
                   type="email"
                   required
                   placeholder="aluno@gge.com.br"
                   value={authForm.email}
                   onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                  className="w-full bg-[#051626] border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                  className="gge-input"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Senha</label>
+              <div className="gge-form-group">
+                <label className="gge-label">Senha</label>
                 <input
                   type="password"
                   required
                   placeholder="••••••••"
                   value={authForm.password}
                   onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-                  className="w-full bg-[#051626] border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                  className="gge-input"
                 />
               </div>
 
               {authMode === 'register' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Unidade GGE</label>
+                <div className="gge-form-group">
+                  <label className="gge-label">Unidade GGE</label>
                   <select
                     value={authForm.unidade}
                     onChange={(e) => setAuthForm({ ...authForm, unidade: e.target.value })}
-                    className="w-full bg-[#051626] border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                    className="gge-select"
                   >
                     <option value="Unidade Boa Viagem - Recife">Unidade Boa Viagem - Recife</option>
                     <option value="Unidade Benfica - Recife">Unidade Benfica - Recife</option>
@@ -1083,41 +1000,44 @@ export default function PlataformaMonitoriaGGE() {
               <button
                 type="submit"
                 disabled={authLoading}
-                className="w-full gge-btn-primary text-xs py-3 justify-center"
+                className="gge-btn gge-btn-primary"
+                style={{ width: '100%', padding: '12px' }}
               >
                 {authLoading ? 'Processando...' : (authMode === 'login' ? 'Entrar no Sistema' : 'Cadastrar Conta')}
               </button>
             </form>
 
             {/* Atalhos para Contas Demo Rápidas */}
-            <div className="mt-5 border-t border-white/10 pt-4 text-center">
-              <p className="text-[11px] font-bold text-slate-400 mb-2">Entrar com Contas de Teste Rápidas:</p>
-              <div className="flex justify-center gap-2">
+            <div className="gge-demo-accounts">
+              <div style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--gge-text-muted)' }}>
+                Testar com Contas Rápidas:
+              </div>
+              <div className="gge-demo-btns">
                 <button
                   onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
-                  className="text-[10px] bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 text-slate-300 font-bold"
+                  className="gge-demo-btn"
                 >
                   Aluno Lucas
                 </button>
                 <button
                   onClick={() => handleFastDemoLogin('professor@gge.com.br')}
-                  className="text-[10px] bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 text-slate-300 font-bold"
+                  className="gge-demo-btn"
                 >
                   Monitor Professor
                 </button>
                 <button
                   onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
-                  className="text-[10px] bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 text-slate-300 font-bold"
+                  className="gge-demo-btn"
                 >
                   Coordenador
                 </button>
               </div>
             </div>
 
-            <div className="mt-4 text-center">
+            <div style={{ textAlign: 'center', marginTop: '14px' }}>
               <button
                 onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); }}
-                className="text-xs text-amber-400 hover:underline font-bold"
+                style={{ background: 'transparent', border: 'none', color: 'var(--gge-[#])', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
               >
                 {authMode === 'login' ? 'Não tem conta? Cadastre-se aqui' : 'Já tem uma conta? Fazer Login'}
               </button>
