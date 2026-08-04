@@ -144,6 +144,13 @@ body {
   gap: 14px;
 }
 
+.gge-brand-logo-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
 .gge-brand-logo {
   width: 46px;
   height: 46px;

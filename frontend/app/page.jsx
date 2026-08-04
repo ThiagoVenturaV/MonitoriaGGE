@@ -350,7 +350,11 @@ export default function PlataformaMonitoriaGGE() {
       <header className="gge-header">
         <div className="gge-header-content">
           <div className="gge-brand-group">
-            <div className="gge-brand-logo">GGE</div>
+            <img 
+              src="https://cdn.gge.com.br/web/wp-content/uploads/2023/09/logo-gge.png" 
+              alt="Colégio GGE Logo" 
+              className="gge-brand-logo-img"
+            />
             <div className="gge-brand-text">
               <h1>
                 Monitoria GGE
@@ -899,9 +903,11 @@ export default function PlataformaMonitoriaGGE() {
             </button>
 
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div className="gge-brand-logo" style={{ margin: '0 auto 8px', width: '48px', height: '48px' }}>
-                GGE
-              </div>
+              <img 
+                src="https://cdn.gge.com.br/web/wp-content/uploads/2023/09/logo-gge.png" 
+                alt="Colégio GGE Logo" 
+                style={{ height: '48px', width: 'auto', margin: '0 auto 12px', display: 'block', objectFit: 'contain' }}
+              />
               <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--gge-text-main)' }}>
                 {authMode === 'login' ? 'Acessar Monitoria GGE' : 'Criar Conta no Portal GGE'}
               </div>
