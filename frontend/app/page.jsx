@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  GraduationCap, 
   UserCheck, 
-  Award, 
   Send, 
   Camera, 
   FileText, 
@@ -47,8 +45,7 @@ export default function PlataformaMonitoriaGGE() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Navegação Mobile & Filtros
-  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'nova_duvida' | 'stats'
-  const [activeRole, setActiveRole] = useState('aluno');
+  const [mobileTab, setMobileTab] = useState('feed'); // 'feed' | 'nova_duvida'
   const [statusFilter, setStatusFilter] = useState('todos');
 
   // Dados dos Chamados & Estatísticas
@@ -97,7 +94,6 @@ export default function PlataformaMonitoriaGGE() {
       const data = await res.json();
       if (data.success) {
         setUser(data.user);
-        setActiveRole(data.user.role || 'aluno');
       } else {
         localStorage.removeItem('gge_token');
         setToken(null);
@@ -154,7 +150,6 @@ export default function PlataformaMonitoriaGGE() {
       localStorage.setItem('gge_token', data.token);
       setToken(data.token);
       setUser(data.user);
-      setActiveRole(data.user.role || 'aluno');
       setShowAuthModal(false);
       setAuthForm({ name: '', email: '', password: '', role: 'aluno', unidade: 'Unidade Boa Viagem - Recife', turma: '3º Ano Terceirão - GGE' });
     } catch (err) {
@@ -176,7 +171,6 @@ export default function PlataformaMonitoriaGGE() {
     localStorage.removeItem('gge_token');
     setToken(null);
     setUser(null);
-    setActiveRole('aluno');
     alert('Sessão encerrada com sucesso! Token JWT revogado.');
   };
 
@@ -194,7 +188,6 @@ export default function PlataformaMonitoriaGGE() {
         localStorage.setItem('gge_token', data.token);
         setToken(data.token);
         setUser(data.user);
-        setActiveRole(data.user.role || 'aluno');
         setShowAuthModal(false);
       } else {
         setAuthError(data.error);
@@ -206,7 +199,7 @@ export default function PlataformaMonitoriaGGE() {
     }
   };
 
-  // ETAPA 1: ALUNO MANDA DÚVIDA (Sem perdir o nome!)
+  // ETAPA 1: ALUNO MANDA DÚVIDA (Sem pedir o nome!)
   const handleCriarChamado = async (e) => {
     e.preventDefault();
     if (!novoChamado.duvidaTexto && !fotoFile) {
@@ -346,6 +339,8 @@ export default function PlataformaMonitoriaGGE() {
     return true;
   });
 
+  const currentUserRole = user ? user.role : 'aluno';
+
   return (
     <div className="gge-app-wrapper">
       
@@ -366,34 +361,12 @@ export default function PlataformaMonitoriaGGE() {
           </div>
 
           <div className="gge-header-actions">
-            {/* Seletor de Visão/Role */}
-            <div className="gge-role-switcher">
-              <button
-                onClick={() => setActiveRole('aluno')}
-                className={`gge-role-btn ${activeRole === 'aluno' ? 'active' : ''}`}
-              >
-                <GraduationCap size={14} /> Aluno
-              </button>
-              <button
-                onClick={() => setActiveRole('monitor')}
-                className={`gge-role-btn ${activeRole === 'monitor' ? 'active' : ''}`}
-              >
-                <UserCheck size={14} /> Monitor
-              </button>
-              <button
-                onClick={() => setActiveRole('coordenador')}
-                className={`gge-role-btn ${activeRole === 'coordenador' ? 'active' : ''}`}
-              >
-                <Award size={14} /> Coordenador
-              </button>
-            </div>
-
-            {/* Usuário Logado ou Botão de Login */}
+            {/* Usuário Logado ou Botão de Login (SEM OS 3 BOTOES AO LADO) */}
             {user ? (
               <div className="gge-user-header-badge">
                 <div className="gge-user-info-text">
                   <div className="name">{user.name}</div>
-                  <div className="unit">{user.unidade?.split('-')[0]}</div>
+                  <div className="unit">{user.unidade?.split('-')[0]} ({user.role})</div>
                 </div>
                 <div className="gge-user-avatar">{user.name.charAt(0)}</div>
                 <button
@@ -417,7 +390,7 @@ export default function PlataformaMonitoriaGGE() {
       </header>
 
       {/* ============================================================================== */}
-      {/* CONTAINER PRINCIPAL (GRID NO DESKTOP, COLUNA ÚNICA NO MOBILE) */}
+      {/* CONTAINER PRINCIPAL */}
       {/* ============================================================================== */}
       <div className="gge-container">
 
@@ -435,20 +408,20 @@ export default function PlataformaMonitoriaGGE() {
 
             {user ? (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', itemsAlign: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div className="gge-user-avatar" style={{ width: '42px', height: '42px', fontSize: '1.1rem' }}>
                     {user.name.charAt(0)}
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: '800', color: '#ffffff' }}>{user.name}</div>
-                    <div style={{ fontSize: '0.725rem', color: 'var(--gge-gold)' }}>{user.turma || user.unidade}</div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--gge-text-main)' }}>{user.name}</div>
+                    <div style={{ fontSize: '0.725rem', color: 'var(--gge-gold-primary)' }}>{user.turma || user.unidade}</div>
                   </div>
                 </div>
 
                 <div style={{ fontSize: '0.75rem', borderTop: '1px solid var(--gge-navy-border)', paddingTop: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
                     <span style={{ color: 'var(--gge-text-muted)' }}>Tipo de Conta:</span>
-                    <strong style={{ color: 'var(--gge-[#])', textTransform: 'capitalize' }}>{user.role}</strong>
+                    <strong style={{ color: '#C8102E', textTransform: 'capitalize' }}>{user.role}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
                     <span style={{ color: 'var(--gge-text-muted)' }}>Unidade:</span>
@@ -459,7 +432,7 @@ export default function PlataformaMonitoriaGGE() {
                 <button 
                   onClick={handleLogout}
                   className="gge-btn gge-btn-secondary"
-                  style={{ width: '100%', marginTop: '14px', fontSize: '0.75rem', color: '#EF4444' }}
+                  style={{ width: '100%', marginTop: '14px', fontSize: '0.75rem', color: '#E53935' }}
                 >
                   <LogOut size={14} /> Sair da Conta (Logout)
                 </button>
@@ -507,8 +480,8 @@ export default function PlataformaMonitoriaGGE() {
           </div>
 
           {/* Metodologia GGE */}
-          <div className="gge-card" style={{ background: 'linear-gradient(135deg, var(--gge-navy-surface) 0%, var(--gge-navy-deep) 100%)' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--gge-[#])', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="gge-card">
+            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: '#C8102E', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <BrainCircuit size={16} /> Metodologia Pedagógica
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)', lineHeight: '1.5' }}>
@@ -522,17 +495,17 @@ export default function PlataformaMonitoriaGGE() {
         {/* ---------------------------------------------------------------------------- */}
         <main className="gge-main-content">
 
-          {/* FORMULÁRIO DE NOVA DÚVIDA (Sem perdir o nome!) */}
-          {(activeRole === 'aluno' || mobileTab === 'nova_duvida') && (
-            <div className="gge-card" style={{ borderLeft: '4px solid var(--gge-[#])' }}>
+          {/* FORMULÁRIO DE NOVA DÚVIDA (ALUNO OU VISITANTE) */}
+          {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
+            <div className="gge-card" style={{ borderLeft: '4px solid #C8102E' }}>
               <div className="gge-card-header">
                 <span className="gge-card-title">
-                  <PlusCircle size={18} style={{ color: 'var(--gge-[#])' }} /> Enviar Nova Dúvida de Matemática
+                  <PlusCircle size={18} style={{ color: '#C8102E' }} /> Enviar Nova Dúvida de Matemática
                 </span>
                 <span className="gge-badge gge-badge-pendente">Monitoria Ativa</span>
               </div>
 
-              {/* BANNER DO USUÁRIO LOGADO - NENHUM CAMPO DE NOME É SOLICITADO */}
+              {/* BANNER DO USUÁRIO LOGADO - SEM PEDIR NOME DO ALUNO */}
               <div className="gge-user-banner">
                 <div className="gge-user-banner-left">
                   <div className="gge-user-avatar">
@@ -582,7 +555,7 @@ export default function PlataformaMonitoriaGGE() {
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                   <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.75rem', cursor: 'pointer' }}>
-                    <Camera size={15} style={{ color: 'var(--gge-gold)' }} />
+                    <Camera size={15} style={{ color: 'var(--gge-gold-primary)' }} />
                     <span>{fotoFile ? 'Foto Anexada ✓' : 'Anexar Foto da Questão'}</span>
                     <input
                       type="file"
@@ -601,7 +574,7 @@ export default function PlataformaMonitoriaGGE() {
           )}
 
           {/* PAINEL PARA RESPOSTA DO PROFESSOR / MONITOR */}
-          {activeRole === 'monitor' && (
+          {(currentUserRole === 'monitor' || currentUserRole === 'coordenador') && (
             <div className="gge-card" style={{ borderLeft: '4px solid #0284C7' }}>
               <div className="gge-card-header">
                 <span className="gge-card-title">
@@ -636,7 +609,7 @@ export default function PlataformaMonitoriaGGE() {
                 </div>
 
                 {/* Mídia & Gravação de Áudio */}
-                <div style={{ background: 'rgba(3, 12, 22, 0.6)', padding: '12px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
+                <div style={{ background: 'var(--gge-navy-bg)', padding: '12px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--gge-text-muted)' }}>Recursos Multimídia:</span>
                     {recording ? (
@@ -662,7 +635,7 @@ export default function PlataformaMonitoriaGGE() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.7rem', justifyContent: 'flex-start', cursor: 'pointer' }}>
-                      <FileText size={14} style={{ color: '#EF4444' }} />
+                      <FileText size={14} style={{ color: '#E53935' }} />
                       <span>{monitorPdf ? monitorPdf.name : 'PDF Resolução'}</span>
                       <input type="file" accept=".pdf" onChange={(e) => setMonitorPdf(e.target.files[0])} style={{ display: 'none' }} />
                     </label>
@@ -684,8 +657,8 @@ export default function PlataformaMonitoriaGGE() {
           {/* LISTA E TIMELINE DAS DÚVIDAS E CICLO DE APRENDIZADO */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={16} style={{ color: 'var(--gge-[#])' }} /> Feed de Dúvidas & Ciclo de Aprendizado
+              <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--gge-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={16} style={{ color: '#C8102E' }} /> Feed de Dúvidas & Ciclo de Aprendizado
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)' }}>
                 {filteredTickets.length} chamado(s)
@@ -694,13 +667,13 @@ export default function PlataformaMonitoriaGGE() {
 
             {loading ? (
               <div className="gge-card" style={{ textAlign: 'center', padding: '32px' }}>
-                <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--gge-[#])', margin: '0 auto 8px' }} />
+                <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: '#C8102E', margin: '0 auto 8px' }} />
                 <div style={{ fontSize: '0.8rem', color: 'var(--gge-text-muted)' }}>Carregando dúvidas de monitoria...</div>
               </div>
             ) : filteredTickets.length === 0 ? (
               <div className="gge-card" style={{ textAlign: 'center', padding: '32px' }}>
                 <HelpCircle size={32} style={{ color: 'var(--gge-text-dim)', margin: '0 auto 8px' }} />
-                <div style={{ fontSize: '0.875rem', fontWeight: '800', color: '#ffffff' }}>Nenhuma dúvida nesta categoria</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--gge-text-main)' }}>Nenhuma dúvida nesta categoria</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--gge-text-muted)' }}>Selecione outro filtro ou envie uma nova dúvida.</div>
               </div>
             ) : (
@@ -750,7 +723,7 @@ export default function PlataformaMonitoriaGGE() {
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '0.8rem', color: '#E2E8F0' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--gge-text-main)' }}>
                         {ticket.resposta.texto}
                       </div>
 
@@ -781,13 +754,13 @@ export default function PlataformaMonitoriaGGE() {
                   {ticket.questaoFixacao && ticket.etapa >= 4 && (
                     <div className="gge-ia-question-box">
                       <div className="gge-ia-header">
-                        <span><Sparkles size={14} style={{ color: 'var(--gge-[#])' }} /> Agente de IA GGE • Questão de Fixação [{ticket.questaoFixacao.vestibular}]</span>
+                        <span><Sparkles size={14} style={{ color: '#C8102E' }} /> Agente de IA GGE • Questão de Fixação [{ticket.questaoFixacao.vestibular}]</span>
                         <span style={{ background: 'rgba(139, 92, 246, 0.2)', padding: '2px 6px', borderRadius: '4px' }}>
                           Nível {ticket.questaoFixacao.nivel}
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#ffffff' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--gge-text-main)' }}>
                         {ticket.questaoFixacao.enunciado}
                       </div>
 
@@ -812,7 +785,7 @@ export default function PlataformaMonitoriaGGE() {
                           <button
                             onClick={() => handleResponderFixacao(ticket.id, null, true)}
                             className="gge-btn gge-btn-secondary"
-                            style={{ fontSize: '0.7rem', padding: '4px 10px', color: 'var(--gge-[#])' }}
+                            style={{ fontSize: '0.7rem', padding: '4px 10px', color: '#C8102E' }}
                           >
                             <RotateCcw size={13} /> Voltar para o Professor
                           </button>
@@ -836,7 +809,7 @@ export default function PlataformaMonitoriaGGE() {
           <div className="gge-card">
             <div className="gge-card-header">
               <span className="gge-card-title">
-                <BarChart3 size={16} style={{ color: 'var(--gge-[#])' }} /> Desempenho Pedagógico
+                <BarChart3 size={16} style={{ color: '#C8102E' }} /> Desempenho Pedagógico
               </span>
             </div>
 
@@ -854,11 +827,11 @@ export default function PlataformaMonitoriaGGE() {
                 </div>
 
                 <div style={{ fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--gge-navy-bg)', borderRadius: 'var(--radius-sm)' }}>
                     <span style={{ color: 'var(--gge-text-muted)' }}>Tempo Médio Resposta:</span>
-                    <strong style={{ color: 'var(--gge-[#])' }}>{coordenadorStats.tempoMedioMinutos} min</strong>
+                    <strong style={{ color: '#C8102E' }}>{coordenadorStats.tempoMedioMinutos} min</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--gge-navy-bg)', borderRadius: 'var(--radius-sm)' }}>
                     <span style={{ color: 'var(--gge-text-muted)' }}>Precisão da IA:</span>
                     <strong style={{ color: '#C084FC' }}>{coordenadorStats.precisaoIA}</strong>
                   </div>
@@ -873,7 +846,7 @@ export default function PlataformaMonitoriaGGE() {
           <div className="gge-card">
             <div className="gge-card-header">
               <span className="gge-card-title">
-                <Building2 size={16} style={{ color: 'var(--gge-[#])' }} /> Unidades GGE Recife
+                <Building2 size={16} style={{ color: '#C8102E' }} /> Unidades GGE Recife
               </span>
             </div>
 
@@ -929,7 +902,7 @@ export default function PlataformaMonitoriaGGE() {
               <div className="gge-brand-logo" style={{ margin: '0 auto 8px', width: '48px', height: '48px' }}>
                 GGE
               </div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--gge-text-main)' }}>
                 {authMode === 'login' ? 'Acessar Monitoria GGE' : 'Criar Conta no Portal GGE'}
               </div>
               <div style={{ fontSize: '0.725rem', color: 'var(--gge-text-muted)' }}>
@@ -938,7 +911,7 @@ export default function PlataformaMonitoriaGGE() {
             </div>
 
             {authError && (
-              <div style={{ background: 'rgba(200, 16, 46, 0.2)', border: '1px solid var(--gge-[#])', color: '#EF4444', fontSize: '0.75rem', padding: '10px', borderRadius: 'var(--radius-md)', marginBottom: '14px' }}>
+              <div style={{ background: 'rgba(200, 16, 46, 0.2)', border: '1px solid #C8102E', color: '#E53935', fontSize: '0.75rem', padding: '10px', borderRadius: 'var(--radius-md)', marginBottom: '14px' }}>
                 {authError}
               </div>
             )}
@@ -1037,7 +1010,7 @@ export default function PlataformaMonitoriaGGE() {
             <div style={{ textAlign: 'center', marginTop: '14px' }}>
               <button
                 onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); }}
-                style={{ background: 'transparent', border: 'none', color: 'var(--gge-[#])', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#C8102E', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
               >
                 {authMode === 'login' ? 'Não tem conta? Cadastre-se aqui' : 'Já tem uma conta? Fazer Login'}
               </button>
