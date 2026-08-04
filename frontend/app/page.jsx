@@ -171,7 +171,7 @@ export default function PlataformaMonitoriaGGE() {
     localStorage.removeItem('gge_token');
     setToken(null);
     setUser(null);
-    alert('Sessão encerrada com sucesso! Token JWT revogado.');
+    alert('Sessão encerrada com sucesso!');
   };
 
   const handleFastDemoLogin = async (demoEmail) => {
@@ -906,7 +906,7 @@ export default function PlataformaMonitoriaGGE() {
                 {authMode === 'login' ? 'Acessar Monitoria GGE' : 'Criar Conta no Portal GGE'}
               </div>
               <div style={{ fontSize: '0.725rem', color: 'var(--gge-text-muted)' }}>
-                Autenticação JWT com Bcrypt & Revogação no Logout
+                Acesso Seguro ao Portal do Aluno & Monitoria
               </div>
             </div>
 
