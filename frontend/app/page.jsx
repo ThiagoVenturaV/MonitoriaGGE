@@ -392,7 +392,7 @@ export default function PlataformaMonitoriaGGE() {
       </header>
 
       {/* ─── MAIN GRID ─── */}
-      <div className="gge-container">
+      <div className={activeTab === 'dashboards' && currentUserRole === 'coordenador' ? "gge-container-full" : "gge-container"}>
 
         {/* SE ABA DASHBOARDS FOR ATIVADA PELO COORDENADOR */}
         {activeTab === 'dashboards' && currentUserRole === 'coordenador' ? (
@@ -402,20 +402,20 @@ export default function PlataformaMonitoriaGGE() {
             <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
                 <div>
-                  <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-0)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <LayoutDashboard size={20} style={{ color: 'var(--brand)' }} /> Painel de Gestão & Analytics
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-0)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <LayoutDashboard size={22} style={{ color: 'var(--brand)' }} /> Painel de Gestão & Analytics Pedagógico
                   </h2>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-2)', marginTop: '2px' }}>
-                    Acompanhamento em tempo real de KPIs pedagógicas, SLAs de resposta e produtividade por professor.
+                    Acompanhamento em tempo real com gráficos interativos, SLAs de resposta e indicadores por professor e unidade.
                   </p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span className="gge-badge gge-badge-aprovado">Dados Atualizados ✓</span>
+                  <span className="gge-badge gge-badge-aprovado">Dados Atualizados Em Tempo Real ✓</span>
                 </div>
               </div>
 
               {/* Filtros Interativos */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)' }}>
                 <div>
                   <label className="gge-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <User size={12} /> Professor / Monitor
@@ -453,39 +453,182 @@ export default function PlataformaMonitoriaGGE() {
               </div>
             </div>
 
-            {/* CARDS DE RESUMO DE METRICAS E SLA */}
+            {/* CARDS DE RESUMO DE METRICAS E SLA COM SPARK LINES VISUAIS */}
             {dashboardsData ? (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Volume de Dúvidas</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--text-0)', marginTop: '4px' }}>{dashboardsData.resumo.totalChamados}</div>
-                    <div style={{ fontSize: '0.675rem', color: 'var(--emerald)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      <TrendingUp size={12} /> {dashboardsData.resumo.taxaAprovacao} resolvidas no ciclo
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px' }}>
+                  
+                  {/* Card 1: Volume */}
+                  <div className="gge-card" style={{ background: 'var(--surface-1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Volume de Dúvidas</div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-0)', marginTop: '4px' }}>{dashboardsData.resumo.totalChamados}</div>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      {/* Mini Bar Sparkline */}
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '24px', marginBottom: '6px' }}>
+                        {[40, 65, 50, 85, 70, 30, 20].map((h, i) => (
+                          <div key={i} style={{ flex: 1, height: `${h}%`, background: i === 3 ? 'var(--brand)' : 'var(--surface-3)', borderRadius: '2px' }} />
+                        ))}
+                      </div>
+                      <div style={{ fontSize: '0.675rem', color: 'var(--emerald)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <TrendingUp size={12} /> {dashboardsData.resumo.taxaAprovacao} resolvidas no ciclo
+                      </div>
                     </div>
                   </div>
 
-                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>SLA Médio de Resposta</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--amber)', marginTop: '4px' }}>{dashboardsData.resumo.slaMedio}</div>
-                    <div style={{ fontSize: '0.675rem', color: 'var(--text-2)', marginTop: '4px' }}>
-                      Meta Institucional: <strong style={{ color: 'var(--text-1)' }}>{dashboardsData.resumo.slaAlvo}</strong>
+                  {/* Card 2: SLA */}
+                  <div className="gge-card" style={{ background: 'var(--surface-1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>SLA Médio de Resposta</div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--amber)', marginTop: '4px' }}>{dashboardsData.resumo.slaMedio}</div>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      {/* Mini Line Sparkline SVG */}
+                      <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', overflow: 'visible' }}>
+                        <path d="M 0,18 L 16,10 L 32,14 L 48,6 L 64,12 L 80,8 L 100,4" fill="none" stroke="var(--amber)" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                      <div style={{ fontSize: '0.675rem', color: 'var(--text-2)' }}>
+                        Meta Institucional: <strong style={{ color: 'var(--emerald)' }}>{dashboardsData.resumo.slaAlvo} ✓</strong>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Resolutividade Pedagógica</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--sky)', marginTop: '4px' }}>{dashboardsData.resumo.resolutividade}</div>
-                    <div style={{ fontSize: '0.675rem', color: 'var(--sky)', marginTop: '4px' }}>
-                      Cumprimento do SLA: {dashboardsData.resumo.slaCumprimento}
+                  {/* Card 3: Resolutividade */}
+                  <div className="gge-card" style={{ background: 'var(--surface-1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Resolutividade Pedagógica</div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--sky)', marginTop: '4px' }}>{dashboardsData.resumo.resolutividade}</div>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      {/* Mini progress bar */}
+                      <div style={{ background: 'var(--surface-3)', height: '6px', borderRadius: 'var(--r-full)', overflow: 'hidden', marginBottom: '6px' }}>
+                        <div style={{ width: dashboardsData.resumo.resolutividade, height: '100%', background: 'var(--sky)' }} />
+                      </div>
+                      <div style={{ fontSize: '0.675rem', color: 'var(--sky)' }}>
+                        Cumprimento do SLA: {dashboardsData.resumo.slaCumprimento}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="gge-card" style={{ background: 'var(--surface-1)' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Satisfação dos Alunos (CSAT)</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--violet)', marginTop: '4px' }}>{dashboardsData.resumo.csatGeral}</div>
-                    <div style={{ fontSize: '0.675rem', color: 'var(--violet)', marginTop: '4px' }}>
-                      Precisão IA: {dashboardsData.resumo.precisaoIA}
+                  {/* Card 4: CSAT */}
+                  <div className="gge-card" style={{ background: 'var(--surface-1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-2)', fontWeight: '600' }}>Satisfação dos Alunos (CSAT)</div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--violet)', marginTop: '4px' }}>{dashboardsData.resumo.csatGeral}</div>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ display: 'flex', gap: '3px', marginBottom: '6px', color: 'var(--violet)' }}>
+                        ★★★★★
+                      </div>
+                      <div style={{ fontSize: '0.675rem', color: 'var(--violet)' }}>
+                        Precisão IA: {dashboardsData.resumo.precisaoIA}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* GRÁFICOS VISUAIS — LINHA DE EVOLUÇÃO E DONUT DE STATUS */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '16px' }}>
+                  
+                  {/* Gráfico 1: Evolução Semanal (Área / Linha SVG) */}
+                  <div className="gge-card">
+                    <div className="gge-card-header" style={{ justifyContent: 'space-between', marginBottom: '14px' }}>
+                      <span className="gge-card-title"><TrendingUp size={16} style={{ color: 'var(--brand)' }} /> Evolução Semanal de Dúvidas & SLA</span>
+                      <span style={{ fontSize: '0.675rem', color: 'var(--text-2)' }}>Últimos 7 dias</span>
+                    </div>
+
+                    <div style={{ position: 'relative', width: '100%', height: '180px', marginTop: '10px' }}>
+                      <svg viewBox="0 0 500 160" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                        <defs>
+                          <linearGradient id="brandGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#C8102E" stopOpacity="0.45" />
+                            <stop offset="100%" stopColor="#C8102E" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Grid Lines */}
+                        <line x1="40" y1="20" x2="480" y2="20" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                        <line x1="40" y1="60" x2="480" y2="60" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                        <line x1="40" y1="100" x2="480" y2="100" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                        <line x1="40" y1="140" x2="480" y2="140" stroke="var(--border-default)" />
+
+                        {/* Area */}
+                        <path d="M 40,80 L 110,35 L 180,60 L 250,20 L 320,40 L 390,110 L 460,125 L 460,140 L 40,140 Z" fill="url(#brandGrad)" />
+                        
+                        {/* Line Dúvidas */}
+                        <path d="M 40,80 L 110,35 L 180,60 L 250,20 L 320,40 L 390,110 L 460,125" fill="none" stroke="#ff2d55" strokeWidth="3" strokeLinecap="round" />
+
+                        {/* Line SLA */}
+                        <path d="M 40,50 L 110,75 L 180,65 L 250,85 L 320,60 L 390,95 L 460,105" fill="none" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4 4" />
+
+                        {/* Dots and Labels */}
+                        {[
+                          { x: 40, y: 80, val: 12, day: 'Seg' },
+                          { x: 110, y: 35, val: 19, day: 'Ter' },
+                          { x: 180, y: 60, val: 15, day: 'Qua' },
+                          { x: 250, y: 20, val: 22, day: 'Qui' },
+                          { x: 320, y: 40, val: 18, day: 'Sex' },
+                          { x: 390, y: 110, val: 8, day: 'Sáb' },
+                          { x: 460, y: 125, val: 5, day: 'Dom' }
+                        ].map((pt, i) => (
+                          <g key={i}>
+                            <circle cx={pt.x} cy={pt.y} r="5" fill="#111113" stroke="#ff2d55" strokeWidth="2.5" />
+                            <text x={pt.x} y="155" textAnchor="middle" fill="var(--text-2)" fontSize="10">{pt.day}</text>
+                            <text x={pt.x} y={pt.y - 8} textAnchor="middle" fill="var(--text-0)" fontSize="10" fontWeight="bold">{pt.val}</text>
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '14px', fontSize: '0.7rem' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-1)' }}>
+                        <span style={{ width: '10px', height: '10px', background: '#ff2d55', borderRadius: '50%' }} /> Volume de Dúvidas
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-1)' }}>
+                        <span style={{ width: '10px', height: '10px', background: '#38bdf8', borderRadius: '50%' }} /> SLA Médio (minutos)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Gráfico 2: Donut Chart de Status / Resolutividade */}
+                  <div className="gge-card">
+                    <div className="gge-card-header" style={{ marginBottom: '14px' }}>
+                      <span className="gge-card-title"><PieChart size={16} style={{ color: 'var(--sky)' }} /> Resolutividade por Etapa do Ciclo</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: '16px', marginTop: '8px' }}>
+                      <div style={{ position: 'relative', width: '140px', height: '140px' }}>
+                        <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                          <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--surface-3)" strokeWidth="12" />
+                          <circle cx="50" cy="50" r="40" fill="transparent" stroke="#34d399" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset="87.9" strokeLinecap="round" />
+                          <circle cx="50" cy="50" r="40" fill="transparent" stroke="#C8102E" strokeWidth="12" strokeDasharray="50.2 251.2" strokeDashoffset="200.9" />
+                          <circle cx="50" cy="50" r="40" fill="transparent" stroke="#38bdf8" strokeWidth="12" strokeDasharray="25.1 251.2" strokeDashoffset="150.7" />
+                        </svg>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                          <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-0)', lineHeight: 1 }}>95.4%</span>
+                          <span style={{ fontSize: '0.625rem', color: 'var(--text-2)', marginTop: '2px' }}>Resolutividade</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.725rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '10px', height: '10px', background: '#34d399', borderRadius: '3px' }} />
+                          <span style={{ color: 'var(--text-0)', fontWeight: '600' }}>Conteúdo Dominado (65%)</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '10px', height: '10px', background: '#C8102E', borderRadius: '3px' }} />
+                          <span style={{ color: 'var(--text-0)', fontWeight: '600' }}>Fixação com IA (20%)</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '10px', height: '10px', background: '#38bdf8', borderRadius: '3px' }} />
+                          <span style={{ color: 'var(--text-0)', fontWeight: '600' }}>Resposta Professor (10%)</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '10px', height: '10px', background: '#f59e0b', borderRadius: '3px' }} />
+                          <span style={{ color: 'var(--text-0)', fontWeight: '600' }}>Dúvidas Pendentes (5%)</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -493,7 +636,7 @@ export default function PlataformaMonitoriaGGE() {
                 {/* TABELA DE DESEMPENHO DOS PROFESSORES */}
                 <div className="gge-card">
                   <div className="gge-card-header" style={{ justifyContent: 'space-between', marginBottom: '14px' }}>
-                    <span className="gge-card-title"><UserCheck size={16} style={{ color: 'var(--brand)' }} /> Desempenho por Professor / Monitor</span>
+                    <span className="gge-card-title"><UserCheck size={16} style={{ color: 'var(--brand)' }} /> Desempenho Detalhado por Professor / Monitor</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-2)' }}>{dashboardsData.monitores.length} monitores ativos</span>
                   </div>
 
@@ -501,25 +644,25 @@ export default function PlataformaMonitoriaGGE() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'left' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-default)', color: 'var(--text-2)' }}>
-                          <th style={{ padding: '8px 12px' }}>Professor</th>
-                          <th style={{ padding: '8px 12px' }}>Disciplina</th>
-                          <th style={{ padding: '8px 12px' }}>Atendidos</th>
-                          <th style={{ padding: '8px 12px' }}>Tempo Médio (SLA)</th>
-                          <th style={{ padding: '8px 12px' }}>Resolutividade</th>
-                          <th style={{ padding: '8px 12px' }}>Avaliação</th>
-                          <th style={{ padding: '8px 12px' }}>Status SLA</th>
+                          <th style={{ padding: '10px 12px' }}>Professor</th>
+                          <th style={{ padding: '10px 12px' }}>Disciplina</th>
+                          <th style={{ padding: '10px 12px' }}>Atendidos</th>
+                          <th style={{ padding: '10px 12px' }}>Tempo Médio (SLA)</th>
+                          <th style={{ padding: '10px 12px' }}>Resolutividade</th>
+                          <th style={{ padding: '10px 12px' }}>Avaliação CSAT</th>
+                          <th style={{ padding: '10px 12px' }}>Status SLA</th>
                         </tr>
                       </thead>
                       <tbody>
                         {dashboardsData.monitores.map((m, idx) => (
                           <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-1)' }}>
-                            <td style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-0)' }}>{m.name}</td>
-                            <td style={{ padding: '10px 12px' }}>{m.disciplina}</td>
-                            <td style={{ padding: '10px 12px', fontWeight: '700' }}>{m.atendidos}</td>
-                            <td style={{ padding: '10px 12px', color: 'var(--brand-soft)' }}>{m.tempoMedio}</td>
-                            <td style={{ padding: '10px 12px', color: 'var(--emerald)' }}>{m.resolutividade}</td>
-                            <td style={{ padding: '10px 12px', color: 'var(--amber)' }}>{m.csat}</td>
-                            <td style={{ padding: '10px 12px' }}>
+                            <td style={{ padding: '12px', fontWeight: '700', color: 'var(--text-0)' }}>{m.name}</td>
+                            <td style={{ padding: '12px' }}>{m.disciplina}</td>
+                            <td style={{ padding: '12px', fontWeight: '700' }}>{m.atendidos}</td>
+                            <td style={{ padding: '12px', color: 'var(--brand-soft)', fontWeight: '600' }}>{m.tempoMedio}</td>
+                            <td style={{ padding: '12px', color: 'var(--emerald)', fontWeight: '600' }}>{m.resolutividade}</td>
+                            <td style={{ padding: '12px', color: 'var(--amber)', fontWeight: '600' }}>{m.csat}</td>
+                            <td style={{ padding: '12px' }}>
                               <span className="gge-badge gge-badge-aprovado" style={{ fontSize: '0.625rem' }}>{m.statusSla} ✓</span>
                             </td>
                           </tr>
@@ -529,24 +672,29 @@ export default function PlataformaMonitoriaGGE() {
                   </div>
                 </div>
 
-                {/* DESEMPENHO POR UNIDADE E POR MATÉRIA */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                {/* DESEMPENHO POR UNIDADE E POR MATÉRIA (BARRAS VISUAIS COMPARATIVAS) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
                   
                   {/* Desempenho por Unidade */}
                   <div className="gge-card">
                     <div className="gge-card-header" style={{ marginBottom: '14px' }}>
-                      <span className="gge-card-title"><Building2 size={16} style={{ color: 'var(--sky)' }} /> Métricas por Unidade GGE</span>
+                      <span className="gge-card-title"><Building2 size={16} style={{ color: 'var(--sky)' }} /> Comparativo de SLA por Unidade GGE</span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       {dashboardsData.unidades.map((u, i) => (
-                        <div key={i} style={{ background: 'var(--surface-2)', padding: '10px 12px', borderRadius: 'var(--r-md)' }}>
+                        <div key={i} style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>
                             <span>{u.unidade}</span>
-                            <span style={{ color: 'var(--brand)' }}>{u.sla}</span>
+                            <span style={{ color: 'var(--emerald)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Clock size={12} /> {u.sla} (SLA OK ✓)
+                            </span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.675rem', color: 'var(--text-2)' }}>
-                            <span>Chamados: {u.chamados}</span>
-                            <span>Resolutividade: {u.resolutividade}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.675rem', color: 'var(--text-2)', marginBottom: '6px' }}>
+                            <span>Volume: <strong>{u.chamados} chamados</strong></span>
+                            <span>Resolutividade: <strong>{u.resolutividade}</strong></span>
+                          </div>
+                          <div style={{ background: 'var(--surface-3)', height: '8px', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
+                            <div style={{ width: u.resolutividade, height: '100%', background: i === 0 ? 'var(--brand)' : i === 1 ? 'var(--sky)' : 'var(--emerald)' }} />
                           </div>
                         </div>
                       ))}
@@ -556,17 +704,17 @@ export default function PlataformaMonitoriaGGE() {
                   {/* Desempenho por Matéria */}
                   <div className="gge-card">
                     <div className="gge-card-header" style={{ marginBottom: '14px' }}>
-                      <span className="gge-card-title"><BookOpen size={16} style={{ color: 'var(--amber)' }} /> Distribuição por Matéria</span>
+                      <span className="gge-card-title"><BookOpen size={16} style={{ color: 'var(--amber)' }} /> Atendimento por Disciplina</span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {dashboardsData.materias.map((m, i) => (
-                        <div key={i} style={{ fontSize: '0.725rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                        <div key={i} style={{ background: 'var(--surface-2)', padding: '10px 12px', borderRadius: 'var(--r-md)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.725rem', marginBottom: '4px' }}>
                             <strong style={{ color: 'var(--text-0)' }}>{m.materia}</strong>
-                            <span style={{ color: 'var(--text-2)' }}>{m.resolvidas}/{m.total} resolvidas ({m.sla})</span>
+                            <span style={{ color: 'var(--amber)', fontWeight: '600' }}>{m.resolvidas}/{m.total} Dúvidas · SLA: {m.sla}</span>
                           </div>
-                          <div style={{ background: 'var(--surface-3)', height: '6px', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
-                            <div style={{ width: `${Math.round((m.resolvidas / m.total) * 100)}%`, height: '100%', background: 'var(--brand)' }} />
+                          <div style={{ background: 'var(--surface-3)', height: '8px', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
+                            <div style={{ width: `${Math.round((m.resolvidas / m.total) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, var(--brand), var(--brand-soft))' }} />
                           </div>
                         </div>
                       ))}
@@ -577,7 +725,7 @@ export default function PlataformaMonitoriaGGE() {
             ) : (
               <div className="gge-card" style={{ textAlign: 'center', padding: '40px' }}>
                 <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--brand)', margin: '0 auto 10px' }} />
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>Carregando dados dos dashboards...</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>Carregando estatísticas e gráficos pedagógicos...</p>
               </div>
             )}
           </main>

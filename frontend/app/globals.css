@@ -173,6 +173,20 @@ body::before {
   }
 }
 
+.gge-container-full {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 16px 12px;
+  display: block;
+}
+@media (min-width: 768px) {
+  .gge-container-full { padding: 24px 20px; }
+}
+@media (min-width: 1024px) {
+  .gge-container-full { padding: 28px 24px; }
+}
+
 .gge-sidebar { display: none; }
 @media (min-width: 1024px) {
   .gge-sidebar {

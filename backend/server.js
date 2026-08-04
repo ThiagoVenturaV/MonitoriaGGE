@@ -476,6 +476,23 @@ app.get('/api/coordenador/dashboards', (req, res) => {
     { materia: 'Redação', total: 20, resolvidas: 19, sla: '09 min' }
   ];
 
+  const evolucaoSemanal = [
+    { dia: 'Seg', duvidas: 12, slaMin: 14 },
+    { dia: 'Ter', duvidas: 19, slaMin: 11 },
+    { dia: 'Qua', duvidas: 15, slaMin: 12 },
+    { dia: 'Qui', duvidas: 22, slaMin: 10 },
+    { dia: 'Sex', duvidas: 18, slaMin: 13 },
+    { dia: 'Sáb', duvidas: 8,  slaMin: 9 },
+    { dia: 'Dom', duvidas: 5,  slaMin: 8 }
+  ];
+
+  const statusDistribuição = [
+    { label: 'Dominado', pct: 65, cor: '#34d399' },
+    { label: 'Fixação IA', pct: 20, cor: '#C8102E' },
+    { label: 'Explicado', pct: 10, cor: '#38bdf8' },
+    { label: 'Pendente', pct: 5, cor: '#f59e0b' }
+  ];
+
   res.json({
     success: true,
     filtrosAplicados: { professor: professor || 'todos', unidade: unidade || 'todas', periodo: periodo || '7d' },
@@ -493,6 +510,8 @@ app.get('/api/coordenador/dashboards', (req, res) => {
       precisaoIA: '96.5%',
       csatGeral: '4.9 / 5.0 ★'
     },
+    evolucaoSemanal,
+    statusDistribuição,
     monitores: monitoresStats,
     unidades: unidadesStats,
     materias: materiasStats
