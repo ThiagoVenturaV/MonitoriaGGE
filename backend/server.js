@@ -280,11 +280,18 @@ app.get('/api/tickets', (req, res) => {
   res.json({ success: true, count: tickets.length, tickets });
 });
 
-app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
+app.post('/api/tickets', optionalToken, upload.fields([
+  { name: 'foto', maxCount: 5 },
+  { name: 'fotos', maxCount: 5 }
+]), (req, res) => {
   const { assunto, tipo, duvidaTexto } = req.body;
   
   const nomeAluno = req.user ? req.user.name : (req.body.aluno || 'Aluno GGE');
   const unidadeAluno = req.user ? req.user.unidade : (req.body.unidade || 'Unidade Boa Viagem - Recife');
+
+  const files = req.files || {};
+  const uploadedFotos = [...(files.foto || []), ...(files.fotos || [])];
+  const fotoUrls = uploadedFotos.map(f => `/uploads/${f.filename}`);
 
   const novoTicket = {
     id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -292,7 +299,8 @@ app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
     unidade: unidadeAluno,
     assunto: assunto || 'Geral',
     tipo: tipo || 'texto',
-    fotoUrl: req.file ? `/uploads/${req.file.filename}` : null,
+    fotoUrl: fotoUrls[0] || null,
+    fotoUrls: fotoUrls,
     duvidaTexto: duvidaTexto || '',
     status: 'Pendente',
     etapa: 1,
@@ -306,9 +314,9 @@ app.post('/api/tickets', optionalToken, upload.single('foto'), (req, res) => {
 });
 
 app.post('/api/tickets/:id/resposta', upload.fields([
-  { name: 'pdf', maxCount: 1 },
-  { name: 'foto', maxCount: 1 },
-  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 5 },
+  { name: 'foto', maxCount: 5 },
+  { name: 'video', maxCount: 5 },
   { name: 'audio', maxCount: 1 }
 ]), (req, res) => {
   const { id } = req.params;
@@ -318,16 +326,23 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
 
   const files = req.files || {};
+  const pdfFiles = files.pdf || [];
+  const fotoFiles = files.foto || [];
+  const videoFiles = files.video || [];
+  const audioFile = files.audio ? files.audio[0] : null;
 
   ticket.status = 'Explicado';
   ticket.etapa = 2;
   ticket.resposta = {
     monitor: monitor || 'Prof. Ricardo Mendes (Equipe GGE)',
     texto: texto || 'Explicação elaborada pelo professor.',
-    pdfUrl: files.pdf ? `/uploads/${files.pdf[0].filename}` : null,
-    fotoUrl: files.foto ? `/uploads/${files.foto[0].filename}` : null,
-    videoUrl: files.video ? `/uploads/${files.video[0].filename}` : null,
-    audioUrl: files.audio ? `/uploads/${files.audio[0].filename}` : null,
+    pdfUrls: pdfFiles.map(f => `/uploads/${f.filename}`),
+    fotoUrls: fotoFiles.map(f => `/uploads/${f.filename}`),
+    videoUrls: videoFiles.map(f => `/uploads/${f.filename}`),
+    pdfUrl: pdfFiles[0] ? `/uploads/${pdfFiles[0].filename}` : null,
+    fotoUrl: fotoFiles[0] ? `/uploads/${fotoFiles[0].filename}` : null,
+    videoUrl: videoFiles[0] ? `/uploads/${videoFiles[0].filename}` : null,
+    audioUrl: audioFile ? `/uploads/${audioFile.filename}` : null,
     respondidoEm: new Date().toISOString()
   };
 

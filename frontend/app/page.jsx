@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   UserCheck, Send, Camera, FileText, Sparkles, Mic, Video, Clock,
   Building2, BrainCircuit, RefreshCw, HelpCircle, RotateCcw, LogOut,
-  LogIn, User, PlusCircle, Layers, X, BarChart3, CheckCircle2, BookOpen
+  LogIn, User, PlusCircle, Layers, X, BarChart3, CheckCircle2, BookOpen,
+  Image as ImageIcon, Trash2, Square
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8080';
@@ -26,13 +27,14 @@ export default function PlataformaMonitoriaGGE() {
   const [loading, setLoading] = useState(true);
   const [coordenadorStats, setCoordenadorStats] = useState(null);
   const [novoChamado, setNovoChamado] = useState({ assunto: '', tipo: 'texto', duvidaTexto: '' });
-  const [fotoFile, setFotoFile] = useState(null);
+  const [fotosAluno, setFotosAluno] = useState([]);
   const [respostaMonitor, setRespostaMonitor] = useState({ ticketId: '', monitor: 'Prof. Ricardo Mendes (Equipe GGE)', textoExplicativo: '' });
-  const [monitorPdf, setMonitorPdf] = useState(null);
-  const [monitorFoto, setMonitorFoto] = useState(null);
-  const [monitorVideo, setMonitorVideo] = useState(null);
+  const [monitorPdfs, setMonitorPdfs] = useState([]);
+  const [monitorFotos, setMonitorFotos] = useState([]);
+  const [monitorVideos, setMonitorVideos] = useState([]);
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
   const mediaRecorderRef = useRef(null);
 
   useEffect(() => {
@@ -95,18 +97,62 @@ export default function PlataformaMonitoriaGGE() {
     finally { setAuthLoading(false); }
   };
 
+  const handleAddFotosAluno = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFotosAluno(prev => [...prev, ...Array.from(e.target.files)]);
+    }
+  };
+  const handleRemoveFotoAluno = (index) => {
+    setFotosAluno(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddPdfs = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setMonitorPdfs(prev => [...prev, ...Array.from(e.target.files)]);
+    }
+  };
+  const handleRemovePdf = (index) => {
+    setMonitorPdfs(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddFotos = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setMonitorFotos(prev => [...prev, ...Array.from(e.target.files)]);
+    }
+  };
+  const handleRemoveFoto = (index) => {
+    setMonitorFotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddVideos = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setMonitorVideos(prev => [...prev, ...Array.from(e.target.files)]);
+    }
+  };
+  const handleRemoveVideo = (index) => {
+    setMonitorVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCriarChamado = async (e) => {
     e.preventDefault();
     if (!novoChamado.assunto.trim()) { alert('Por favor, informe a matéria e o assunto da sua dúvida.'); return; }
-    if (!novoChamado.duvidaTexto && !fotoFile) { alert('Por favor, digite sua dúvida ou anexe uma foto da questão.'); return; }
+    if (!novoChamado.duvidaTexto && fotosAluno.length === 0) { alert('Por favor, digite sua dúvida ou anexe pelo menos uma foto da questão.'); return; }
     const formData = new FormData();
-    formData.append('assunto', novoChamado.assunto); formData.append('tipo', fotoFile ? 'foto' : 'texto');
-    formData.append('duvidaTexto', novoChamado.duvidaTexto); if (fotoFile) formData.append('foto', fotoFile);
+    formData.append('assunto', novoChamado.assunto);
+    formData.append('tipo', fotosAluno.length > 0 ? 'foto' : 'texto');
+    formData.append('duvidaTexto', novoChamado.duvidaTexto);
+    fotosAluno.forEach(file => formData.append('foto', file));
     const headers = {}; if (token) headers['Authorization'] = `Bearer ${token}`;
     try {
       const res = await fetch(`${API_BASE}/api/tickets`, { method: 'POST', headers, body: formData });
       const data = await res.json();
-      if (data.success) { alert('Dúvida enviada com sucesso! Acompanhe o Ciclo de Aprendizado.'); setNovoChamado({ assunto: '', tipo: 'texto', duvidaTexto: '' }); setFotoFile(null); setMobileTab('feed'); carregarDados(); }
+      if (data.success) {
+        alert('Dúvida enviada com sucesso! Acompanhe o Ciclo de Aprendizado.');
+        setNovoChamado({ assunto: '', tipo: 'texto', duvidaTexto: '' });
+        setFotosAluno([]);
+        setMobileTab('feed');
+        carregarDados();
+      }
     } catch (err) { alert('Erro ao enviar a dúvida.'); }
   };
 
@@ -115,12 +161,24 @@ export default function PlataformaMonitoriaGGE() {
     const formData = new FormData();
     formData.append('monitor', user ? `${user.name} (Equipe GGE)` : respostaMonitor.monitor);
     formData.append('texto', respostaMonitor.textoExplicativo);
-    if (monitorPdf) formData.append('pdf', monitorPdf); if (monitorFoto) formData.append('foto', monitorFoto);
-    if (monitorVideo) formData.append('video', monitorVideo); if (audioBlob) formData.append('audio', audioBlob, 'explicacao-audio.webm');
+
+    monitorPdfs.forEach(file => formData.append('pdf', file));
+    monitorFotos.forEach(file => formData.append('foto', file));
+    monitorVideos.forEach(file => formData.append('video', file));
+    if (audioBlob) formData.append('audio', audioBlob, 'explicacao-audio.webm');
+
     try {
       const res = await fetch(`${API_BASE}/api/tickets/${respostaMonitor.ticketId}/resposta`, { method: 'POST', body: formData });
       const data = await res.json();
-      if (data.success) { alert('Explicação enviada com sucesso!'); setRespostaMonitor(prev => ({ ...prev, textoExplicativo: '' })); setMonitorPdf(null); setMonitorFoto(null); setMonitorVideo(null); setAudioBlob(null); carregarDados(); }
+      if (data.success) {
+        alert('Explicação enviada com sucesso!');
+        setRespostaMonitor(prev => ({ ...prev, textoExplicativo: '' }));
+        setMonitorPdfs([]);
+        setMonitorFotos([]);
+        setMonitorVideos([]);
+        clearAudio();
+        carregarDados();
+      }
     } catch (err) { alert('Erro ao enviar a resposta.'); }
   };
 
@@ -137,13 +195,37 @@ export default function PlataformaMonitoriaGGE() {
   };
 
   const startRecording = async () => {
-    try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); const mediaRecorder = new MediaRecorder(stream); mediaRecorderRef.current = mediaRecorder; const chunks = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data); mediaRecorder.onstop = () => { setAudioBlob(new Blob(chunks, { type: 'audio/webm' })); };
-      mediaRecorder.start(); setRecording(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks = [];
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+      };
+      mediaRecorder.start();
+      setRecording(true);
     } catch (err) { alert('Não foi possível acessar o microfone.'); }
   };
 
-  const stopRecording = () => { if (mediaRecorderRef.current && recording) { mediaRecorderRef.current.stop(); setRecording(false); } };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      if (mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+      setRecording(false);
+    }
+  };
+
+  const clearAudio = () => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setAudioBlob(null);
+    setAudioUrl(null);
+  };
 
   const handleMobileNavClick = (tab) => {
     setMobileTab(tab);
@@ -325,15 +407,30 @@ export default function PlataformaMonitoriaGGE() {
                   <textarea placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
                     value={novoChamado.duvidaTexto} onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })} className="gge-textarea" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                  <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.75rem' }}>
-                    <Camera size={14} style={{ color: 'var(--amber)' }} />
-                    <span>{fotoFile ? 'Foto anexada ✓' : 'Anexar foto'}</span>
-                    <input type="file" accept="image/*" onChange={(e) => setFotoFile(e.target.files[0])} style={{ display: 'none' }} />
-                  </label>
-                  <button type="submit" className="gge-btn gge-btn-primary">
-                    <Send size={14} /> Enviar Dúvida
-                  </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                    <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.75rem' }}>
+                      <Camera size={14} style={{ color: 'var(--amber)' }} />
+                      <span>{fotosAluno.length > 0 ? `+ Anexar Fotos (${fotosAluno.length})` : 'Anexar Foto(s)'}</span>
+                      <input type="file" accept="image/*" multiple onChange={handleAddFotosAluno} style={{ display: 'none' }} />
+                    </label>
+                    <button type="submit" className="gge-btn gge-btn-primary">
+                      <Send size={14} /> Enviar Dúvida
+                    </button>
+                  </div>
+
+                  {fotosAluno.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                      {fotosAluno.map((file, idx) => (
+                        <span key={idx} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)', padding: '4px 8px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <ImageIcon size={12} style={{ color: 'var(--amber)' }} /> {file.name}
+                          <button type="button" onClick={() => handleRemoveFotoAluno(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '0 2px' }}>
+                            <X size={13} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
@@ -357,28 +454,99 @@ export default function PlataformaMonitoriaGGE() {
                   <textarea placeholder="Resolução passo a passo..." value={respostaMonitor.textoExplicativo}
                     onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })} className="gge-textarea" />
                 </div>
-                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: 'var(--r-lg)', marginBottom: '16px' }}>
+                
+                {/* Formas de Enviar Conteudo (Recursos) */}
+                <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-lg)', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '600', color: 'var(--text-2)' }}>Recursos</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-1)' }}>Formas de Enviar Conteúdo (Recursos)</span>
                     {recording ? (
-                      <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.675rem', padding: '4px 10px' }}>Parar 🔴</button>
+                      <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.675rem', padding: '4px 10px', background: 'var(--brand)' }}>
+                        <Square size={12} fill="white" /> Parar Gravação 🔴
+                      </button>
                     ) : (
-                      <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px' }}>
-                        <Mic size={13} /> {audioBlob ? 'Gravado ✓' : 'Áudio'}
+                      <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px', color: audioBlob ? 'var(--emerald)' : 'var(--text-1)' }}>
+                        <Mic size={13} style={{ color: audioBlob ? 'var(--emerald)' : 'var(--sky)' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
                       </button>
                     )}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'flex-start' }}>
-                      <FileText size={13} style={{ color: 'var(--rose)' }} /> <span>{monitorPdf ? monitorPdf.name : 'PDF'}</span>
-                      <input type="file" accept=".pdf" onChange={(e) => setMonitorPdf(e.target.files[0])} style={{ display: 'none' }} />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
+                      <FileText size={13} style={{ color: 'var(--rose)' }} /> <span>+ PDF</span>
+                      <input type="file" accept=".pdf" multiple onChange={handleAddPdfs} style={{ display: 'none' }} />
                     </label>
-                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'flex-start' }}>
-                      <Video size={13} style={{ color: 'var(--emerald)' }} /> <span>{monitorVideo ? monitorVideo.name : 'Vídeo'}</span>
-                      <input type="file" accept="video/*" onChange={(e) => setMonitorVideo(e.target.files[0])} style={{ display: 'none' }} />
+                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
+                      <ImageIcon size={13} style={{ color: 'var(--amber)' }} /> <span>+ Imagem</span>
+                      <input type="file" accept="image/*" multiple onChange={handleAddFotos} style={{ display: 'none' }} />
+                    </label>
+                    <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
+                      <Video size={13} style={{ color: 'var(--emerald)' }} /> <span>+ Vídeo</span>
+                      <input type="file" accept="video/*" multiple onChange={handleAddVideos} style={{ display: 'none' }} />
                     </label>
                   </div>
+
+                  {/* Player de áudio com opção de reouvir e apagar */}
+                  {audioUrl && (
+                    <div style={{ background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 'var(--r-md)', marginBottom: '10px', border: '1px solid var(--border-default)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '0.675rem', fontWeight: '700', color: 'var(--sky)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Mic size={12} /> Áudio gravado — Ouça antes de enviar:
+                        </span>
+                        <button type="button" onClick={clearAudio} className="gge-btn-icon" style={{ color: 'var(--rose)', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Descartar e apagar áudio">
+                          <Trash2 size={13} /> <span style={{ fontSize: '0.65rem' }}>Apagar</span>
+                        </button>
+                      </div>
+                      <audio controls src={audioUrl} style={{ width: '100%', height: '36px' }} />
+                    </div>
+                  )}
+
+                  {/* Lista de anexos selecionados */}
+                  {(monitorPdfs.length > 0 || monitorFotos.length > 0 || monitorVideos.length > 0) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-2)', fontWeight: '600' }}>Anexos selecionados ({monitorPdfs.length + monitorFotos.length + monitorVideos.length}):</span>
+                      
+                      {monitorFotos.map((file, idx) => (
+                        <div key={`foto-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <ImageIcon size={13} style={{ color: 'var(--amber)', flexShrink: 0 }} />
+                            <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
+                            <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / 1024).toFixed(1)} KB)</span>
+                          </span>
+                          <button type="button" onClick={() => handleRemoveFoto(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover imagem">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+
+                      {monitorPdfs.map((file, idx) => (
+                        <div key={`pdf-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <FileText size={13} style={{ color: 'var(--rose)', flexShrink: 0 }} />
+                            <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
+                            <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / 1024).toFixed(1)} KB)</span>
+                          </span>
+                          <button type="button" onClick={() => handleRemovePdf(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover PDF">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+
+                      {monitorVideos.map((file, idx) => (
+                        <div key={`vid-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-3)', padding: '6px 10px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Video size={13} style={{ color: 'var(--emerald)', flexShrink: 0 }} />
+                            <strong style={{ color: 'var(--text-0)' }}>{file.name}</strong>
+                            <span style={{ color: 'var(--text-2)', fontSize: '0.65rem' }}>({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                          </span>
+                          <button type="button" onClick={() => handleRemoveVideo(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '2px' }} title="Remover vídeo">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
                 <button type="submit" className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
                   <Send size={14} /> Enviar Explicação
                 </button>
@@ -425,7 +593,15 @@ export default function PlataformaMonitoriaGGE() {
                   {/* Doubt text */}
                   <div className="gge-ticket-body">
                     {ticket.duvidaTexto}
-                    {ticket.fotoUrl && <img src={`${API_BASE}${ticket.fotoUrl}`} alt="Foto da Questão" className="gge-ticket-image" />}
+                    {ticket.fotoUrls && ticket.fotoUrls.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: ticket.fotoUrls.length > 1 ? 'repeat(auto-fit, minmax(180px, 1fr))' : '1fr', gap: '8px', marginTop: '10px' }}>
+                        {ticket.fotoUrls.map((url, idx) => (
+                          <img key={idx} src={`${API_BASE}${url}`} alt={`Foto da Questão ${idx + 1}`} className="gge-ticket-image" />
+                        ))}
+                      </div>
+                    ) : ticket.fotoUrl ? (
+                      <img src={`${API_BASE}${ticket.fotoUrl}`} alt="Foto da Questão" className="gge-ticket-image" />
+                    ) : null}
                   </div>
 
                   {/* Teacher response */}
@@ -437,17 +613,49 @@ export default function PlataformaMonitoriaGGE() {
                           {new Date(ticket.resposta.respondidoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-1)', lineHeight: '1.6' }}>{ticket.resposta.texto}</p>
+                      {ticket.resposta.texto && <p style={{ fontSize: '0.8rem', color: 'var(--text-1)', lineHeight: '1.6', marginBottom: '8px' }}>{ticket.resposta.texto}</p>}
+                      
+                      {/* Audio */}
                       {ticket.resposta.audioUrl && (
-                        <div>
+                        <div style={{ marginBottom: '10px' }}>
                           <div style={{ fontSize: '0.675rem', fontWeight: '600', color: 'var(--sky)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Mic size={11} /> Áudio do professor
                           </div>
                           <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} className="gge-audio-player" />
                         </div>
                       )}
+
+                      {/* Photos */}
+                      {((ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0) || ticket.resposta.fotoUrl) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: (ticket.resposta.fotoUrls?.length > 1) ? 'repeat(auto-fit, minmax(200px, 1fr))' : '1fr', gap: '8px', marginBottom: '10px' }}>
+                          {(ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0 ? ticket.resposta.fotoUrls : [ticket.resposta.fotoUrl]).map((url, i) => (
+                            <img key={i} src={`${API_BASE}${url}`} alt={`Imagem explicativa ${i + 1}`} className="gge-ticket-image" />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* PDFs */}
+                      {((ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0) || ticket.resposta.pdfUrl) && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                          {(ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0 ? ticket.resposta.pdfUrls : [ticket.resposta.pdfUrl]).map((url, i) => (
+                            <a key={i} href={`${API_BASE}${url}`} target="_blank" rel="noreferrer" className="gge-btn gge-btn-secondary" style={{ fontSize: '0.725rem', width: 'fit-content' }}>
+                              <FileText size={14} style={{ color: 'var(--rose)' }} /> <span>PDF Explicativo {i > 0 ? `#${i+1}` : ''}</span>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Videos */}
+                      {((ticket.resposta.videoUrls && ticket.resposta.videoUrls.length > 0) || ticket.resposta.videoUrl) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                          {(ticket.resposta.videoUrls && ticket.resposta.videoUrls.length > 0 ? ticket.resposta.videoUrls : [ticket.resposta.videoUrl]).map((url, i) => (
+                            <video key={i} controls src={`${API_BASE}${url}`} style={{ width: '100%', borderRadius: 'var(--r-md)', maxHeight: '320px' }} />
+                          ))}
+                        </div>
+                      )}
+
                       {ticket.etapa === 2 && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                           <button onClick={() => handleAlunoEntendeu(ticket.id)} className="gge-btn gge-btn-success" style={{ fontSize: '0.75rem' }}>
                             <CheckCircle2 size={14} /> Entendi! Ir para Fixação
                           </button>
