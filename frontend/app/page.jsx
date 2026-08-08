@@ -381,7 +381,7 @@ export default function PlataformaMonitoriaGGE() {
           <section className="gge-login-hero">
             <div className="gge-login-hero-header">
               <img src="/logo-gge-official.png" alt="Colégio GGE" className="gge-login-hero-logo-img" />
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span className="gge-login-hero-brand-title">
                   Monitoria GGE
                 </span>

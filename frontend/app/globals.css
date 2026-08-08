@@ -436,15 +436,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-login-hero-brand-title {
+  display: block;
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #FFFFFF;
+  margin-bottom: 0.25rem;
 }
 
 .gge-login-hero-brand-sub {
+  display: block;
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.8);
 }
