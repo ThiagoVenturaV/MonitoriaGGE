@@ -236,6 +236,30 @@ h1, h2, h3, h4, h5, h6 {
   background-color: rgba(20, 56, 126, 0.06);
 }
 
+.gge-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #14387E;
+  color: #FFFFFF;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2.5px solid #E30612;
+  box-shadow: 0 2px 8px rgba(20, 56, 126, 0.18);
+  flex-shrink: 0;
+}
+
+.gge-user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .gge-official-user-info {
   text-align: right;
   display: none;

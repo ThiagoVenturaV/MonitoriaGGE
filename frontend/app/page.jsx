@@ -160,8 +160,32 @@ export default function PlataformaMonitoriaGGE() {
     }
   };
 
+  const handleUploadAvatar = async (e) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/profile/avatar`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        alert('Foto de perfil atualizada com sucesso!');
+      } else {
+        alert(data.error || 'Erro ao enviar foto de perfil.');
+      }
+    } catch (err) {
+      alert('Erro de conexão ao enviar foto de perfil.');
+    }
+  };
+
   const handleLogout = async () => {
-    if (token) { try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch (err) { } }
+    if (token) { try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch (err) {} }
     localStorage.removeItem('gge_token'); setToken(null); setUser(null); setShowProfileDropdown(false); alert('Sessão encerrada com sucesso!');
   };
 
@@ -278,15 +302,13 @@ export default function PlataformaMonitoriaGGE() {
   };
 
   const handleAlunoEntendeu = async (ticketId) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/entendi`, { method: 'POST' }); const data = await res.json();
+    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/entendi`, { method: 'POST' }); const data = await res.json();
       if (data.success) { alert('Ótimo! Uma Questão de Fixação foi selecionada para validar seu aprendizado.'); carregarDados(); }
     } catch (err) { alert('Erro ao avançar para a questão de fixação.'); }
   };
 
   const handleResponderFixacao = async (ticketId, opcao, teveDuvida = false) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/responder-fixacao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respostaSelecionada: opcao, teveDuvida }) });
+    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/responder-fixacao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respostaSelecionada: opcao, teveDuvida }) });
       const data = await res.json(); if (data.success) { alert(data.mensagem); carregarDados(); }
     } catch (err) { alert('Erro ao processar a resposta da questão.'); }
   };
@@ -363,7 +385,6 @@ export default function PlataformaMonitoriaGGE() {
                 <span className="gge-login-hero-brand-title">
                   Monitoria GGE
                 </span>
-                <br></br>
                 <span className="gge-login-hero-brand-sub">
                   Colégio GGE · Ensino Médio, SSA & ENEM
                 </span>
@@ -639,15 +660,19 @@ export default function PlataformaMonitoriaGGE() {
             )}
           </nav>
 
-          {/* PERFIL CLICÁVEL NO CANTO SUPERIOR DIREITO */}
+          {/* PERFIL CLICÁVEL NO CANTO SUPERIOR DIREITO COM FOTO */}
           <div className="gge-official-user-area">
             <div
               className="gge-user-clickable-box"
               onClick={() => setShowProfileDropdown(prev => !prev)}
               title="Clique para ver seu perfil e opções de conta"
             >
-              <div className="gge-user-avatar" style={{ width: '38px', height: '38px', fontSize: '1rem' }}>
-                {user?.name?.charAt(0)}
+              <div className="gge-user-avatar" style={{ width: '40px', height: '40px' }}>
+                {user?.avatarUrl ? (
+                  <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="gge-user-avatar-img" />
+                ) : (
+                  user?.name?.charAt(0)
+                )}
               </div>
               <div className="gge-official-user-info">
                 <div className="gge-official-user-name">{user?.name}</div>
@@ -669,8 +694,12 @@ export default function PlataformaMonitoriaGGE() {
             {showProfileDropdown && (
               <div className="gge-profile-dropdown" onClick={(e) => e.stopPropagation()}>
                 <div className="gge-dropdown-user-header">
-                  <div className="gge-user-avatar" style={{ width: '42px', height: '42px', fontSize: '1.1rem' }}>
-                    {user?.name?.charAt(0)}
+                  <div className="gge-user-avatar" style={{ width: '46px', height: '46px' }}>
+                    {user?.avatarUrl ? (
+                      <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="gge-user-avatar-img" />
+                    ) : (
+                      user?.name?.charAt(0)
+                    )}
                   </div>
                   <div>
                     <div className="gge-dropdown-user-name">{user?.name}</div>
@@ -723,7 +752,7 @@ export default function PlataformaMonitoriaGGE() {
       {/* ─── MAIN GRID ─── */}
       <div className={activeTab === 'dashboards' && currentUserRole === 'coordenador' ? "gge-container-full" : "gge-container"}>
 
-        {/* ─── ABA 1: PÁGINA DEDICADA DE PERFIL DO USUÁRIO ─── */}
+        {/* ─── ABA 1: PÁGINA DEDICADA DE PERFIL DO USUÁRIO COM UPLOAD DE FOTO ─── */}
         {activeTab === 'perfil' ? (
           <main style={{ width: '100%', maxWidth: '680px', margin: '0 auto' }}>
             <div className="gge-card">
@@ -739,6 +768,22 @@ export default function PlataformaMonitoriaGGE() {
                 >
                   <X size={16} /> Voltar ao Feed
                 </button>
+              </div>
+
+              {/* SEÇÃO DE FOTO DE PERFIL */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid #CBD5E1' }}>
+                <div className="gge-user-avatar" style={{ width: '96px', height: '96px', fontSize: '2.2rem', marginBottom: '12px', borderWidth: '3px' }}>
+                  {user?.avatarUrl ? (
+                    <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="gge-user-avatar-img" />
+                  ) : (
+                    user?.name?.charAt(0)
+                  )}
+                </div>
+                <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.85rem', padding: '6px 14px' }}>
+                  <Camera size={16} style={{ color: '#E30612' }} />
+                  <span>{user?.avatarUrl ? 'Alterar Foto de Perfil' : 'Enviar Foto de Perfil'}</span>
+                  <input type="file" accept="image/*" onChange={handleUploadAvatar} style={{ display: 'none' }} />
+                </label>
               </div>
 
               <form onSubmit={handleSalvarPerfil}>
@@ -821,7 +866,7 @@ export default function PlataformaMonitoriaGGE() {
         ) : activeTab === 'dashboards' && currentUserRole === 'coordenador' ? (
           /* ─── ABA 2: DASHBOARDS DA COORDENAÇÃO ─── */
           <main style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
+            
             {/* Header com Filtros do Dashboard */}
             <div className="gge-card">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
@@ -883,7 +928,7 @@ export default function PlataformaMonitoriaGGE() {
             {dashboardsData ? (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px' }}>
-
+                  
                   {/* Card 1: Volume */}
                   <div className="gge-card">
                     <div>
@@ -931,7 +976,7 @@ export default function PlataformaMonitoriaGGE() {
                     </div>
                     <div style={{ marginTop: '12px' }}>
                       <div style={{ fontSize: '0.8rem', color: '#7E22CE', fontWeight: '600' }}>
-                        Avaliação Positiva: {dashboardsData.resumo.taxaAvaliacaoPositiva || '100%'}
+                        Precisão da IA: {dashboardsData.resumo.precisaoIA}
                       </div>
                     </div>
                   </div>
@@ -984,334 +1029,309 @@ export default function PlataformaMonitoriaGGE() {
           </main>
         ) : (
           /* ─── ABA 3: FEED PRINCIPAL DE DÚVIDAS (ATENDIMENTO) ─── */
-          <main className="gge-main-content">
+          <>
+            {/* ─── LEFT SIDEBAR ─── */}
+            <aside className="gge-sidebar">
 
-            {/* Form Nova Dúvida (Visível para Alunos) */}
-            {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
-              <div className="gge-card" id="form-duvida">
-                <div className="gge-card-header">
-                  <span className="gge-card-title">
-                    <PlusCircle size={18} style={{ color: '#E30612' }} /> Nova Dúvida
-                  </span>
-                </div>
-
-                <div className="gge-user-banner">
-                  <div className="gge-user-banner-left">
-                    <div className="gge-user-avatar">{user ? user.name.charAt(0) : 'A'}</div>
-                    <div className="gge-user-banner-info">
-                      <div className="name">{user ? user.name : 'Visitante'}</div>
-                      <div className="unit">{user ? user.email : 'Faça login para enviar'}</div>
-                    </div>
-                  </div>
-                  {!user && (
-                    <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.8rem' }}>
-                      Entrar
-                    </button>
-                  )}
-                </div>
-
-                <form onSubmit={handleCriarChamado}>
-                  <div className="gge-form-group">
-                    <label className="gge-label">Área do Conhecimento</label>
-                    <select
-                      value={novoChamado.area}
-                      onChange={(e) => setNovoChamado({ ...novoChamado, area: e.target.value })}
-                      className="gge-select"
-                    >
-                      <option value="Física">Física</option>
-                      <option value="Matemática">Matemática</option>
-                      <option value="Química">Química</option>
-                      <option value="Biologia">Biologia</option>
-                      <option value="Linguagens">Linguagens & Redação</option>
-                      <option value="Ciências Humanas">Ciências Humanas</option>
-                    </select>
-                  </div>
-
-                  <div className="gge-form-group">
-                    <label className="gge-label">Matéria e Assunto</label>
-                    <input type="text" required placeholder="Ex: Física — Leis de Ohm, Redação — Proposta de Intervenção..."
-                      value={novoChamado.assunto} onChange={(e) => setNovoChamado({ ...novoChamado, assunto: e.target.value })} className="gge-input" />
-                  </div>
-
-                  <div className="gge-form-group">
-                    <label className="gge-label">Sua Dúvida</label>
-                    <textarea
-                      placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
-                      value={novoChamado.duvidaTexto}
-                      onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })}
-                      onInput={(e) => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = `${e.target.scrollHeight + 4}px`;
-                      }}
-                      className="gge-textarea"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                      <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.875rem' }}>
-                        <Camera size={16} style={{ color: '#D97706' }} />
-                        <span>{fotosAluno.length > 0 ? `+ Anexar Fotos (${fotosAluno.length})` : 'Anexar Foto(s)'}</span>
-                        <input type="file" accept="image/*" multiple onChange={handleAddFotosAluno} style={{ display: 'none' }} />
-                      </label>
-                      <button type="submit" className="gge-btn gge-btn-primary">
-                        <Send size={16} /> Enviar Dúvida
-                      </button>
-                    </div>
-
-                    {fotosAluno.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                        {fotosAluno.map((file, idx) => (
-                          <span key={idx} style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                            <ImageIcon size={14} style={{ color: '#D97706' }} /> {file.name}
-                            <button type="button" onClick={() => handleRemoveFotoAluno(idx)} style={{ background: 'none', border: 'none', color: '#e11d48', cursor: 'pointer', padding: '0 2px' }}>
-                              <X size={14} />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* Form Responder Dúvida com Preview Completo da Dúvida Selecionada */}
-            {(currentUserRole === 'monitor' || currentUserRole === 'coordenador') && (
+              {/* Cycle Filter */}
               <div className="gge-card">
                 <div className="gge-card-header">
-                  <span className="gge-card-title"><UserCheck size={18} style={{ color: '#0284C7' }} /> Responder Dúvida</span>
+                  <span className="gge-card-title"><Layers size={18} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
                 </div>
-                <form onSubmit={handleEnviarResposta}>
-                  <div className="gge-form-group">
-                    <label className="gge-label">Selecionar Dúvida para Atendimento</label>
-                    <select
-                      value={respostaMonitor.ticketId}
-                      onChange={(e) => setRespostaMonitor({ ...respostaMonitor, ticketId: e.target.value })}
-                      className="gge-select"
-                    >
-                      <option value="">-- Escolha um chamado da fila --</option>
-                      {tickets.map(t => (
-                        <option key={t.id} value={t.id}>[{t.id}] {t.aluno} — {t.assunto} ({t.status})</option>
-                      ))}
-                    </select>
+                <div className="gge-filter-buttons-grid">
+                  {[
+                    { id: 'todos', label: 'Todas', count: filteredTickets.length },
+                    { id: 'pendente', label: 'Dúvida Enviada', count: filteredTickets.filter(t => t.status === 'Pendente').length },
+                    { id: 'explicado', label: 'Resposta do Professor', count: filteredTickets.filter(t => t.status === 'Explicado').length },
+                    { id: 'entendido', label: 'Aluno Entendido', count: filteredTickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
+                    { id: 'praticando', label: 'Fixação com IA', count: filteredTickets.filter(t => t.status === 'Praticando').length },
+                    { id: 'aprovado', label: 'Conteúdo Dominado', count: filteredTickets.filter(t => t.status === 'Aprovado').length },
+                  ].map(f => (
+                    <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
+                      <span>{f.label}</span>
+                      <span className="gge-filter-count">{f.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Methodology */}
+              <div className="gge-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <BrainCircuit size={18} style={{ color: '#E30612' }} />
+                  <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#14387E' }}>Metodologia GGE</span>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.6' }}>
+                  Dúvidas de qualquer matéria resolvidas por professores e fixadas com Inteligência Artificial.
+                </p>
+              </div>
+            </aside>
+
+            {/* ─── CENTER — MAIN CONTENT ─── */}
+            <main className="gge-main-content">
+
+              {/* Form Nova Dúvida (Visível para Alunos) */}
+              {(currentUserRole === 'aluno' || mobileTab === 'nova_duvida') && (
+                <div className="gge-card" id="form-duvida">
+                  <div className="gge-card-header">
+                    <span className="gge-card-title">
+                      <PlusCircle size={18} style={{ color: '#E30612' }} /> Nova Dúvida
+                    </span>
                   </div>
 
-                  {/* PREVIEW COMPLETO DA DÚVIDA SELEIONADA PELO MONITOR */}
-                  {selectedTicketForMonitor && (
-                    <div className="gge-selected-doubt-preview">
-                      <div className="gge-selected-doubt-title">
-                        <Eye size={16} /> Detalhes Completos da Dúvida Selecionada [{selectedTicketForMonitor.id}]
+                  <div className="gge-user-banner">
+                    <div className="gge-user-banner-left">
+                      <div className="gge-user-avatar">
+                        {user?.avatarUrl ? (
+                          <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="gge-user-avatar-img" />
+                        ) : (
+                          user ? user.name.charAt(0) : 'A'
+                        )}
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '4px' }}>
-                        Aluno: <strong style={{ color: '#14387E' }}>{selectedTicketForMonitor.aluno}</strong> · Matéria: <strong style={{ color: '#E30612' }}>{selectedTicketForMonitor.assunto}</strong>
+                      <div className="gge-user-banner-info">
+                        <div className="name">{user ? user.name : 'Visitante'}</div>
+                        <div className="unit">{user ? user.email : 'Faça login para enviar'}</div>
                       </div>
-                      <div className="gge-selected-doubt-text">
-                        {selectedTicketForMonitor.duvidaTexto || <em>Dúvida enviada via anexo de imagem/foto.</em>}
-                      </div>
-                      {selectedTicketForMonitor.fotoUrls && selectedTicketForMonitor.fotoUrls.length > 0 && (
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                          {selectedTicketForMonitor.fotoUrls.map((url, i) => (
-                            <img
-                              key={i}
-                              src={`${API_BASE}${url}`}
-                              alt="Questão do aluno"
-                              onClick={() => setSelectedImage(`${API_BASE}${url}`)}
-                              style={{ height: '80px', width: 'auto', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }}
-                              title="Clique para ampliar e baixar"
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
-                  )}
-
-                  <div className="gge-form-group">
-                    <label className="gge-label">Explicação Passo a Passo</label>
-                    <textarea
-                      placeholder="Resolução detalhada da questão..."
-                      value={respostaMonitor.textoExplicativo}
-                      onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })}
-                      onInput={(e) => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = `${e.target.scrollHeight + 4}px`;
-                      }}
-                      className="gge-textarea"
-                      rows={3}
-                    />
-                  </div>
-
-                  {/* Formas de Enviar Conteudo (Recursos) */}
-                  <div className="gge-resources-box">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#14387E' }}>Anexar Recursos à Explicação</span>
-                      {recording ? (
-                        <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px', background: '#E30612' }}>
-                          <Square size={14} fill="white" /> Parar Gravação 🔴
-                        </button>
-                      ) : (
-                        <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.8rem', padding: '6px 12px', color: audioBlob ? '#059669' : '#14387E' }}>
-                          <Mic size={15} style={{ color: audioBlob ? '#059669' : '#0284C7' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
-                        </button>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
-                      <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
-                        <FileText size={16} style={{ color: '#e11d48' }} /> <span>+ PDF</span>
-                        <input type="file" accept=".pdf" multiple onChange={handleAddPdfs} style={{ display: 'none' }} />
-                      </label>
-                      <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
-                        <ImageIcon size={16} style={{ color: '#D97706' }} /> <span>+ Imagem</span>
-                        <input type="file" accept="image/*" multiple onChange={handleAddFotos} style={{ display: 'none' }} />
-                      </label>
-                      <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
-                        <Video size={16} style={{ color: '#059669' }} /> <span>+ Vídeo</span>
-                        <input type="file" accept="video/*" multiple onChange={handleAddVideos} style={{ display: 'none' }} />
-                      </label>
-                    </div>
-
-                    {/* Player de áudio gravado */}
-                    {audioUrl && (
-                      <div style={{ background: '#F1F5F9', padding: '10px 12px', borderRadius: '8px', marginBottom: '10px', border: '1px solid #CBD5E1' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0284C7', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Mic size={14} /> Áudio gravado — Ouça antes de enviar:
-                          </span>
-                          <button type="button" onClick={clearAudio} style={{ background: 'none', border: 'none', color: '#e11d48', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Trash2 size={14} /> <span style={{ fontSize: '0.75rem' }}>Apagar</span>
-                          </button>
-                        </div>
-                        <audio controls src={audioUrl} style={{ width: '100%', height: '36px' }} />
-                      </div>
+                    {!user && (
+                      <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.8rem' }}>
+                        Entrar
+                      </button>
                     )}
                   </div>
 
-                  <button type="submit" className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
-                    <Send size={16} /> Enviar Explicação ao Aluno
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Cycle Filter */}
-            <div className="gge-card">
-              <div className="gge-card-header">
-                <span className="gge-card-title"><Layers size={18} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
-              </div>
-              <div className="gge-filter-buttons-grid">
-                {[
-                  { id: 'todos', label: 'Todas', count: filteredTickets.length },
-                  { id: 'pendente', label: 'Dúvida Enviada', count: filteredTickets.filter(t => t.status === 'Pendente').length },
-                  { id: 'explicado', label: 'Resposta do Professor', count: filteredTickets.filter(t => t.status === 'Explicado').length },
-                  { id: 'entendido', label: 'Aluno Entendeu', count: filteredTickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
-                  { id: 'praticando', label: 'Fixação com IA', count: filteredTickets.filter(t => t.status === 'Praticando').length },
-                  { id: 'aprovado', label: 'Conteúdo Dominado', count: filteredTickets.filter(t => t.status === 'Aprovado').length },
-                ].map(f => (
-                  <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
-                    <span>{f.label}</span>
-                    <span className="gge-filter-count">{f.count}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* ─── HISTÓRICO DE DÚVIDAS ─── */}
-            <div id="feed-section">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#14387E', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BookOpen size={20} style={{ color: '#E30612' }} />
-                  {user?.role === 'aluno' ? 'Seu Histórico Privado de Dúvidas' : 'Fila Geral de Dúvidas'}
-                </h2>
-                <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}>
-                  {filteredTickets.length} {filteredTickets.length === 1 ? 'chamado' : 'chamados'}
-                </span>
-              </div>
-
-              {loading ? (
-                <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: '#E30612', marginBottom: '10px' }} />
-                  <p style={{ fontSize: '0.9rem', color: '#475569' }}>Carregando dúvidas...</p>
-                </div>
-              ) : filteredTickets.length === 0 ? (
-                <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <HelpCircle size={32} style={{ color: '#64748B', marginBottom: '10px' }} />
-                  <p style={{ fontSize: '1rem', fontWeight: '800', color: '#14387E', marginBottom: '4px' }}>Nenhuma dúvida cadastrada</p>
-                  <p style={{ fontSize: '0.85rem', color: '#475569' }}>Use o botão "Nova Dúvida" para enviar sua questão ao professor.</p>
-                </div>
-              ) : (
-                filteredTickets.map(ticket => (
-                  <div key={ticket.id} className="gge-ticket-card">
-
-                    {/* Ticket header */}
-                    <div className="gge-ticket-header">
-                      <div style={{ minWidth: 0 }}>
-                        <div className="gge-ticket-id">{ticket.id} · {ticket.area || 'Física'}</div>
-                        <div className="gge-ticket-subject">{ticket.assunto}</div>
-                        <div className="gge-ticket-meta">por <strong>{ticket.aluno}</strong> · {new Date(ticket.criadoEm).toLocaleDateString('pt-BR')}</div>
-                      </div>
-                      {statusBadge(ticket)}
+                  <form onSubmit={handleCriarChamado}>
+                    <div className="gge-form-group">
+                      <label className="gge-label">Área do Conhecimento</label>
+                      <select
+                        value={novoChamado.area}
+                        onChange={(e) => setNovoChamado({ ...novoChamado, area: e.target.value })}
+                        className="gge-select"
+                      >
+                        <option value="Física">Física</option>
+                        <option value="Matemática">Matemática</option>
+                        <option value="Química">Química</option>
+                        <option value="Biologia">Biologia</option>
+                        <option value="Linguagens">Linguagens & Redação</option>
+                        <option value="Ciências Humanas">Ciências Humanas</option>
+                      </select>
                     </div>
 
-                    {/* Doubt text */}
-                    <div className="gge-ticket-body">
-                      {ticket.duvidaTexto}
-                      {ticket.fotoUrls && ticket.fotoUrls.length > 0 ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: ticket.fotoUrls.length > 1 ? 'repeat(auto-fit, minmax(180px, 1fr))' : '1fr', gap: '10px', marginTop: '12px' }}>
-                          {ticket.fotoUrls.map((url, idx) => (
-                            <img
-                              key={idx}
-                              src={`${API_BASE}${url}`}
-                              alt={`Foto da Questão ${idx + 1}`}
-                              onClick={() => setSelectedImage(`${API_BASE}${url}`)}
-                              className="gge-ticket-image"
-                              style={{ cursor: 'pointer' }}
-                              title="Clique para ampliar e baixar foto"
-                            />
+                    <div className="gge-form-group">
+                      <label className="gge-label">Matéria e Assunto</label>
+                      <input type="text" required placeholder="Ex: Física — Leis de Ohm, Redação — Proposta de Intervenção..."
+                        value={novoChamado.assunto} onChange={(e) => setNovoChamado({ ...novoChamado, assunto: e.target.value })} className="gge-input" />
+                    </div>
+
+                    <div className="gge-form-group">
+                      <label className="gge-label">Sua Dúvida</label>
+                      <textarea
+                        placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
+                        value={novoChamado.duvidaTexto}
+                        onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight + 4}px`;
+                        }}
+                        className="gge-textarea"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                        <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.875rem' }}>
+                          <Camera size={16} style={{ color: '#D97706' }} />
+                          <span>{fotosAluno.length > 0 ? `+ Anexar Fotos (${fotosAluno.length})` : 'Anexar Foto(s)'}</span>
+                          <input type="file" accept="image/*" multiple onChange={handleAddFotosAluno} style={{ display: 'none' }} />
+                        </label>
+                        <button type="submit" className="gge-btn gge-btn-primary">
+                          <Send size={16} /> Enviar Dúvida
+                        </button>
+                      </div>
+
+                      {fotosAluno.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                          {fotosAluno.map((file, idx) => (
+                            <span key={idx} style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <ImageIcon size={14} style={{ color: '#D97706' }} /> {file.name}
+                              <button type="button" onClick={() => handleRemoveFotoAluno(idx)} style={{ background: 'none', border: 'none', color: '#e11d48', cursor: 'pointer', padding: '0 2px' }}>
+                                <X size={14} />
+                              </button>
+                            </span>
                           ))}
                         </div>
-                      ) : ticket.fotoUrl ? (
-                        <img
-                          src={`${API_BASE}${ticket.fotoUrl}`}
-                          alt="Foto da Questão"
-                          onClick={() => setSelectedImage(`${API_BASE}${ticket.fotoUrl}`)}
-                          className="gge-ticket-image"
-                          style={{ cursor: 'pointer' }}
-                          title="Clique para ampliar e baixar foto"
-                        />
-                      ) : null}
+                      )}
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Form Responder Dúvida com Preview Completo da Dúvida Selecionada */}
+              {(currentUserRole === 'monitor' || currentUserRole === 'coordenador') && (
+                <div className="gge-card">
+                  <div className="gge-card-header">
+                    <span className="gge-card-title"><UserCheck size={18} style={{ color: '#0284C7' }} /> Responder Dúvida</span>
+                  </div>
+                  <form onSubmit={handleEnviarResposta}>
+                    <div className="gge-form-group">
+                      <label className="gge-label">Selecionar Dúvida para Atendimento</label>
+                      <select
+                        value={respostaMonitor.ticketId}
+                        onChange={(e) => setRespostaMonitor({ ...respostaMonitor, ticketId: e.target.value })}
+                        className="gge-select"
+                      >
+                        <option value="">-- Escolha um chamado da fila --</option>
+                        {tickets.map(t => (
+                          <option key={t.id} value={t.id}>[{t.id}] {t.aluno} — {t.assunto} ({t.status})</option>
+                        ))}
+                      </select>
                     </div>
 
-                    {/* Teacher response */}
-                    {ticket.resposta && (
-                      <div className="gge-response-box">
-                        <div className="gge-response-header">
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserCheck size={16} /> {ticket.resposta.monitor}</span>
-                          <span style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                            {new Date(ticket.resposta.respondidoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                    {/* PREVIEW COMPLETO DA DÚVIDA SELEIONADA PELO MONITOR */}
+                    {selectedTicketForMonitor && (
+                      <div className="gge-selected-doubt-preview">
+                        <div className="gge-selected-doubt-title">
+                          <Eye size={16} /> Detalhes Completos da Dúvida Selecionada [{selectedTicketForMonitor.id}]
                         </div>
-                        {ticket.resposta.texto && <p style={{ fontSize: '0.95rem', color: '#1e293b', lineHeight: '1.6', marginBottom: '10px' }}>{ticket.resposta.texto}</p>}
-
-                        {/* Audio */}
-                        {ticket.resposta.audioUrl && (
-                          <div style={{ marginBottom: '12px' }}>
-                            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0284C7', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Mic size={14} /> Áudio do professor
-                            </div>
-                            <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} style={{ width: '100%', height: '38px' }} />
-                          </div>
-                        )}
-
-                        {/* Photos */}
-                        {((ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0) || ticket.resposta.fotoUrl) && (
-                          <div style={{ display: 'grid', gridTemplateColumns: (ticket.resposta.fotoUrls?.length > 1) ? 'repeat(auto-fit, minmax(200px, 1fr))' : '1fr', gap: '10px', marginBottom: '10px' }}>
-                            {(ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0 ? ticket.resposta.fotoUrls : [ticket.resposta.fotoUrl]).map((url, i) => (
+                        <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '4px' }}>
+                          Aluno: <strong style={{ color: '#14387E' }}>{selectedTicketForMonitor.aluno}</strong> · Matéria: <strong style={{ color: '#E30612' }}>{selectedTicketForMonitor.assunto}</strong>
+                        </div>
+                        <div className="gge-selected-doubt-text">
+                          {selectedTicketForMonitor.duvidaTexto || <em>Dúvida enviada via anexo de imagem/foto.</em>}
+                        </div>
+                        {selectedTicketForMonitor.fotoUrls && selectedTicketForMonitor.fotoUrls.length > 0 && (
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                            {selectedTicketForMonitor.fotoUrls.map((url, i) => (
                               <img
                                 key={i}
                                 src={`${API_BASE}${url}`}
-                                alt={`Imagem explicativa ${i + 1}`}
+                                alt="Questão do aluno"
+                                onClick={() => setSelectedImage(`${API_BASE}${url}`)}
+                                style={{ height: '80px', width: 'auto', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }}
+                                title="Clique para ampliar e baixar"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="gge-form-group">
+                      <label className="gge-label">Explicação Passo a Passo</label>
+                      <textarea
+                        placeholder="Resolução detalhada da questão..."
+                        value={respostaMonitor.textoExplicativo}
+                        onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight + 4}px`;
+                        }}
+                        className="gge-textarea"
+                        rows={3}
+                      />
+                    </div>
+                    
+                    {/* Formas de Enviar Conteudo (Recursos) */}
+                    <div className="gge-resources-box">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#14387E' }}>Anexar Recursos à Explicação</span>
+                        {recording ? (
+                          <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px', background: '#E30612' }}>
+                            <Square size={14} fill="white" /> Parar Gravação 🔴
+                          </button>
+                        ) : (
+                          <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.8rem', padding: '6px 12px', color: audioBlob ? '#059669' : '#14387E' }}>
+                            <Mic size={15} style={{ color: audioBlob ? '#059669' : '#0284C7' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
+                          </button>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+                        <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
+                          <FileText size={16} style={{ color: '#e11d48' }} /> <span>+ PDF</span>
+                          <input type="file" accept=".pdf" multiple onChange={handleAddPdfs} style={{ display: 'none' }} />
+                        </label>
+                        <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
+                          <ImageIcon size={16} style={{ color: '#D97706' }} /> <span>+ Imagem</span>
+                          <input type="file" accept="image/*" multiple onChange={handleAddFotos} style={{ display: 'none' }} />
+                        </label>
+                        <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
+                          <Video size={16} style={{ color: '#059669' }} /> <span>+ Vídeo</span>
+                          <input type="file" accept="video/*" multiple onChange={handleAddVideos} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+
+                      {/* Player de áudio gravado */}
+                      {audioUrl && (
+                        <div style={{ background: '#F1F5F9', padding: '10px 12px', borderRadius: '8px', marginBottom: '10px', border: '1px solid #CBD5E1' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0284C7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Mic size={14} /> Áudio gravado — Ouça antes de enviar:
+                            </span>
+                            <button type="button" onClick={clearAudio} style={{ background: 'none', border: 'none', color: '#e11d48', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Trash2 size={14} /> <span style={{ fontSize: '0.75rem' }}>Apagar</span>
+                            </button>
+                          </div>
+                          <audio controls src={audioUrl} style={{ width: '100%', height: '36px' }} />
+                        </div>
+                      )}
+                    </div>
+
+                    <button type="submit" className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
+                      <Send size={16} /> Enviar Explicação ao Aluno
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* ─── HISTÓRICO DE DÚVIDAS ─── */}
+              <div id="feed-section">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#14387E', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BookOpen size={20} style={{ color: '#E30612' }} />
+                    {user?.role === 'aluno' ? 'Seu Histórico Privado de Dúvidas' : 'Fila Geral de Dúvidas'}
+                  </h2>
+                  <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}>
+                    {filteredTickets.length} {filteredTickets.length === 1 ? 'chamado' : 'chamados'}
+                  </span>
+                </div>
+
+                {loading ? (
+                  <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                    <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: '#E30612', marginBottom: '10px' }} />
+                    <p style={{ fontSize: '0.9rem', color: '#475569' }}>Carregando dúvidas...</p>
+                  </div>
+                ) : filteredTickets.length === 0 ? (
+                  <div className="gge-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                    <HelpCircle size={32} style={{ color: '#64748B', marginBottom: '10px' }} />
+                    <p style={{ fontSize: '1rem', fontWeight: '800', color: '#14387E', marginBottom: '4px' }}>Nenhuma dúvida cadastrada</p>
+                    <p style={{ fontSize: '0.85rem', color: '#475569' }}>Use o botão "Nova Dúvida" para enviar sua questão ao professor.</p>
+                  </div>
+                ) : (
+                  filteredTickets.map(ticket => (
+                    <div key={ticket.id} className="gge-ticket-card">
+
+                      {/* Ticket header */}
+                      <div className="gge-ticket-header">
+                        <div style={{ minWidth: 0 }}>
+                          <div className="gge-ticket-id">{ticket.id} · {ticket.area || 'Física'}</div>
+                          <div className="gge-ticket-subject">{ticket.assunto}</div>
+                          <div className="gge-ticket-meta">por <strong>{ticket.aluno}</strong> · {new Date(ticket.criadoEm).toLocaleDateString('pt-BR')}</div>
+                        </div>
+                        {statusBadge(ticket)}
+                      </div>
+
+                      {/* Doubt text */}
+                      <div className="gge-ticket-body">
+                        {ticket.duvidaTexto}
+                        {ticket.fotoUrls && ticket.fotoUrls.length > 0 ? (
+                          <div style={{ display: 'grid', gridTemplateColumns: ticket.fotoUrls.length > 1 ? 'repeat(auto-fit, minmax(180px, 1fr))' : '1fr', gap: '10px', marginTop: '12px' }}>
+                            {ticket.fotoUrls.map((url, idx) => (
+                              <img
+                                key={idx}
+                                src={`${API_BASE}${url}`}
+                                alt={`Foto da Questão ${idx + 1}`}
                                 onClick={() => setSelectedImage(`${API_BASE}${url}`)}
                                 className="gge-ticket-image"
                                 style={{ cursor: 'pointer' }}
@@ -1319,93 +1339,142 @@ export default function PlataformaMonitoriaGGE() {
                               />
                             ))}
                           </div>
-                        )}
+                        ) : ticket.fotoUrl ? (
+                          <img
+                            src={`${API_BASE}${ticket.fotoUrl}`}
+                            alt="Foto da Questão"
+                            onClick={() => setSelectedImage(`${API_BASE}${ticket.fotoUrl}`)}
+                            className="gge-ticket-image"
+                            style={{ cursor: 'pointer' }}
+                            title="Clique para ampliar e baixar foto"
+                          />
+                        ) : null}
+                      </div>
 
-                        {/* PDFs */}
-                        {((ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0) || ticket.resposta.pdfUrl) && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-                            {(ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0 ? ticket.resposta.pdfUrls : [ticket.resposta.pdfUrl]).map((url, i) => (
-                              <a key={i} href={`${API_BASE}${url}`} target="_blank" rel="noreferrer" className="gge-btn gge-btn-secondary" style={{ fontSize: '0.85rem' }}>
-                                <FileText size={16} style={{ color: '#e11d48' }} /> <span>PDF Explicativo {i > 0 ? `#${i + 1}` : ''}</span>
-                              </a>
-                            ))}
+                      {/* Teacher response */}
+                      {ticket.resposta && (
+                        <div className="gge-response-box">
+                          <div className="gge-response-header">
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserCheck size={16} /> {ticket.resposta.monitor}</span>
+                            <span style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                              {new Date(ticket.resposta.respondidoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
-                        )}
-
-                        {ticket.etapa === 2 && user?.role === 'aluno' && (
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                            <button onClick={() => handleAlunoEntendeu(ticket.id)} className="gge-btn gge-btn-primary">
-                              <CheckCircle2 size={16} /> Entendi! Ir para Fixação
-                            </button>
-                          </div>
-                        )}
-
-                        {/* SISTEMA DE AVALIAÇÃO DA EXPLICAÇÃO PELO ALUNO */}
-                        {ticket.resposta && user?.role === 'aluno' && (
-                          <div className="gge-rating-card">
-                            <div className="gge-rating-title">
-                              <Star size={16} fill="#F59E0B" /> Avalie a Explicação do Professor
+                          {ticket.resposta.texto && <p style={{ fontSize: '0.95rem', color: '#1e293b', lineHeight: '1.6', marginBottom: '10px' }}>{ticket.resposta.texto}</p>}
+                          
+                          {/* Audio */}
+                          {ticket.resposta.audioUrl && (
+                            <div style={{ marginBottom: '12px' }}>
+                              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0284C7', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Mic size={14} /> Áudio do professor
+                              </div>
+                              <audio controls src={`${API_BASE}${ticket.resposta.audioUrl}`} style={{ width: '100%', height: '38px' }} />
                             </div>
-                            <p style={{ fontSize: '0.825rem', color: '#78350F' }}>
-                              Como você avalia a clareza e didática desta resolução?
-                            </p>
-                            <div className="gge-stars-row">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  key={star}
-                                  type="button"
-                                  onClick={() => handleAvaliarProfessor(ticket.id, star)}
-                                  className={`gge-star-btn ${(ticket.avaliacao?.nota || avaliacoes[ticket.id]) >= star ? 'active' : ''}`}
-                                >
-                                  ★
-                                </button>
+                          )}
+
+                          {/* Photos */}
+                          {((ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0) || ticket.resposta.fotoUrl) && (
+                            <div style={{ display: 'grid', gridTemplateColumns: (ticket.resposta.fotoUrls?.length > 1) ? 'repeat(auto-fit, minmax(200px, 1fr))' : '1fr', gap: '10px', marginBottom: '10px' }}>
+                              {(ticket.resposta.fotoUrls && ticket.resposta.fotoUrls.length > 0 ? ticket.resposta.fotoUrls : [ticket.resposta.fotoUrl]).map((url, i) => (
+                                <img
+                                  key={i}
+                                  src={`${API_BASE}${url}`}
+                                  alt={`Imagem explicativa ${i + 1}`}
+                                  onClick={() => setSelectedImage(`${API_BASE}${url}`)}
+                                  className="gge-ticket-image"
+                                  style={{ cursor: 'pointer' }}
+                                  title="Clique para ampliar e baixar foto"
+                                />
                               ))}
                             </div>
-                            {ticket.avaliacao && (
-                              <div style={{ fontSize: '0.8rem', color: '#92400E', fontWeight: 600, marginTop: '4px' }}>
-                                Sua avaliação enviada: {ticket.avaliacao.nota} / 5 Estrelas ★
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
 
-                    {/* AI fixation */}
-                    {ticket.questaoFixacao && ticket.etapa >= 4 && (
-                      <div className="gge-ia-question-box">
-                        <div className="gge-ia-header">
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Sparkles size={16} style={{ color: '#E30612' }} /> IA GGE · Fixação [{ticket.questaoFixacao.vestibular}]
-                          </span>
-                          <span style={{ fontSize: '0.75rem', background: 'rgba(126,34,206,.15)', padding: '3px 9px', borderRadius: '9999px', fontWeight: 700 }}>
-                            Nível {ticket.questaoFixacao.nivel}
-                          </span>
+                          {/* PDFs */}
+                          {((ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0) || ticket.resposta.pdfUrl) && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                              {(ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0 ? ticket.resposta.pdfUrls : [ticket.resposta.pdfUrl]).map((url, i) => (
+                                <a key={i} href={`${API_BASE}${url}`} target="_blank" rel="noreferrer" className="gge-btn gge-btn-secondary" style={{ fontSize: '0.85rem' }}>
+                                  <FileText size={16} style={{ color: '#e11d48' }} /> <span>PDF Explicativo {i > 0 ? `#${i+1}` : ''}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+
+                          {ticket.etapa === 2 && user?.role === 'aluno' && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                              <button onClick={() => handleAlunoEntendeu(ticket.id)} className="gge-btn gge-btn-primary">
+                                <CheckCircle2 size={16} /> Entendi! Ir para Fixação
+                              </button>
+                            </div>
+                          )}
+
+                          {/* SISTEMA DE AVALIAÇÃO DA EXPLICAÇÃO PELO ALUNO */}
+                          {ticket.resposta && user?.role === 'aluno' && (
+                            <div className="gge-rating-card">
+                              <div className="gge-rating-title">
+                                <Star size={16} fill="#F59E0B" /> Avalie a Explicação do Professor
+                              </div>
+                              <p style={{ fontSize: '0.825rem', color: '#78350F' }}>
+                                Como você avalia a clareza e didática desta resolução?
+                              </p>
+                              <div className="gge-stars-row">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => handleAvaliarProfessor(ticket.id, star)}
+                                    className={`gge-star-btn ${(ticket.avaliacao?.nota || avaliacoes[ticket.id]) >= star ? 'active' : ''}`}
+                                  >
+                                    ★
+                                  </button>
+                                ))}
+                              </div>
+                              {ticket.avaliacao && (
+                                <div style={{ fontSize: '0.8rem', color: '#92400E', fontWeight: 600, marginTop: '4px' }}>
+                                  Sua avaliação enviada: {ticket.avaliacao.nota} / 5 Estrelas ★
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <p style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b', lineHeight: '1.6' }}>{ticket.questaoFixacao.enunciado}</p>
-                        <div className="gge-options-grid">
-                          {ticket.questaoFixacao.opcoes.map((opcao, idx) => (
-                            <button key={idx} onClick={() => handleResponderFixacao(ticket.id, opcao)} disabled={ticket.etapa === 5}
-                              className={`gge-option-btn ${ticket.etapa === 5 && opcao === ticket.questaoFixacao.respostaCorreta ? 'correct' : ''}`}>
-                              {opcao}
-                            </button>
-                          ))}
-                        </div>
-                        {ticket.etapa !== 5 && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(126,34,206,.15)' }}>
-                            <span style={{ fontSize: '0.825rem', color: '#64748B' }}>Ainda tem dúvida?</span>
-                            <button onClick={() => handleResponderFixacao(ticket.id, null, true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.825rem', padding: '6px 12px', color: '#E30612' }}>
-                              <RotateCcw size={14} /> Voltar ao Professor
-                            </button>
+                      )}
+
+                      {/* AI fixation */}
+                      {ticket.questaoFixacao && ticket.etapa >= 4 && (
+                        <div className="gge-ia-question-box">
+                          <div className="gge-ia-header">
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Sparkles size={16} style={{ color: '#E30612' }} /> IA GGE · Fixação [{ticket.questaoFixacao.vestibular}]
+                            </span>
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(126,34,206,.15)', padding: '3px 9px', borderRadius: '9999px', fontWeight: 700 }}>
+                              Nível {ticket.questaoFixacao.nivel}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </main>
+                          <p style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b', lineHeight: '1.6' }}>{ticket.questaoFixacao.enunciado}</p>
+                          <div className="gge-options-grid">
+                            {ticket.questaoFixacao.opcoes.map((opcao, idx) => (
+                              <button key={idx} onClick={() => handleResponderFixacao(ticket.id, opcao)} disabled={ticket.etapa === 5}
+                                className={`gge-option-btn ${ticket.etapa === 5 && opcao === ticket.questaoFixacao.respostaCorreta ? 'correct' : ''}`}>
+                                {opcao}
+                              </button>
+                            ))}
+                          </div>
+                          {ticket.etapa !== 5 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(126,34,206,.15)' }}>
+                              <span style={{ fontSize: '0.825rem', color: '#64748B' }}>Ainda tem dúvida?</span>
+                              <button onClick={() => handleResponderFixacao(ticket.id, null, true)} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.825rem', padding: '6px 12px', color: '#E30612' }}>
+                                <RotateCcw size={14} /> Voltar ao Professor
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </main>
+          </>
         )}
       </div>
 

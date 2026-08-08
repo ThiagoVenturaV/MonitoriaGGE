@@ -48,7 +48,8 @@ let users = [
     email: 'lucas@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'aluno',
-    turma: '3º Ano Terceirão - Medicina'
+    turma: '3º Ano Terceirão - Medicina',
+    avatarUrl: '/uploads/avatar-lucas.jpg'
   },
   {
     id: 'USR-02',
@@ -65,7 +66,8 @@ let users = [
     passwordHash: defaultPasswordHash,
     role: 'monitor',
     area: 'Física',
-    disciplina: 'Física & Astronomia'
+    disciplina: 'Física & Astronomia',
+    avatarUrl: '/uploads/avatar-ricardo.jpg'
   },
   {
     id: 'USR-04',
