@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================================================
-   MONITORIA GGE — CORES OFICIAIS & HEADER OFICIAL COLÉGIO GGE
+   MONITORIA GGE — SISTEMA DE DESIGN DE ALTA LEGIBILIDADE & CORES OFICIAIS
    Vermelho Oficial: #E30612 | Azul-Marinho: #14387E | Branco: #FFFFFF
    ============================================================================ */
 
 :root {
-  /* GGE Official Colors (Requested by User) */
+  /* GGE Official Brand Colors */
   --gge-red: #E30612;
   --gge-red-hover: #c4040e;
   --gge-navy: #14387E;
@@ -14,73 +14,72 @@
   --gge-navy-dark: #0a1628;
   --gge-white: #FFFFFF;
 
-  /* Theme Mapping */
+  /* Global Theme Tokens */
   --primary: #E30612;
   --primary-foreground: #FFFFFF;
   --navy: #14387E;
   --navy-foreground: #FFFFFF;
 
   --background: #F4F6FA;
-  --foreground: #14387E;
+  --foreground: #1e293b;
   --card: #FFFFFF;
   --card-foreground: #1e293b;
   --secondary: #F1F5F9;
   --secondary-foreground: #14387E;
 
-  /* Surfaces for Dashboards and Components */
+  /* Surfaces for Components */
   --surface-0: #F4F6FA;
   --surface-1: #FFFFFF;
   --surface-2: #F8FAFC;
   --surface-3: #F1F5F9;
   --surface-4: #E2E8F0;
-  --surface-glass: rgba(255, 255, 255, 0.9);
 
-  /* Brand Tokens */
+  /* Brand Accents */
   --brand: #E30612;
-  --brand-soft: #ff2d55;
+  --brand-soft: #e11d48;
   --brand-glow: rgba(227, 6, 18, 0.25);
-  --brand-ghost: rgba(227, 6, 18, 0.05);
+  --brand-ghost: rgba(227, 6, 18, 0.06);
 
   /* Typography & Colors */
   --text-0: #14387E;
   --text-1: #334155;
-  --text-2: #64748B;
-  --text-3: #94A3B8;
+  --text-2: #475569;
+  --text-3: #64748B;
 
-  /* Accent Palette */
+  /* Status Colors */
   --amber: #D97706;
   --sky: #0284C7;
   --emerald: #059669;
   --violet: #7E22CE;
+  --rose: #e11d48;
 
-  /* Borders & Shadows */
+  /* Borders & Inputs */
   --border: #E2E8F0;
   --border-subtle: #F1F5F9;
-  --border-default: #E2E8F0;
-  --border-hover: #CBD5E1;
-  --border-brand: rgba(227, 6, 18, 0.3);
+  --border-default: #CBD5E1;
+  --border-hover: #94A3B8;
   --input: #CBD5E1;
   --muted: #F1F5F9;
   --muted-foreground: #64748B;
 
   /* Radius */
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
   --r-xs: 6px;
   --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
+  --r-md: 10px;
+  --r-lg: 14px;
   --r-xl: 20px;
   --r-full: 9999px;
 
-  /* Elevation */
-  --shadow-xs: 0 1px 2px rgba(20, 56, 126, 0.04);
-  --shadow-sm: 0 2px 8px rgba(20, 56, 126, 0.06);
-  --shadow-md: 0 6px 16px rgba(20, 56, 126, 0.1);
-  --shadow-lg: 0 12px 28px rgba(20, 56, 126, 0.14);
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(20, 56, 126, 0.05);
+  --shadow-sm: 0 2px 8px rgba(20, 56, 126, 0.08);
+  --shadow-md: 0 6px 16px rgba(20, 56, 126, 0.12);
+  --shadow-lg: 0 12px 28px rgba(20, 56, 126, 0.16);
 
   /* Fonts */
   --font-sans: 'Barlow', ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -97,14 +96,16 @@
 html {
   scroll-behavior: smooth;
   font-family: var(--font-sans);
+  font-size: 16px;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-size: 0.95rem;
   min-height: 100vh;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -119,14 +120,15 @@ h1, h2, h3, h4, h5, h6 {
 .font-sans { font-family: var(--font-sans); }
 
 /* ============================================================================
-   HEADER OFICIAL INSPIRADO NO SITE DO COLÉGIO GGE (FUNDO BRANCO, LOGO SEM QUADRADO)
+   HEADER OFICIAL DO COLÉGIO GGE (FUNDO BRANCO, LOGO OFICIAL LIMPA)
    ============================================================================ */
 
 .gge-top-bar {
   background-color: #0a1628;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.75rem;
-  padding: 0.35rem 1rem;
+  color: #FFFFFF;
+  font-size: 0.825rem;
+  font-weight: 500;
+  padding: 0.4rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -150,7 +152,7 @@ h1, h2, h3, h4, h5, h6 {
 .gge-official-header-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0.625rem 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -173,7 +175,7 @@ h1, h2, h3, h4, h5, h6 {
 .gge-official-nav {
   display: none;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 @media (min-width: 768px) {
@@ -182,7 +184,6 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Botões da Navegação: Azul Marinho por padrão, Vermelho + Texto Branco quando ATIVO (igual site GGE) */
 .gge-official-nav-btn {
   display: inline-flex;
   align-items: center;
@@ -190,7 +191,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.625rem 1.125rem;
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
-  font-size: 0.825rem;
+  font-size: 0.875rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -216,7 +217,7 @@ h1, h2, h3, h4, h5, h6 {
 .gge-official-user-area {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
 }
 
 .gge-official-user-info {
@@ -232,14 +233,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-official-user-name {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #14387E;
 }
 
 .gge-official-user-sub {
-  font-size: 0.725rem;
-  color: #64748B;
+  font-size: 0.775rem;
+  color: #475569;
 }
 
 .gge-official-logout-btn {
@@ -248,7 +249,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.35rem;
   padding: 0.45rem 0.85rem;
   border-radius: var(--radius-sm);
-  font-size: 0.775rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #E30612;
   background-color: rgba(227, 6, 18, 0.08);
@@ -311,7 +312,6 @@ h1, h2, h3, h4, h5, h6 {
   height: 52px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .gge-login-hero-brand-title {
@@ -324,8 +324,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-login-hero-brand-sub {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .gge-login-hero-main {
@@ -349,8 +349,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-login-hero-desc {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
   margin-bottom: 2rem;
 }
@@ -387,14 +387,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-login-demo-title {
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #FFFFFF;
   display: block;
 }
 
 .gge-login-demo-sub {
-  font-size: 0.775rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.825rem;
+  color: rgba(255, 255, 255, 0.8);
   display: block;
 }
 
@@ -402,8 +402,8 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.775rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.825rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .gge-login-form-section {
@@ -430,13 +430,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-login-card-title {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: #14387E;
 }
 
 .gge-login-card-sub {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--muted-foreground);
   margin-top: 0.25rem;
 }
@@ -453,9 +453,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-tab-btn {
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--muted-foreground);
   background: transparent;
@@ -474,26 +474,26 @@ h1, h2, h3, h4, h5, h6 {
 .gge-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
+  gap: 0.4rem;
+  margin-bottom: 1.15rem;
 }
 
 .gge-form-label {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #14387E;
 }
 
 .gge-form-input {
   width: 100%;
-  height: 2.625rem;
-  padding: 0.5rem 0.75rem;
+  height: 2.85rem;
+  padding: 0.6rem 0.875rem;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--input);
   background-color: #FFFFFF;
   color: #0f172a;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -505,14 +505,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-form-select {
   width: 100%;
-  height: 2.625rem;
-  padding: 0.5rem 0.75rem;
+  height: 2.85rem;
+  padding: 0.6rem 0.875rem;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--input);
   background-color: #FFFFFF;
   color: #0f172a;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   outline: none;
   cursor: pointer;
 }
@@ -523,7 +523,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-submit-btn {
   width: 100%;
-  height: 2.75rem;
+  height: 2.85rem;
   background-color: #E30612;
   color: #FFFFFF;
   font-family: var(--font-sans);
@@ -548,7 +548,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-demo-logins-title {
-  font-size: 0.775rem;
+  font-size: 0.825rem;
   color: var(--muted-foreground);
   font-weight: 700;
   margin-bottom: 0.5rem;
@@ -561,9 +561,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-demo-btn {
-  padding: 0.4rem 0.5rem;
+  padding: 0.5rem 0.6rem;
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   background-color: #FFFFFF;
   color: #14387E;
@@ -592,14 +592,14 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 1.75rem 1rem;
 }
 
 .gge-container-full {
   max-width: 1360px;
   width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 1.75rem 1rem;
 }
 
 .gge-card {
@@ -608,18 +608,265 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.gge-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.gge-card-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #14387E;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gge-card-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 1rem 0;
+}
+
+/* Ciclo de Aprendizado — Botões de Filtro Padded e Limpos */
+.gge-filter-buttons-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 0.875rem;
+}
+
+.gge-filter-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  background-color: #FFFFFF;
+  color: #14387E;
+  border: 1.5px solid #CBD5E1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gge-filter-item:hover {
+  border-color: #E30612;
+  background-color: #FFF5F5;
+  color: #E30612;
+}
+
+.gge-filter-item.active {
+  background-color: #E30612 !important;
+  color: #FFFFFF !important;
+  border-color: #E30612 !important;
+  box-shadow: 0 3px 8px rgba(227, 6, 18, 0.25);
+}
+
+.gge-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.4rem;
+  border-radius: 9999px;
+  font-size: 0.775rem;
+  font-weight: 800;
+  background-color: rgba(20, 56, 126, 0.1);
+  color: inherit;
+}
+
+.gge-filter-item.active .gge-filter-count {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+/* User Banner */
+.gge-user-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background-color: #F8FAFC;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+}
+
+.gge-user-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.gge-user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  background-color: #14387E;
+  color: #FFFFFF;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gge-user-banner-info .name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #14387E;
+}
+
+.gge-user-banner-info .unit {
+  font-size: 0.825rem;
+  color: #475569;
+}
+
+/* Tickets & Posts */
+.gge-ticket-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
   margin-bottom: 1.25rem;
 }
 
+.gge-ticket-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.gge-ticket-id {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #E30612;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.gge-ticket-subject {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #14387E;
+}
+
+.gge-ticket-meta {
+  font-size: 0.825rem;
+  color: #475569;
+  margin-top: 0.25rem;
+}
+
+.gge-ticket-body {
+  font-size: 0.95rem;
+  color: #1e293b;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.gge-ticket-image {
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.gge-response-box {
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-left: 4px solid #14387E;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.gge-response-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #14387E;
+  margin-bottom: 0.75rem;
+}
+
+.gge-ia-question-box {
+  background-color: #FAF5FF;
+  border: 1px solid #E9D5FF;
+  border-left: 4px solid #7E22CE;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.gge-ia-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #7E22CE;
+  margin-bottom: 0.75rem;
+}
+
+.gge-options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.625rem;
+  margin: 1rem 0;
+}
+
+.gge-option-btn {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  background-color: #FFFFFF;
+  color: #1e293b;
+  border: 1.5px solid #CBD5E1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gge-option-btn:hover {
+  border-color: #7E22CE;
+  background-color: #F3E8FF;
+}
+
+.gge-option-btn.correct {
+  background-color: #DCFCE7;
+  color: #15803D;
+  border-color: #22C55E;
+}
+
+/* Badges */
 .gge-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.35rem 0.75rem;
   border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.775rem;
+  font-weight: 800;
   line-height: 1;
 }
 
@@ -647,15 +894,16 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid rgba(5, 150, 105, 0.3);
 }
 
+/* Generic Buttons */
 .gge-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.25rem;
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -672,12 +920,22 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #c4040e;
 }
 
+.gge-btn-secondary {
+  background-color: #F1F5F9;
+  color: #14387E;
+  border: 1px solid #CBD5E1;
+}
+
+.gge-btn-secondary:hover {
+  background-color: #E2E8F0;
+}
+
 .gge-btn-outline {
   background-color: transparent;
   color: #14387E;
-  border: 1px solid var(--border);
+  border: 1px solid #CBD5E1;
 }
 
 .gge-btn-outline:hover {
-  background-color: var(--muted);
+  background-color: #F1F5F9;
 }

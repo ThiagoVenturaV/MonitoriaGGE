@@ -986,36 +986,36 @@ export default function PlataformaMonitoriaGGE() {
               {/* Profile */}
               <div className="gge-card" id="perfil-section">
                 <div className="gge-card-header">
-                  <span className="gge-card-title"><User size={15} /> Perfil</span>
+                  <span className="gge-card-title"><User size={18} style={{ color: '#E30612' }} /> Perfil do Usuário</span>
                 </div>
                 {user ? (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                      <div className="gge-user-avatar" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>{user.name.charAt(0)}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                      <div className="gge-user-avatar" style={{ width: '44px', height: '44px', fontSize: '1.15rem' }}>{user.name.charAt(0)}</div>
                       <div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-0)' }}>{user.name}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-2)' }}>{user.turma || user.unidade}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', color: '#14387E' }}>{user.name}</div>
+                        <div style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '500' }}>{user.turma || user.unidade}</div>
                       </div>
                     </div>
                     <div className="gge-card-divider" />
-                    <div style={{ fontSize: '0.725rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-2)' }}>Função</span>
-                        <strong style={{ color: 'var(--brand)', textTransform: 'capitalize' }}>{user.role}</strong>
+                    <div style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#64748B', fontWeight: '600' }}>Função</span>
+                        <strong style={{ color: '#E30612', textTransform: 'uppercase', fontSize: '0.8rem', background: 'rgba(227,6,18,0.1)', padding: '2px 8px', borderRadius: '6px' }}>{user.role}</strong>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-2)' }}>Unidade</span>
-                        <strong style={{ color: 'var(--text-0)' }}>{user.unidade?.replace('Unidade ', '')}</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#64748B', fontWeight: '600' }}>Unidade</span>
+                        <strong style={{ color: '#14387E' }}>{user.unidade?.replace('Unidade ', '')}</strong>
                       </div>
                     </div>
                     <div className="gge-card-divider" />
-                    <button onClick={handleLogout} className="gge-btn gge-btn-secondary" style={{ width: '100%', fontSize: '0.725rem', color: 'var(--brand)' }}>
-                      <LogOut size={13} /> Sair da Conta
+                    <button onClick={handleLogout} className="gge-btn gge-btn-outline" style={{ width: '100%', fontSize: '0.85rem', color: '#E30612', borderColor: '#CBD5E1' }}>
+                      <LogOut size={15} /> Sair da Conta
                     </button>
                   </>
                 ) : (
                   <div style={{ textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-2)', marginBottom: '14px', lineHeight: '1.5' }}>
+                    <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '14px', lineHeight: '1.5' }}>
                       Acesse sua conta para enviar dúvidas e acompanhar seu progresso.
                     </p>
                     <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
@@ -1028,30 +1028,32 @@ export default function PlataformaMonitoriaGGE() {
               {/* Cycle Filter */}
               <div className="gge-card">
                 <div className="gge-card-header">
-                  <span className="gge-card-title"><Layers size={15} /> Ciclo de Aprendizado</span>
+                  <span className="gge-card-title"><Layers size={18} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
                 </div>
-                {[
-                  { id: 'todos', label: 'Todas', count: tickets.length },
-                  { id: 'pendente', label: 'Dúvida Enviada', count: tickets.filter(t => t.status === 'Pendente').length },
-                  { id: 'explicado', label: 'Resposta do Professor', count: tickets.filter(t => t.status === 'Explicado').length },
-                  { id: 'entendido', label: 'Aluno Entendeu', count: tickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
-                  { id: 'praticando', label: 'Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
-                  { id: 'aprovado', label: 'Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
-                ].map(f => (
-                  <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
-                    <span>{f.label}</span>
-                    <span className="gge-filter-count">{f.count}</span>
-                  </button>
-                ))}
+                <div className="gge-filter-buttons-grid">
+                  {[
+                    { id: 'todos', label: 'Todas', count: tickets.length },
+                    { id: 'pendente', label: 'Dúvida Enviada', count: tickets.filter(t => t.status === 'Pendente').length },
+                    { id: 'explicado', label: 'Resposta do Professor', count: tickets.filter(t => t.status === 'Explicado').length },
+                    { id: 'entendido', label: 'Aluno Entendeu', count: tickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
+                    { id: 'praticando', label: 'Fixação com IA', count: tickets.filter(t => t.status === 'Praticando').length },
+                    { id: 'aprovado', label: 'Conteúdo Dominado', count: tickets.filter(t => t.status === 'Aprovado').length },
+                  ].map(f => (
+                    <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
+                      <span>{f.label}</span>
+                      <span className="gge-filter-count">{f.count}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Methodology */}
               <div className="gge-card">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <BrainCircuit size={15} style={{ color: 'var(--brand)' }} />
-                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-0)' }}>Metodologia</span>
+                  <BrainCircuit size={18} style={{ color: '#E30612' }} />
+                  <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#14387E' }}>Metodologia GGE</span>
                 </div>
-                <p style={{ fontSize: '0.725rem', color: 'var(--text-2)', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.6' }}>
                   Dúvidas de qualquer matéria resolvidas por professores e fixadas com Inteligência Artificial.
                 </p>
               </div>
