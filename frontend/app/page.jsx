@@ -342,108 +342,109 @@ export default function PlataformaMonitoriaGGE() {
   /* ======================================================================== */
   if (!user || showAuthModal) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="gge-login-wrapper">
         <div className="gge-login-grid">
           {/* Lado Esquerdo - Hero Navy Sweet Look */}
           <section className="gge-login-hero">
-            <div className="flex items-center gap-3">
-              <span className="gge-sweet-logo-img-wrapper">
-                <img src="/logo-gge.png" alt="Colégio GGE" className="gge-sweet-logo-img" />
-              </span>
+            <div className="gge-login-hero-header">
+              <div className="gge-login-hero-logo-box">
+                <img src="/logo-gge.png" alt="Colégio GGE" className="gge-login-hero-logo-img" />
+              </div>
               <div>
-                <span className="block font-display text-lg font-extrabold uppercase tracking-wide text-white">
+                <span className="gge-login-hero-brand-title">
                   Monitoria GGE
                 </span>
-                <span className="block text-xs text-slate-300">
+                <span className="gge-login-hero-brand-sub">
                   Colégio GGE · Ensino Médio, SSA & ENEM
                 </span>
               </div>
             </div>
 
-            <div className="my-10 max-w-lg">
-              <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight text-white mb-4">
+            <div className="gge-login-hero-main">
+              <h1 className="gge-login-hero-title">
                 Sua dúvida vira aprendizado no mesmo dia.
               </h1>
-              <p className="text-sm sm:text-base text-slate-300 mb-8">
+              <p className="gge-login-hero-desc">
                 Envie a questão por texto ou foto, receba a resolução do professor em vídeo, áudio, PDF ou lousa e feche o ciclo com questões recomendadas pela IA GGE.
               </p>
 
-              <div className="grid gap-3">
+              <div className="gge-login-demo-cards">
                 <div
                   onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
-                  className="flex items-start gap-3 rounded-lg bg-slate-800/60 p-4 border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors"
+                  className="gge-login-demo-card"
                 >
-                  <UserCheck className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+                  <UserCheck className="gge-login-demo-icon" size={20} />
                   <div>
-                    <span className="block text-sm font-bold text-white">Portal do Aluno (Demo)</span>
-                    <span className="block text-xs text-slate-300">Envie dúvidas por texto/foto e pratique com a IA GGE.</span>
+                    <span className="gge-login-demo-title">Portal do Aluno (Demo)</span>
+                    <span className="gge-login-demo-sub">Envie dúvidas por texto/foto e pratique com a IA GGE.</span>
                   </div>
                 </div>
 
                 <div
                   onClick={() => handleFastDemoLogin('professor@gge.com.br')}
-                  className="flex items-start gap-3 rounded-lg bg-slate-800/60 p-4 border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors"
+                  className="gge-login-demo-card"
                 >
-                  <BookOpen className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+                  <BookOpen className="gge-login-demo-icon" size={20} />
                   <div>
-                    <span className="block text-sm font-bold text-white">Painel do Monitor (Demo)</span>
-                    <span className="block text-xs text-slate-300">Fila por unidade e respostas multimídia.</span>
+                    <span className="gge-login-demo-title">Painel do Monitor (Demo)</span>
+                    <span className="gge-login-demo-sub">Fila por unidade e respostas multimídia.</span>
                   </div>
                 </div>
 
                 <div
                   onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
-                  className="flex items-start gap-3 rounded-lg bg-slate-800/60 p-4 border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors"
+                  className="gge-login-demo-card"
                 >
-                  <BarChart3 className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+                  <BarChart3 className="gge-login-demo-icon" size={20} />
                   <div>
-                    <span className="block text-sm font-bold text-white">Coordenação Acadêmica (Demo)</span>
-                    <span className="block text-xs text-slate-300">SLAs de atendimento, indicadores e dashboards por unidade.</span>
+                    <span className="gge-login-demo-title">Coordenação Acadêmica (Demo)</span>
+                    <span className="gge-login-demo-sub">SLAs de atendimento, indicadores e dashboards por unidade.</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <p className="flex items-center gap-2 text-xs text-slate-400">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Ambiente demonstrativo oficial de Monitoria Colégio GGE.
-            </p>
+            <div className="gge-login-hero-footer">
+              <CheckCircle2 size={16} style={{ color: '#10B981' }} />
+              <span>Ambiente demonstrativo oficial de Monitoria Colégio GGE.</span>
+            </div>
           </section>
 
           {/* Lado Direito - Card de Acesso / Cadastro */}
-          <section className="gge-login-card-container">
-            <div className="w-full max-w-md gge-sweet-card">
+          <section className="gge-login-form-section">
+            <div className="gge-login-card">
               {showAuthModal && user && (
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-                  <button onClick={() => setShowAuthModal(false)} className="gge-btn gge-btn-outline gge-btn-sm">
+                  <button onClick={() => setShowAuthModal(false)} className="gge-btn gge-btn-outline" style={{ fontSize: '0.8rem', padding: '4px 10px' }}>
                     <X size={16} /> Fechar
                   </button>
                 </div>
               )}
 
-              <div className="gge-sweet-card-header">
-                <h2 className="gge-sweet-card-title">Acesse a plataforma</h2>
-                <p className="text-xs text-muted-foreground mt-1">
+              <div className="gge-login-card-header">
+                <h2 className="gge-login-card-title">Acesse a plataforma</h2>
+                <p className="gge-login-card-sub">
                   Use <strong>lucas@gge.com.br</strong>, <strong>professor@gge.com.br</strong> ou <strong>coordenador@gge.com.br</strong> com a senha <strong>123456</strong>.
                 </p>
               </div>
 
               {authError && (
-                <div style={{ background: 'rgba(239,68,68,0.1)', color: '#dc2626', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', marginBottom: '12px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div style={{ background: 'rgba(227,6,18,0.1)', color: '#E30612', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.825rem', marginBottom: '14px', border: '1px solid rgba(227,6,18,0.25)', fontWeight: 600 }}>
                   {authError}
                 </div>
               )}
 
-              <div className="gge-tabs-list mb-6">
+              <div className="gge-tabs-header">
                 <button
                   type="button"
-                  className={`gge-tab-trigger ${authMode === 'login' ? 'active' : ''}`}
+                  className={`gge-tab-btn ${authMode === 'login' ? 'active' : ''}`}
                   onClick={() => { setAuthMode('login'); setAuthError(''); }}
                 >
                   Entrar
                 </button>
                 <button
                   type="button"
-                  className={`gge-tab-trigger ${authMode === 'register' ? 'active' : ''}`}
+                  className={`gge-tab-btn ${authMode === 'register' ? 'active' : ''}`}
                   onClick={() => { setAuthMode('register'); setAuthError(''); }}
                 >
                   Criar conta
@@ -452,51 +453,51 @@ export default function PlataformaMonitoriaGGE() {
 
               <form onSubmit={handleAuthSubmit}>
                 {authMode === 'register' && (
-                  <div className="gge-input-group">
-                    <label className="gge-label">Nome Completo</label>
+                  <div className="gge-form-group">
+                    <label className="gge-form-label">Nome Completo</label>
                     <input
                       type="text"
                       required
                       placeholder="Seu nome"
                       value={authForm.name}
                       onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
-                      className="gge-input"
+                      className="gge-form-input"
                     />
                   </div>
                 )}
 
-                <div className="gge-input-group">
-                  <label className="gge-label">E-mail institucional</label>
+                <div className="gge-form-group">
+                  <label className="gge-form-label">E-mail institucional</label>
                   <input
                     type="email"
                     required
                     placeholder="seu.email@gge.com.br"
                     value={authForm.email}
                     onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                    className="gge-input"
+                    className="gge-form-input"
                   />
                 </div>
 
-                <div className="gge-input-group">
-                  <label className="gge-label">Senha</label>
+                <div className="gge-form-group">
+                  <label className="gge-form-label">Senha</label>
                   <input
                     type="password"
                     required
                     placeholder="••••••••"
                     value={authForm.password}
                     onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-                    className="gge-input"
+                    className="gge-form-input"
                   />
                 </div>
 
                 {authMode === 'register' && (
                   <>
-                    <div className="gge-input-group">
-                      <label className="gge-label">Papel / Função</label>
+                    <div className="gge-form-group">
+                      <label className="gge-form-label">Papel / Função</label>
                       <select
                         value={authForm.role}
                         onChange={(e) => setAuthForm({ ...authForm, role: e.target.value })}
-                        className="gge-select"
+                        className="gge-form-select"
                       >
                         <option value="aluno">Aluno(a)</option>
                         <option value="monitor">Monitor / Professor</option>
@@ -504,12 +505,12 @@ export default function PlataformaMonitoriaGGE() {
                       </select>
                     </div>
 
-                    <div className="gge-input-group">
-                      <label className="gge-label">Unidade GGE</label>
+                    <div className="gge-form-group">
+                      <label className="gge-form-label">Unidade GGE</label>
                       <select
                         value={authForm.unidade}
                         onChange={(e) => setAuthForm({ ...authForm, unidade: e.target.value })}
-                        className="gge-select"
+                        className="gge-form-select"
                       >
                         <option value="Unidade Boa Viagem - Recife">Boa Viagem — Recife</option>
                         <option value="Unidade Benfica - Recife">Benfica — Recife</option>
@@ -519,14 +520,14 @@ export default function PlataformaMonitoriaGGE() {
                     </div>
 
                     {authForm.role === 'aluno' && (
-                      <div className="gge-input-group">
-                        <label className="gge-label">Turma</label>
+                      <div className="gge-form-group">
+                        <label className="gge-form-label">Turma</label>
                         <input
                           type="text"
                           placeholder="Ex: 3º Ano Terceirão - GGE"
                           value={authForm.turma}
                           onChange={(e) => setAuthForm({ ...authForm, turma: e.target.value })}
-                          className="gge-input"
+                          className="gge-form-input"
                         />
                       </div>
                     )}
@@ -536,38 +537,35 @@ export default function PlataformaMonitoriaGGE() {
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="gge-btn gge-btn-primary gge-btn-full mt-4"
+                  className="gge-submit-btn"
                 >
                   {authLoading ? 'Acessando...' : authMode === 'login' ? 'Entrar na plataforma' : 'Cadastrar conta'}
                 </button>
               </form>
 
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginBottom: '8px', fontWeight: 600 }}>
+              <div className="gge-demo-logins-box">
+                <div className="gge-demo-logins-title">
                   Logins de demonstração rápida:
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                <div className="gge-demo-logins-grid">
                   <button
                     type="button"
                     onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
-                    className="gge-btn gge-btn-outline gge-btn-sm"
-                    style={{ fontSize: '0.72rem' }}
+                    className="gge-demo-btn"
                   >
                     Aluno
                   </button>
                   <button
                     type="button"
                     onClick={() => handleFastDemoLogin('professor@gge.com.br')}
-                    className="gge-btn gge-btn-outline gge-btn-sm"
-                    style={{ fontSize: '0.72rem' }}
+                    className="gge-demo-btn"
                   >
                     Monitor
                   </button>
                   <button
                     type="button"
                     onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
-                    className="gge-btn gge-btn-outline gge-btn-sm"
-                    style={{ fontSize: '0.72rem' }}
+                    className="gge-demo-btn"
                   >
                     Coordenação
                   </button>
@@ -583,7 +581,7 @@ export default function PlataformaMonitoriaGGE() {
   return (
     <div className="gge-app-wrapper">
 
-      {/* ─── HEADER SWEET LOOK ─── */}
+      {/* ─── HEADER SWEET LOOK GGE ─── */}
       <header className="gge-sweet-header">
         <div className="gge-sweet-header-inner">
           <div className="gge-sweet-logo-box">
@@ -591,10 +589,10 @@ export default function PlataformaMonitoriaGGE() {
               <img src="/logo-gge.png" alt="Colégio GGE" className="gge-sweet-logo-img" />
             </div>
             <div>
-              <span className="block font-display text-sm font-extrabold uppercase tracking-wide text-white">
+              <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '0.04em', color: '#FFFFFF' }}>
                 Monitoria GGE
               </span>
-              <span className="block text-xs text-slate-300">
+              <span style={{ display: 'block', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.75)' }}>
                 Ciclo de Aprendizado · {user?.unidade?.split('-')[0]?.trim()}
               </span>
             </div>
@@ -629,41 +627,20 @@ export default function PlataformaMonitoriaGGE() {
           </nav>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#ffffff' }}>{user?.name}</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(248,250,252,0.7)' }}>
+            <div className="gge-user-header-text">
+              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#FFFFFF' }}>{user?.name}</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.75)' }}>
                 {currentUserRole === 'coordenador' ? 'Coordenação' : currentUserRole === 'monitor' ? 'Monitor' : 'Aluno'}
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="gge-btn gge-btn-outline gge-btn-sm"
-              style={{ color: '#ffffff', borderColor: 'rgba(255,255,255,0.2)', padding: '6px 10px' }}
+              className="gge-btn gge-btn-outline"
+              style={{ color: '#FFFFFF', borderColor: 'rgba(255, 255, 255, 0.3)', padding: '5px 10px', fontSize: '0.775rem' }}
               title="Encerrar sessão"
             >
-              <LogOut size={15} /> <span>Sair</span>
-            </button>
-
-            {/* Menu Hambúrguer Mobile */}
-            <button
-              onClick={() => setShowMenuDrawer(!showMenuDrawer)}
-              className="gge-btn-icon"
-              style={{
-                background: showMenuDrawer ? 'var(--navy-soft)' : 'var(--primary)',
-                color: '#ffffff',
-                width: '36px',
-                height: '36px',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid rgba(255,255,255,0.15)',
-                cursor: 'pointer'
-              }}
-              title="Menu Principal"
-            >
-              {showMenuDrawer ? <X size={18} /> : <Menu size={18} />}
+              <LogOut size={14} /> <span>Sair</span>
             </button>
           </div>
         </div>

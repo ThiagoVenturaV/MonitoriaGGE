@@ -1,84 +1,60 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================================================
-   MONITORIA GGE — SWEET LOOK DESIGN SYSTEM
-   Official GGE Brand Colors, Barlow & Archivo Typography, Navy Shell
+   MONITORIA GGE — CORES OFICIAIS & SWEET LOOK DESIGN SYSTEM
+   Vermelho Oficial: #E30612 | Azul-Marinho: #14387E | Branco: #FFFFFF
    ============================================================================ */
 
 :root {
-  --radius: 0.5rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* GGE Official Colors */
+  --gge-red: #E30612;
+  --gge-red-hover: #c4040e;
+  --gge-navy: #14387E;
+  --gge-navy-soft: #1d4a9f;
+  --gge-navy-dark: #0d285c;
+  --gge-white: #FFFFFF;
+
+  /* Design Tokens */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* Surfaces & Backgrounds */
-  --background: #f8fafc;
-  --foreground: #1e293b;
-  --card: #ffffff;
+  --background: #F4F6FA;
+  --foreground: #14387E;
+  --card: #FFFFFF;
   --card-foreground: #1e293b;
-  --popover: #ffffff;
-  --popover-foreground: #1e293b;
+  
+  --primary: #E30612;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #14387E;
+  
+  --navy: #14387E;
+  --navy-foreground: #FFFFFF;
+  --navy-soft: #1d4a9f;
 
-  /* GGE Brand Colors */
-  --primary: #C8102E;
-  --primary-foreground: #ffffff;
-  --primary-hover: #b00d27;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #e2e8f0;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-
-  /* Navy Theme (Sweet Look Header & Login Hero) */
-  --navy: #1b2537;
-  --navy-foreground: #f8fafc;
-  --navy-soft: #283750;
-  --navy-soft-hover: #334461;
+  --border: #E2E8F0;
+  --border-brand: rgba(227, 6, 18, 0.25);
+  --input: #CBD5E1;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
 
   /* Status Colors */
-  --status-pendente: #f59e0b;
-  --status-explicado: #1b2537;
-  --status-praticando: #a855f7;
-  --status-aprovado: #10b981;
+  --status-pendente: #D97706;
+  --status-explicado: #14387E;
+  --status-praticando: #7E22CE;
+  --status-aprovado: #059669;
 
-  /* Borders & Shadows */
-  --border: #e2e8f0;
-  --input: #cbd5e1;
-  --ring: #C8102E;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(20, 56, 126, 0.08);
+  --shadow-md: 0 4px 12px rgba(20, 56, 126, 0.12);
+  --shadow-lg: 0 12px 28px rgba(20, 56, 126, 0.16);
 
   /* Fonts */
   --font-sans: 'Barlow', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: 'Archivo', ui-sans-serif, system-ui, -apple-system, sans-serif;
-}
-
-.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
-  --primary: #d91c38;
-  --primary-foreground: #ffffff;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #334155;
-  --accent-foreground: #f8fafc;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --navy: #0f172a;
-  --navy-foreground: #f8fafc;
-  --navy-soft: #1e293b;
 }
 
 /* Base Reset */
@@ -86,7 +62,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  border-color: var(--border);
 }
 
 html {
@@ -107,42 +82,358 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   letter-spacing: -0.015em;
-  color: inherit;
+  color: var(--gge-navy);
 }
 
 /* Typography Utility Classes */
 .font-display { font-family: var(--font-display); }
 .font-sans { font-family: var(--font-sans); }
 
-/* Color Utility Classes */
-.bg-background { background-color: var(--background); }
-.bg-card { background-color: var(--card); }
-.bg-navy { background-color: var(--navy); }
-.bg-navy-soft { background-color: var(--navy-soft); }
-.bg-primary { background-color: var(--primary); }
-.bg-secondary { background-color: var(--secondary); }
-.bg-muted { background-color: var(--muted); }
+/* ============================================================================
+   TELA DE LOGIN SWEET LOOK (RESPONSIVA E SEM BUG DE TAILWIND)
+   ============================================================================ */
 
-.text-foreground { color: var(--foreground); }
-.text-card-foreground { color: var(--card-foreground); }
-.text-navy-foreground { color: var(--navy-foreground); }
-.text-primary { color: var(--primary); }
-.text-primary-foreground { color: var(--primary-foreground); }
-.text-muted-foreground { color: var(--muted-foreground); }
-.text-navy { color: var(--navy); }
+.gge-login-wrapper {
+  min-height: 100vh;
+  background-color: var(--background);
+  display: flex;
+  flex-direction: column;
+}
 
-.border-border { border-color: var(--border); }
-.border-primary { border-color: var(--primary); }
+.gge-login-grid {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 1fr;
+}
 
-/* Sweet Look Header Layout */
+@media (min-width: 1024px) {
+  .gge-login-grid {
+    grid-template-columns: 1.15fr 1fr;
+  }
+}
+
+/* Coluna Esquerda - Navy Hero */
+.gge-login-hero {
+  background: linear-gradient(135deg, var(--gge-navy-dark) 0%, var(--gge-navy) 100%);
+  color: #FFFFFF;
+  padding: 2.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 4px solid var(--gge-red);
+}
+
+@media (min-width: 768px) {
+  .gge-login-hero {
+    padding: 3.5rem 3rem;
+  }
+}
+
+.gge-login-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.gge-login-hero-logo-box {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  background-color: #FFFFFF;
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.gge-login-hero-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.gge-login-hero-brand-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+}
+
+.gge-login-hero-brand-sub {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.gge-login-hero-main {
+  margin: 2.5rem 0;
+  max-width: 520px;
+}
+
+.gge-login-hero-title {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .gge-login-hero-title {
+    font-size: 2.85rem;
+  }
+}
+
+.gge-login-hero-desc {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* Cards de Perfil na Hero */
+.gge-login-demo-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gge-login-demo-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gge-login-demo-card:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateX(4px);
+}
+
+.gge-login-demo-icon {
+  color: var(--gge-red);
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.gge-login-demo-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #FFFFFF;
+  display: block;
+}
+
+.gge-login-demo-sub {
+  font-size: 0.775rem;
+  color: rgba(255, 255, 255, 0.75);
+  display: block;
+}
+
+.gge-login-hero-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.775rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Coluna Direita - Card de Acesso */
+.gge-login-form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  background-color: var(--background);
+}
+
+.gge-login-card {
+  width: 100%;
+  max-width: 440px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.gge-login-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.gge-login-card-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--gge-navy);
+}
+
+.gge-login-card-sub {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+}
+
+/* Abas no Form */
+.gge-tabs-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background-color: var(--muted);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+}
+
+.gge-tab-btn {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.gge-tab-btn.active {
+  background-color: #FFFFFF;
+  color: var(--gge-navy);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Controles de Formulário */
+.gge-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.gge-form-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gge-navy);
+}
+
+.gge-form-input {
+  width: 100%;
+  height: 2.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--input);
+  background-color: #FFFFFF;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gge-form-input:focus {
+  border-color: var(--gge-red);
+  box-shadow: 0 0 0 3px rgba(227, 6, 18, 0.15);
+}
+
+.gge-form-select {
+  width: 100%;
+  height: 2.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--input);
+  background-color: #FFFFFF;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.gge-form-select:focus {
+  border-color: var(--gge-red);
+}
+
+.gge-submit-btn {
+  width: 100%;
+  height: 2.75rem;
+  background-color: var(--gge-red);
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.gge-submit-btn:hover {
+  background-color: var(--gge-red-hover);
+  transform: translateY(-1px);
+}
+
+.gge-demo-logins-box {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.gge-demo-logins-title {
+  font-size: 0.775rem;
+  color: var(--muted-foreground);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.gge-demo-logins-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.gge-demo-btn {
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: #FFFFFF;
+  color: var(--gge-navy);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.gge-demo-btn:hover {
+  background-color: var(--muted);
+  border-color: var(--gge-navy);
+}
+
+/* ============================================================================
+   HEADER PRINCIPAL SWEET LOOK DA PLATAFORMA
+   ============================================================================ */
+
 .gge-sweet-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  background-color: var(--navy);
-  color: var(--navy-foreground);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--gge-navy);
+  color: #FFFFFF;
+  border-bottom: 3.5px solid var(--gge-red);
+  box-shadow: var(--shadow-md);
 }
 
 .gge-sweet-header-inner {
@@ -167,12 +458,12 @@ h1, h2, h3, h4, h5, h6 {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-md);
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   padding: 0.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
@@ -185,7 +476,7 @@ h1, h2, h3, h4, h5, h6 {
 .gge-sweet-nav {
   display: none;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 @media (min-width: 768px) {
@@ -201,157 +492,110 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.5rem 0.875rem;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(248, 250, 252, 0.8);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.15s ease;
-  text-decoration: none;
 }
 
 .gge-sweet-nav-btn:hover {
-  background-color: var(--navy-soft);
-  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
 }
 
 .gge-sweet-nav-btn.active {
-  background-color: var(--primary);
-  color: #ffffff;
+  background-color: var(--gge-red);
+  color: #FFFFFF;
 }
 
-/* Sweet Look Login Hero Section */
-.gge-login-grid {
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 1024px) {
-  .gge-login-grid {
-    grid-template-columns: 1.1fr 1fr;
-  }
-}
-
-.gge-login-hero {
-  background-color: var(--navy);
-  color: var(--navy-foreground);
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.gge-user-header-text {
+  text-align: right;
+  display: none;
 }
 
 @media (min-width: 640px) {
-  .gge-login-hero {
-    padding: 3rem 3rem;
+  .gge-user-header-text {
+    display: block;
   }
 }
 
-.gge-login-card-container {
+/* ============================================================================
+   CARDS DE CONTEÚDO E COMPONENTES
+   ============================================================================ */
+
+.gge-app-wrapper {
+  min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2.5rem 1.5rem;
-  background-color: var(--background);
+  flex-direction: column;
 }
 
-.gge-sweet-card {
-  background-color: var(--card);
-  color: var(--card-foreground);
+.gge-container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.gge-container-full {
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.gge-card {
+  background-color: #FFFFFF;
+  color: #1e293b;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.5rem;
-}
-
-.gge-sweet-card-header {
   margin-bottom: 1.25rem;
 }
 
-.gge-sweet-card-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--navy);
+.gge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-/* Form Controls */
-.gge-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  margin-bottom: 1rem;
+.gge-badge-pendente {
+  background-color: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
-.gge-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--foreground);
+.gge-badge-explicado {
+  background-color: rgba(20, 56, 126, 0.1);
+  color: var(--gge-navy);
+  border: 1px solid rgba(20, 56, 126, 0.25);
 }
 
-.gge-input {
-  width: 100%;
-  height: 2.625rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--input);
-  background-color: var(--card);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  outline: none;
+.gge-badge-praticando {
+  background-color: rgba(126, 34, 206, 0.12);
+  color: #7e22ce;
+  border: 1px solid rgba(126, 34, 206, 0.3);
 }
 
-.gge-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.15);
+.gge-badge-aprovado {
+  background-color: rgba(5, 150, 105, 0.12);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.3);
 }
 
-.gge-textarea {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--input);
-  background-color: var(--card);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  outline: none;
-  resize: vertical;
-  transition: border-color 0.15s ease;
-}
-
-.gge-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.15);
-}
-
-.gge-select {
-  width: 100%;
-  height: 2.625rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--input);
-  background-color: var(--card);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  outline: none;
-  cursor: pointer;
-}
-
-.gge-select:focus {
-  border-color: var(--primary);
-}
-
-/* Buttons */
 .gge-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: 0.875rem;
@@ -363,168 +607,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-btn-primary {
-  background-color: var(--primary);
-  color: #ffffff;
+  background-color: var(--gge-red);
+  color: #FFFFFF;
 }
 
 .gge-btn-primary:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
-.gge-btn-secondary {
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  border: 1px solid var(--border);
-}
-
-.gge-btn-secondary:hover {
-  background-color: var(--accent);
+  background-color: var(--gge-red-hover);
 }
 
 .gge-btn-outline {
   background-color: transparent;
-  color: var(--foreground);
+  color: var(--gge-navy);
   border: 1px solid var(--border);
 }
 
 .gge-btn-outline:hover {
   background-color: var(--muted);
-}
-
-.gge-btn-navy {
-  background-color: var(--navy);
-  color: var(--navy-foreground);
-}
-
-.gge-btn-navy:hover {
-  background-color: var(--navy-soft);
-}
-
-.gge-btn-full {
-  width: 100%;
-}
-
-.gge-btn-sm {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
-}
-
-/* Sweet Look Status Badges */
-.gge-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.gge-badge-pendente {
-  background-color: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.gge-badge-explicado {
-  background-color: rgba(27, 37, 55, 0.1);
-  color: var(--navy);
-  border: 1px solid rgba(27, 37, 55, 0.25);
-}
-
-.gge-badge-praticando {
-  background-color: rgba(168, 85, 247, 0.12);
-  color: #7e22ce;
-  border: 1px solid rgba(168, 85, 247, 0.3);
-}
-
-.gge-badge-aprovado {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #047857;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-/* Sweet Look Tabs */
-.gge-tabs-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: 0.25rem;
-  background-color: var(--muted);
-  padding: 0.25rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-}
-
-.gge-tab-trigger {
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--muted-foreground);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-
-.gge-tab-trigger.active {
-  background-color: var(--card);
-  color: var(--navy);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Responsive Container */
-.gge-main-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem;
-}
-
-@media (min-width: 768px) {
-  .gge-main-container {
-    padding: 2rem 1.5rem;
-  }
-}
-
-/* Floating Mobile Navigation Bar */
-.gge-mobile-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  background-color: var(--card);
-  border-top: 1px solid var(--border);
-  padding: 0.35rem 0;
-}
-
-@media (min-width: 768px) {
-  .gge-mobile-nav {
-    display: none;
-  }
-}
-
-.gge-mobile-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  padding: 0.35rem 0;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--muted-foreground);
-  text-decoration: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.gge-mobile-nav-item.active {
-  color: var(--primary);
 }
