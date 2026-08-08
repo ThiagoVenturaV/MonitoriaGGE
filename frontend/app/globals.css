@@ -215,9 +215,25 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-official-user-area {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.875rem;
+}
+
+.gge-user-clickable-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.gge-user-clickable-box:hover {
+  background-color: rgba(20, 56, 126, 0.06);
 }
 
 .gge-official-user-info {
@@ -263,8 +279,89 @@ h1, h2, h3, h4, h5, h6 {
   color: #FFFFFF;
 }
 
+/* Dropdown de Perfil no Canto Superior Direito */
+.gge-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 30px rgba(20, 56, 126, 0.18);
+  padding: 1rem;
+  z-index: 100;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gge-dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.gge-dropdown-user-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #14387E;
+}
+
+.gge-dropdown-user-email {
+  font-size: 0.8rem;
+  color: #64748B;
+}
+
+.gge-dropdown-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gge-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #14387E;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.gge-dropdown-item:hover {
+  background-color: #F1F5F9;
+  color: #E30612;
+}
+
+.gge-dropdown-item.danger {
+  color: #E30612;
+}
+
+.gge-dropdown-item.danger:hover {
+  background-color: #FFF5F5;
+}
+
 /* ============================================================================
-   TELA DE LOGIN SWEET LOOK — 2 COLUNAS DE ALTA DENSIDADE E VISUAL LIMPO
+   TELA DE LOGIN SWEET LOOK
    ============================================================================ */
 
 .gge-login-wrapper {

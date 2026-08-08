@@ -153,7 +153,7 @@ const optionalToken = (req, res, next) => {
 };
 
 // ==============================================================================
-// ENDPOINTS DE AUTENTICAÇÃO
+// ENDPOINTS DE AUTENTICAÇÃO E PERFIL DO USUÁRIO
 // ==============================================================================
 
 app.post('/api/auth/register', async (req, res) => {
@@ -228,6 +228,23 @@ app.post('/api/auth/logout', authenticateToken, (req, res) => {
 app.get('/api/auth/me', authenticateToken, (req, res) => {
   const { passwordHash: _, ...userWithoutPassword } = req.user;
   res.json({ success: true, user: userWithoutPassword });
+});
+
+// Endpoint de atualização de perfil/cadastro do usuário
+app.put('/api/auth/profile', authenticateToken, async (req, res) => {
+  const { name, email, password, turma, area } = req.body;
+  const user = req.user;
+
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (turma) user.turma = turma;
+  if (area) user.area = area;
+  if (password && password.trim() !== '') {
+    user.passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  const { passwordHash: _, ...userWithoutPassword } = user;
+  res.json({ success: true, user: userWithoutPassword, message: 'Perfil atualizado com sucesso!' });
 });
 
 // ==============================================================================

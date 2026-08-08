@@ -15,10 +15,14 @@ export default function PlataformaMonitoriaGGE() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [authForm, setAuthForm] = useState({
     name: '', email: '', password: '', role: 'aluno',
     area: 'Física', turma: '3º Ano Terceirão - GGE'
+  });
+  const [profileForm, setProfileForm] = useState({
+    name: '', email: '', password: '', turma: '', area: 'Física'
   });
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -44,14 +48,8 @@ export default function PlataformaMonitoriaGGE() {
   // Estado de avaliação da explicação do professor
   const [avaliacoes, setAvaliacoes] = useState({});
 
-  // PWA State & Header Navigation
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isStandalone, setIsStandalone] = useState(false);
-  const [showPwaModal, setShowPwaModal] = useState(false);
-  const [deviceType, setDeviceType] = useState('desktop');
-
-  // Coordinator Dashboards State
-  const [activeTab, setActiveTab] = useState('atendimento'); // 'atendimento' | 'dashboards'
+  // Navigation State
+  const [activeTab, setActiveTab] = useState('atendimento'); // 'atendimento' | 'dashboards' | 'perfil'
   const [filterProfessor, setFilterProfessor] = useState('todos');
   const [filterArea, setFilterArea] = useState('todas');
   const [filterPeriodo, setFilterPeriodo] = useState('7d');
@@ -61,28 +59,19 @@ export default function PlataformaMonitoriaGGE() {
     const savedToken = localStorage.getItem('gge_token');
     if (savedToken) { setToken(savedToken); validarSessaoToken(savedToken); }
     carregarDados();
-
-    const checkStandalone = () => {
-      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    };
-    setIsStandalone(checkStandalone());
-
-    const ua = navigator.userAgent || '';
-    let dev = 'desktop';
-    if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) dev = 'ios';
-    else if (/android/i.test(ua)) dev = 'android';
-    setDeviceType(dev);
-
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        password: '',
+        turma: user.turma || '',
+        area: user.area || 'Física'
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (activeTab === 'dashboards' || (user && user.role === 'coordenador')) {
@@ -146,9 +135,34 @@ export default function PlataformaMonitoriaGGE() {
     finally { setAuthLoading(false); }
   };
 
+  const handleSalvarPerfil = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(profileForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Cadastro atualizado com sucesso!');
+        setUser(data.user);
+        setProfileForm(prev => ({ ...prev, password: '' }));
+        setActiveTab('atendimento');
+      } else {
+        alert(data.error || 'Erro ao atualizar perfil.');
+      }
+    } catch (err) {
+      alert('Erro ao salvar alterações no perfil.');
+    }
+  };
+
   const handleLogout = async () => {
     if (token) { try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch (err) {} }
-    localStorage.removeItem('gge_token'); setToken(null); setUser(null); alert('Sessão encerrada com sucesso!');
+    localStorage.removeItem('gge_token'); setToken(null); setUser(null); setShowProfileDropdown(false); alert('Sessão encerrada com sucesso!');
   };
 
   const handleFastDemoLogin = async (demoEmail) => {
@@ -182,26 +196,17 @@ export default function PlataformaMonitoriaGGE() {
       setMonitorPdfs(prev => [...prev, ...Array.from(e.target.files)]);
     }
   };
-  const handleRemovePdf = (index) => {
-    setMonitorPdfs(prev => prev.filter((_, i) => i !== index));
-  };
 
   const handleAddFotos = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setMonitorFotos(prev => [...prev, ...Array.from(e.target.files)]);
     }
   };
-  const handleRemoveFoto = (index) => {
-    setMonitorFotos(prev => prev.filter((_, i) => i !== index));
-  };
 
   const handleAddVideos = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setMonitorVideos(prev => [...prev, ...Array.from(e.target.files)]);
     }
-  };
-  const handleRemoveVideo = (index) => {
-    setMonitorVideos(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCriarChamado = async (e) => {
@@ -315,13 +320,6 @@ export default function PlataformaMonitoriaGGE() {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioBlob(null);
     setAudioUrl(null);
-  };
-
-  const handleMobileNavClick = (tab) => {
-    setMobileTab(tab);
-    if (tab === 'feed') document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
-    else if (tab === 'nova_duvida') { const el = document.getElementById('form-duvida'); if (el) el.scrollIntoView({ behavior: 'smooth' }); else if (!user) setShowAuthModal(true); }
-    else if (tab === 'perfil') { if (user) document.getElementById('perfil-section')?.scrollIntoView({ behavior: 'smooth' }); else setShowAuthModal(true); }
   };
 
   // Feed Privado para Aluno (Histórico Próprio)
@@ -638,11 +636,21 @@ export default function PlataformaMonitoriaGGE() {
             )}
           </nav>
 
+          {/* PERFIL CLICÁVEL NO CANTO SUPERIOR DIREITO */}
           <div className="gge-official-user-area">
-            <div className="gge-official-user-info">
-              <div className="gge-official-user-name">{user?.name}</div>
-              <div className="gge-official-user-sub">
-                {currentUserRole === 'coordenador' ? `Coordenação (${user?.area || 'Exatas'})` : currentUserRole === 'monitor' ? `Monitor (${user?.area || 'Física'})` : 'Aluno GGE'}
+            <div
+              className="gge-user-clickable-box"
+              onClick={() => setShowProfileDropdown(prev => !prev)}
+              title="Clique para ver seu perfil e opções de conta"
+            >
+              <div className="gge-user-avatar" style={{ width: '38px', height: '38px', fontSize: '1rem' }}>
+                {user?.name?.charAt(0)}
+              </div>
+              <div className="gge-official-user-info">
+                <div className="gge-official-user-name">{user?.name}</div>
+                <div className="gge-official-user-sub">
+                  {currentUserRole === 'coordenador' ? `Coordenação (${user?.area || 'Exatas'})` : currentUserRole === 'monitor' ? `Monitor (${user?.area || 'Física'})` : 'Aluno GGE'}
+                </div>
               </div>
             </div>
 
@@ -653,6 +661,58 @@ export default function PlataformaMonitoriaGGE() {
             >
               <LogOut size={14} /> <span>Sair</span>
             </button>
+
+            {/* DROPDOWN / MODAL DE PERFIL DE USUÁRIO */}
+            {showProfileDropdown && (
+              <div className="gge-profile-dropdown" onClick={(e) => e.stopPropagation()}>
+                <div className="gge-dropdown-user-header">
+                  <div className="gge-user-avatar" style={{ width: '42px', height: '42px', fontSize: '1.1rem' }}>
+                    {user?.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="gge-dropdown-user-name">{user?.name}</div>
+                    <div className="gge-dropdown-user-email">{user?.email}</div>
+                  </div>
+                </div>
+
+                <div className="gge-card-divider" style={{ margin: '8px 0' }} />
+
+                <div className="gge-dropdown-menu-list">
+                  <button
+                    type="button"
+                    className="gge-dropdown-item"
+                    onClick={() => {
+                      setActiveTab('perfil');
+                      setShowProfileDropdown(false);
+                    }}
+                  >
+                    <User size={16} style={{ color: '#E30612' }} /> <span>Meu Perfil / Alterar Cadastro</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="gge-dropdown-item"
+                    onClick={() => {
+                      setActiveTab('atendimento');
+                      setShowProfileDropdown(false);
+                    }}
+                  >
+                    <BookOpen size={16} style={{ color: '#14387E' }} /> <span>Histórico de Dúvidas</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="gge-dropdown-item danger"
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      handleLogout();
+                    }}
+                  >
+                    <LogOut size={16} /> <span>Sair da Conta</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -660,8 +720,103 @@ export default function PlataformaMonitoriaGGE() {
       {/* ─── MAIN GRID ─── */}
       <div className={activeTab === 'dashboards' && currentUserRole === 'coordenador' ? "gge-container-full" : "gge-container"}>
 
-        {/* SE ABA DASHBOARDS FOR ATIVADA PELO COORDENADOR */}
-        {activeTab === 'dashboards' && currentUserRole === 'coordenador' ? (
+        {/* ─── ABA 1: PÁGINA DEDICADA DE PERFIL DO USUÁRIO ─── */}
+        {activeTab === 'perfil' ? (
+          <main style={{ width: '100%', maxWidth: '680px', margin: '0 auto' }}>
+            <div className="gge-card">
+              <div className="gge-card-header" style={{ marginBottom: '1.25rem' }}>
+                <h2 className="gge-card-title">
+                  <User size={22} style={{ color: '#E30612' }} /> Editar Cadastro & Perfil
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('atendimento')}
+                  className="gge-btn gge-btn-outline"
+                  style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                >
+                  <X size={16} /> Voltar ao Feed
+                </button>
+              </div>
+
+              <form onSubmit={handleSalvarPerfil}>
+                <div className="gge-form-group">
+                  <label className="gge-form-label">Nome Completo</label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    className="gge-form-input"
+                  />
+                </div>
+
+                <div className="gge-form-group">
+                  <label className="gge-form-label">E-mail Institucional</label>
+                  <input
+                    type="email"
+                    required
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                    className="gge-form-input"
+                  />
+                </div>
+
+                <div className="gge-form-group">
+                  <label className="gge-form-label">Alterar Senha (opcional)</label>
+                  <input
+                    type="password"
+                    placeholder="Preencha apenas se quiser alterar sua senha"
+                    value={profileForm.password}
+                    onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
+                    className="gge-form-input"
+                  />
+                </div>
+
+                {user?.role === 'aluno' ? (
+                  <div className="gge-form-group">
+                    <label className="gge-form-label">Turma</label>
+                    <input
+                      type="text"
+                      value={profileForm.turma}
+                      onChange={(e) => setProfileForm({ ...profileForm, turma: e.target.value })}
+                      className="gge-form-input"
+                    />
+                  </div>
+                ) : (
+                  <div className="gge-form-group">
+                    <label className="gge-form-label">Área do Conhecimento</label>
+                    <select
+                      value={profileForm.area}
+                      onChange={(e) => setProfileForm({ ...profileForm, area: e.target.value })}
+                      className="gge-form-select"
+                    >
+                      <option value="Física">Física</option>
+                      <option value="Matemática">Matemática</option>
+                      <option value="Química">Química</option>
+                      <option value="Biologia">Biologia</option>
+                      <option value="Linguagens">Linguagens & Redação</option>
+                      <option value="Ciências Humanas">Ciências Humanas</option>
+                    </select>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                  <button type="submit" className="gge-btn gge-btn-primary" style={{ flex: 1 }}>
+                    <CheckCircle2 size={18} /> Salvar Alterações no Cadastro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('atendimento')}
+                    className="gge-btn gge-btn-outline"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </main>
+        ) : activeTab === 'dashboards' && currentUserRole === 'coordenador' ? (
+          /* ─── ABA 2: DASHBOARDS DA COORDENAÇÃO ─── */
           <main style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
             {/* Header com Filtros do Dashboard */}
@@ -772,7 +927,7 @@ export default function PlataformaMonitoriaGGE() {
                       <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#7E22CE', marginTop: '4px' }}>{dashboardsData.resumo.satisfacaoAlunosGeral}</div>
                     </div>
                     <div style={{ marginTop: '12px' }}>
-                      <div style={{ fontSize: '0.8rem', color: '#7E22CE', fontWeight: 600 }}>
+                      <div style={{ fontSize: '0.8rem', color: '#7E22CE', fontWeight: '600' }}>
                         Precisão da IA: {dashboardsData.resumo.precisaoIA}
                       </div>
                     </div>
@@ -825,53 +980,10 @@ export default function PlataformaMonitoriaGGE() {
             )}
           </main>
         ) : (
+          /* ─── ABA 3: FEED PRINCIPAL DE DÚVIDAS (ATENDIMENTO) ─── */
           <>
             {/* ─── LEFT SIDEBAR ─── */}
             <aside className="gge-sidebar">
-
-              {/* Profile */}
-              <div className="gge-card" id="perfil-section">
-                <div className="gge-card-header">
-                  <span className="gge-card-title"><User size={18} style={{ color: '#E30612' }} /> Perfil do Usuário</span>
-                </div>
-                {user ? (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
-                      <div className="gge-user-avatar" style={{ width: '44px', height: '44px', fontSize: '1.15rem' }}>{user.name.charAt(0)}</div>
-                      <div>
-                        <div style={{ fontSize: '1rem', fontWeight: '800', color: '#14387E' }}>{user.name}</div>
-                        <div style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '500' }}>{user.turma || user.email}</div>
-                      </div>
-                    </div>
-                    <div className="gge-card-divider" />
-                    <div style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#64748B', fontWeight: '600' }}>Função</span>
-                        <strong style={{ color: '#E30612', textTransform: 'uppercase', fontSize: '0.8rem', background: 'rgba(227,6,18,0.1)', padding: '2px 8px', borderRadius: '6px' }}>{user.role}</strong>
-                      </div>
-                      {user.area && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#64748B', fontWeight: '600' }}>Área</span>
-                          <strong style={{ color: '#14387E' }}>{user.area}</strong>
-                        </div>
-                      )}
-                    </div>
-                    <div className="gge-card-divider" />
-                    <button onClick={handleLogout} className="gge-btn gge-btn-outline" style={{ width: '100%', fontSize: '0.85rem', color: '#E30612', borderColor: '#CBD5E1' }}>
-                      <LogOut size={15} /> Sair da Conta
-                    </button>
-                  </>
-                ) : (
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '14px', lineHeight: '1.5' }}>
-                      Acesse sua conta para enviar dúvidas e acompanhar seu progresso.
-                    </p>
-                    <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary" style={{ width: '100%' }}>
-                      Acessar Conta
-                    </button>
-                  </div>
-                )}
-              </div>
 
               {/* Cycle Filter */}
               <div className="gge-card">
