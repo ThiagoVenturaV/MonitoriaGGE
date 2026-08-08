@@ -264,318 +264,113 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================================
-   TELA DE LOGIN SWEET LOOK
+   ESTILOS PREMIUM PARA FORMULÁRIOS, SELECTS E TEXTAREAS EXPANSÍVEIS
    ============================================================================ */
-
-.gge-login-wrapper {
-  min-height: 100vh;
-  background-color: var(--background);
-  display: flex;
-  flex-direction: column;
-}
-
-.gge-login-grid {
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 1024px) {
-  .gge-login-grid {
-    grid-template-columns: 1.15fr 1fr;
-  }
-}
-
-.gge-login-hero {
-  background: linear-gradient(135deg, #0a1628 0%, #14387E 100%);
-  color: #FFFFFF;
-  padding: 2.5rem 1.75rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-right: 4px solid #E30612;
-}
-
-@media (min-width: 768px) {
-  .gge-login-hero {
-    padding: 3.5rem 3rem;
-  }
-}
-
-.gge-login-hero-header {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-}
-
-.gge-login-hero-logo-img {
-  height: 52px;
-  width: auto;
-  object-fit: contain;
-}
-
-.gge-login-hero-brand-title {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #FFFFFF;
-}
-
-.gge-login-hero-brand-sub {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.gge-login-hero-main {
-  margin: 2.5rem 0;
-  max-width: 520px;
-}
-
-.gge-login-hero-title {
-  font-family: var(--font-display);
-  font-size: 2.25rem;
-  font-weight: 800;
-  line-height: 1.15;
-  color: #FFFFFF;
-  margin-bottom: 1rem;
-}
-
-@media (min-width: 640px) {
-  .gge-login-hero-title {
-    font-size: 2.85rem;
-  }
-}
-
-.gge-login-hero-desc {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.6;
-  margin-bottom: 2rem;
-}
-
-.gge-login-demo-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.gge-login-demo-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
-  padding: 1rem 1.125rem;
-  border-radius: var(--radius-md);
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.gge-login-demo-card:hover {
-  background-color: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: translateX(4px);
-}
-
-.gge-login-demo-icon {
-  color: #E30612;
-  flex-shrink: 0;
-  margin-top: 0.15rem;
-}
-
-.gge-login-demo-title {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #FFFFFF;
-  display: block;
-}
-
-.gge-login-demo-sub {
-  font-size: 0.825rem;
-  color: rgba(255, 255, 255, 0.8);
-  display: block;
-}
-
-.gge-login-hero-footer {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.825rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.gge-login-form-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2.5rem 1.5rem;
-  background-color: var(--background);
-}
-
-.gge-login-card {
-  width: 100%;
-  max-width: 440px;
-  background-color: #FFFFFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 2rem;
-}
-
-.gge-login-card-header {
-  margin-bottom: 1.5rem;
-}
-
-.gge-login-card-title {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #14387E;
-}
-
-.gge-login-card-sub {
-  font-size: 0.85rem;
-  color: var(--muted-foreground);
-  margin-top: 0.25rem;
-}
-
-.gge-tabs-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  background-color: var(--muted);
-  padding: 4px;
-  border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border);
-}
-
-.gge-tab-btn {
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--muted-foreground);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-
-.gge-tab-btn.active {
-  background-color: #FFFFFF;
-  color: #14387E;
-  box-shadow: var(--shadow-sm);
-}
 
 .gge-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1.15rem;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
 }
 
-.gge-form-label {
+.gge-label {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #14387E;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gge-input,
+.gge-select {
+  width: 100%;
+  height: 2.85rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.gge-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2314387E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1.1rem;
+  padding-right: 2.5rem;
+}
+
+.gge-input:focus,
+.gge-select:focus,
+.gge-textarea:focus {
+  border-color: #E30612;
+  box-shadow: 0 0 0 3.5px rgba(227, 6, 18, 0.15);
+  background-color: #FFFFFF;
+}
+
+/* Textarea Expansível Auto-ajustável */
+.gge-textarea {
+  width: 100%;
+  min-height: 110px;
+  max-height: 600px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+  field-sizing: content;
+  overflow-y: auto;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Container de Recursos (Formas de Enviar Conteúdo) */
+.gge-resources-box {
+  background-color: #F8FAFC;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.25rem;
+  border: 1px solid #CBD5E1;
+}
+
+.gge-resource-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 700;
-  color: #14387E;
-}
-
-.gge-form-input {
-  width: 100%;
-  height: 2.85rem;
-  padding: 0.6rem 0.875rem;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--input);
-  background-color: #FFFFFF;
-  color: #0f172a;
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.gge-form-input:focus {
-  border-color: #E30612;
-  box-shadow: 0 0 0 3px rgba(227, 6, 18, 0.15);
-}
-
-.gge-form-select {
-  width: 100%;
-  height: 2.85rem;
-  padding: 0.6rem 0.875rem;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--input);
-  background-color: #FFFFFF;
-  color: #0f172a;
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  outline: none;
-  cursor: pointer;
-}
-
-.gge-form-select:focus {
-  border-color: #E30612;
-}
-
-.gge-submit-btn {
-  width: 100%;
-  height: 2.85rem;
-  background-color: #E30612;
-  color: #FFFFFF;
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 700;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  margin-top: 0.5rem;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.gge-submit-btn:hover {
-  background-color: #c4040e;
-  transform: translateY(-1px);
-}
-
-.gge-demo-logins-box {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
-}
-
-.gge-demo-logins-title {
-  font-size: 0.825rem;
-  color: var(--muted-foreground);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.gge-demo-logins-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.gge-demo-btn {
-  padding: 0.5rem 0.6rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  font-weight: 700;
   background-color: #FFFFFF;
   color: #14387E;
-  border: 1px solid var(--border);
+  border: 1.5px solid #CBD5E1;
   cursor: pointer;
   transition: all 0.15s ease;
-  text-align: center;
 }
 
-.gge-demo-btn:hover {
-  background-color: var(--muted);
+.gge-resource-btn:hover {
   border-color: #14387E;
+  background-color: #F1F5F9;
+  transform: translateY(-1px);
 }
 
 /* ============================================================================
@@ -691,219 +486,16 @@ h1, h2, h3, h4, h5, h6 {
   color: #FFFFFF;
 }
 
-/* User Banner */
-.gge-user-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  background-color: #F8FAFC;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  margin-bottom: 1.25rem;
-}
-
-.gge-user-banner-left {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-}
-
-.gge-user-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 9999px;
-  background-color: #14387E;
-  color: #FFFFFF;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.gge-user-banner-info .name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #14387E;
-}
-
-.gge-user-banner-info .unit {
-  font-size: 0.825rem;
-  color: #475569;
-}
-
-/* Tickets & Posts */
-.gge-ticket-card {
-  background-color: #FFFFFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.gge-ticket-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.875rem;
-}
-
-.gge-ticket-id {
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #E30612;
-  text-transform: uppercase;
-  margin-bottom: 0.2rem;
-}
-
-.gge-ticket-subject {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #14387E;
-}
-
-.gge-ticket-meta {
-  font-size: 0.825rem;
-  color: #475569;
-  margin-top: 0.25rem;
-}
-
-.gge-ticket-body {
-  font-size: 0.95rem;
-  color: #1e293b;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-.gge-ticket-image {
-  width: 100%;
-  max-height: 380px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-}
-
-.gge-response-box {
-  background-color: #F8FAFC;
-  border: 1px solid #CBD5E1;
-  border-left: 4px solid #14387E;
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  margin-top: 1rem;
-}
-
-.gge-response-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #14387E;
-  margin-bottom: 0.75rem;
-}
-
-.gge-ia-question-box {
-  background-color: #FAF5FF;
-  border: 1px solid #E9D5FF;
-  border-left: 4px solid #7E22CE;
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  margin-top: 1rem;
-}
-
-.gge-ia-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: #7E22CE;
-  margin-bottom: 0.75rem;
-}
-
-.gge-options-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.625rem;
-  margin: 1rem 0;
-}
-
-.gge-option-btn {
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-align: left;
-  background-color: #FFFFFF;
-  color: #1e293b;
-  border: 1.5px solid #CBD5E1;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.gge-option-btn:hover {
-  border-color: #7E22CE;
-  background-color: #F3E8FF;
-}
-
-.gge-option-btn.correct {
-  background-color: #DCFCE7;
-  color: #15803D;
-  border-color: #22C55E;
-}
-
-/* Badges */
-.gge-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-full);
-  font-size: 0.775rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.gge-badge-pendente {
-  background-color: rgba(217, 119, 6, 0.12);
-  color: #d97706;
-  border: 1px solid rgba(217, 119, 6, 0.3);
-}
-
-.gge-badge-explicado {
-  background-color: rgba(20, 56, 126, 0.1);
-  color: #14387E;
-  border: 1px solid rgba(20, 56, 126, 0.25);
-}
-
-.gge-badge-praticando {
-  background-color: rgba(126, 34, 206, 0.12);
-  color: #7e22ce;
-  border: 1px solid rgba(126, 34, 206, 0.3);
-}
-
-.gge-badge-aprovado {
-  background-color: rgba(5, 150, 105, 0.12);
-  color: #059669;
-  border: 1px solid rgba(5, 150, 105, 0.3);
-}
-
 /* Generic Buttons */
 .gge-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.925rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -914,26 +506,29 @@ h1, h2, h3, h4, h5, h6 {
 .gge-btn-primary {
   background-color: #E30612;
   color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(227, 6, 18, 0.2);
 }
 
 .gge-btn-primary:hover {
   background-color: #c4040e;
+  transform: translateY(-1px);
 }
 
 .gge-btn-secondary {
   background-color: #F1F5F9;
   color: #14387E;
-  border: 1px solid #CBD5E1;
+  border: 1.5px solid #CBD5E1;
 }
 
 .gge-btn-secondary:hover {
   background-color: #E2E8F0;
+  border-color: #14387E;
 }
 
 .gge-btn-outline {
   background-color: transparent;
   color: #14387E;
-  border: 1px solid #CBD5E1;
+  border: 1.5px solid #CBD5E1;
 }
 
 .gge-btn-outline:hover {

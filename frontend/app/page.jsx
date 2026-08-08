@@ -1094,28 +1094,37 @@ export default function PlataformaMonitoriaGGE() {
                     </div>
                     <div className="gge-form-group">
                       <label className="gge-label">Sua Dúvida</label>
-                      <textarea placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
-                        value={novoChamado.duvidaTexto} onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })} className="gge-textarea" />
+                      <textarea
+                        placeholder="Descreva a questão ou o ponto da matéria que você não entendeu..."
+                        value={novoChamado.duvidaTexto}
+                        onChange={(e) => setNovoChamado({ ...novoChamado, duvidaTexto: e.target.value })}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight + 4}px`;
+                        }}
+                        className="gge-textarea"
+                        rows={3}
+                      />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                        <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.75rem' }}>
-                          <Camera size={14} style={{ color: 'var(--amber)' }} />
+                        <label className="gge-btn gge-btn-secondary" style={{ cursor: 'pointer', fontSize: '0.875rem' }}>
+                          <Camera size={16} style={{ color: 'var(--amber)' }} />
                           <span>{fotosAluno.length > 0 ? `+ Anexar Fotos (${fotosAluno.length})` : 'Anexar Foto(s)'}</span>
                           <input type="file" accept="image/*" multiple onChange={handleAddFotosAluno} style={{ display: 'none' }} />
                         </label>
                         <button type="submit" className="gge-btn gge-btn-primary">
-                          <Send size={14} /> Enviar Dúvida
+                          <Send size={16} /> Enviar Dúvida
                         </button>
                       </div>
 
                       {fotosAluno.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                           {fotosAluno.map((file, idx) => (
-                            <span key={idx} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)', padding: '4px 8px', borderRadius: 'var(--r-sm)', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                              <ImageIcon size={12} style={{ color: 'var(--amber)' }} /> {file.name}
+                            <span key={idx} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)', padding: '4px 8px', borderRadius: 'var(--r-sm)', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <ImageIcon size={14} style={{ color: 'var(--amber)' }} /> {file.name}
                               <button type="button" onClick={() => handleRemoveFotoAluno(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: '0 2px' }}>
-                                <X size={13} />
+                                <X size={14} />
                               </button>
                             </span>
                           ))}
@@ -1130,7 +1139,7 @@ export default function PlataformaMonitoriaGGE() {
               {(currentUserRole === 'monitor' || currentUserRole === 'coordenador') && (
                 <div className="gge-card">
                   <div className="gge-card-header">
-                    <span className="gge-card-title"><UserCheck size={16} style={{ color: 'var(--sky)' }} /> Responder Dúvida</span>
+                    <span className="gge-card-title"><UserCheck size={18} style={{ color: 'var(--sky)' }} /> Responder Dúvida</span>
                   </div>
                   <form onSubmit={handleEnviarResposta}>
                     <div className="gge-form-group">
@@ -1141,36 +1150,45 @@ export default function PlataformaMonitoriaGGE() {
                     </div>
                     <div className="gge-form-group">
                       <label className="gge-label">Explicação</label>
-                      <textarea placeholder="Resolução passo a passo..." value={respostaMonitor.textoExplicativo}
-                        onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })} className="gge-textarea" />
+                      <textarea
+                        placeholder="Resolução passo a passo..."
+                        value={respostaMonitor.textoExplicativo}
+                        onChange={(e) => setRespostaMonitor({ ...respostaMonitor, textoExplicativo: e.target.value })}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight + 4}px`;
+                        }}
+                        className="gge-textarea"
+                        rows={3}
+                      />
                     </div>
                     
                     {/* Formas de Enviar Conteudo (Recursos) */}
-                    <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: 'var(--r-lg)', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-1)' }}>Formas de Enviar Conteúdo (Recursos)</span>
+                    <div className="gge-resources-box">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#14387E' }}>Formas de Enviar Conteúdo (Recursos)</span>
                         {recording ? (
-                          <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.675rem', padding: '4px 10px', background: 'var(--brand)' }}>
-                            <Square size={12} fill="white" /> Parar Gravação 🔴
+                          <button type="button" onClick={stopRecording} className="gge-btn gge-btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px', background: '#E30612' }}>
+                            <Square size={14} fill="white" /> Parar Gravação 🔴
                           </button>
                         ) : (
-                          <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', padding: '4px 10px', color: audioBlob ? 'var(--emerald)' : 'var(--text-1)' }}>
-                            <Mic size={13} style={{ color: audioBlob ? 'var(--emerald)' : 'var(--sky)' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
+                          <button type="button" onClick={startRecording} className="gge-btn gge-btn-secondary" style={{ fontSize: '0.8rem', padding: '6px 12px', color: audioBlob ? '#059669' : '#14387E' }}>
+                            <Mic size={15} style={{ color: audioBlob ? '#059669' : '#0284C7' }} /> {audioBlob ? 'Regravar Áudio' : 'Gravar Áudio'}
                           </button>
                         )}
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
-                        <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
-                          <FileText size={13} style={{ color: 'var(--rose)' }} /> <span>+ PDF</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+                        <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
+                          <FileText size={16} style={{ color: '#e11d48' }} /> <span>+ PDF</span>
                           <input type="file" accept=".pdf" multiple onChange={handleAddPdfs} style={{ display: 'none' }} />
                         </label>
-                        <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
-                          <ImageIcon size={13} style={{ color: 'var(--amber)' }} /> <span>+ Imagem</span>
+                        <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
+                          <ImageIcon size={16} style={{ color: '#D97706' }} /> <span>+ Imagem</span>
                           <input type="file" accept="image/*" multiple onChange={handleAddFotos} style={{ display: 'none' }} />
                         </label>
-                        <label className="gge-btn gge-btn-secondary" style={{ fontSize: '0.675rem', cursor: 'pointer', justifyContent: 'center' }}>
-                          <Video size={13} style={{ color: 'var(--emerald)' }} /> <span>+ Vídeo</span>
+                        <label className="gge-resource-btn" style={{ cursor: 'pointer' }}>
+                          <Video size={16} style={{ color: '#059669' }} /> <span>+ Vídeo</span>
                           <input type="file" accept="video/*" multiple onChange={handleAddVideos} style={{ display: 'none' }} />
                         </label>
                       </div>
