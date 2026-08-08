@@ -35,7 +35,7 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 // ==============================================================================
-// REVOGAÇÃO DE TOKENS & BANCO DE DADOS EM MEMÓRIA (MULTIDISCIPLINAR)
+// BANCO DE DADOS EM MEMÓRIA (SEM DADOS MOCKADOS NO FEED)
 // ==============================================================================
 
 const revokedTokens = new Set();
@@ -48,7 +48,6 @@ let users = [
     email: 'lucas@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'aluno',
-    unidade: 'Unidade Boa Viagem - Recife',
     turma: '3º Ano Terceirão - Medicina'
   },
   {
@@ -57,7 +56,6 @@ let users = [
     email: 'beatriz@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'aluno',
-    unidade: 'Unidade Benfica - Recife',
     turma: 'Extensivo GGE'
   },
   {
@@ -66,8 +64,8 @@ let users = [
     email: 'professor@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'monitor',
-    unidade: 'GGE Recife (Todas as Unidades)',
-    disciplina: 'Física & Matemática'
+    area: 'Física',
+    disciplina: 'Física & Astronomia'
   },
   {
     id: 'USR-04',
@@ -75,49 +73,13 @@ let users = [
     email: 'coordenador@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'coordenador',
-    unidade: 'Coordenação Geral GGE',
-    cargo: 'Coordenador Pedagógico'
+    area: 'Exatas',
+    cargo: 'Coordenador Acadêmico de Exatas'
   }
 ];
 
-let tickets = [
-  {
-    id: 'TK-1001',
-    aluno: 'Lucas Silva',
-    unidade: 'Unidade Boa Viagem - Recife',
-    assunto: 'Física - Leis de Ohm e Circuitos Elétricos',
-    tipo: 'texto',
-    fotoUrl: null,
-    duvidaTexto: 'Como calcular a resistência equivalente em um circuito misto quando há resistores em ponte de Wheatstone?',
-    status: 'Pendente', // Pendente | Explicado | Entendido | Praticando | Aprovado
-    etapa: 1,
-    criadoEm: new Date(Date.now() - 3600000).toISOString(),
-    resposta: null,
-    questaoFixacao: null
-  },
-  {
-    id: 'TK-1002',
-    aluno: 'Beatriz Ramos',
-    unidade: 'Unidade Benfica - Recife',
-    assunto: 'Biologia - Genética e Leis de Mendel',
-    tipo: 'texto',
-    fotoUrl: null,
-    duvidaTexto: 'Qual a diferença entre herança autossômica dominante e recessiva em heredogramas do SSA/UPE?',
-    status: 'Explicado',
-    etapa: 2,
-    criadoEm: new Date(Date.now() - 7200000).toISOString(),
-    resposta: {
-      monitor: 'Prof. Ricardo Mendes (Equipe GGE)',
-      texto: 'Olá Beatriz! Na herança dominante, o caráter se manifesta em todas as gerações sem salto. Gravamos uma explicação em áudio detalhando o heredograma!',
-      pdfUrl: null,
-      fotoUrl: null,
-      videoUrl: null,
-      audioUrl: null,
-      respondidoEm: new Date(Date.now() - 1800000).toISOString()
-    },
-    questaoFixacao: null
-  }
-];
+// Inicia com lista limpa de dúvidas (sem mocks hardcoded)
+let tickets = [];
 
 const bancoQuestoesIA = [
   {
@@ -141,7 +103,7 @@ const bancoQuestoesIA = [
 ];
 
 // ==============================================================================
-// MIDDLEWARES DE AUTENTICAÇÃO E REVOGAÇÃO
+// MIDDLEWARES DE AUTENTICAÇÃO
 // ==============================================================================
 
 const extractToken = (req) => {
@@ -154,7 +116,7 @@ const extractToken = (req) => {
 const authenticateToken = (req, res, next) => {
   const token = extractToken(req);
   if (!token) {
-    return res.status(401).json({ success: false, error: 'Acesso negado. Token de autenticação não fornecido.' });
+    return res.status(401).json({ success: false, error: 'Acesso negado. Token não fornecido.' });
   }
 
   if (revokedTokens.has(token)) {
@@ -191,11 +153,11 @@ const optionalToken = (req, res, next) => {
 };
 
 // ==============================================================================
-// ENDPOINTS REST DE AUTENTICAÇÃO
+// ENDPOINTS DE AUTENTICAÇÃO
 // ==============================================================================
 
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password, role, unidade, turma } = req.body;
+  const { name, email, password, role, area, turma } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ success: false, error: 'Preencha nome, e-mail e senha.' });
@@ -213,14 +175,14 @@ app.post('/api/auth/register', async (req, res) => {
     email: email.toLowerCase(),
     passwordHash,
     role: role || 'aluno',
-    unidade: unidade || 'Unidade Boa Viagem - Recife',
+    area: area || 'Geral',
     turma: turma || 'Ensino Médio GGE'
   };
 
   users.push(newUser);
 
   const token = jwt.sign(
-    { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, unidade: newUser.unidade },
+    { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, area: newUser.area },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -247,7 +209,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, name: user.name, email: user.email, role: user.role, unidade: user.unidade },
+    { id: user.id, name: user.name, email: user.email, role: user.role, area: user.area },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -269,25 +231,33 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 });
 
 // ==============================================================================
-// ENDPOINTS REST DE DÚVIDAS MULTIDISCIPLINARES
+// ENDPOINTS DE DÚVIDAS E AVALIAÇÕES DE PROFESSORES
 // ==============================================================================
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', server: 'Hostinger KVM 2 - Primario (São Paulo)' });
+  res.status(200).json({ status: 'OK', server: 'GGE Monitoria Engine' });
 });
 
-app.get('/api/tickets', (req, res) => {
-  res.json({ success: true, count: tickets.length, tickets });
+app.get('/api/tickets', optionalToken, (req, res) => {
+  let result = [...tickets];
+  
+  // Se for aluno logado, filtra apenas as próprias dúvidas (Histórico Privado)
+  if (req.user && req.user.role === 'aluno') {
+    result = result.filter(t => t.alunoId === req.user.id || t.alunoEmail === req.user.email || t.aluno === req.user.name);
+  }
+
+  res.json({ success: true, count: result.length, tickets: result });
 });
 
 app.post('/api/tickets', optionalToken, upload.fields([
   { name: 'foto', maxCount: 5 },
   { name: 'fotos', maxCount: 5 }
 ]), (req, res) => {
-  const { assunto, tipo, duvidaTexto } = req.body;
+  const { assunto, tipo, duvidaTexto, area } = req.body;
   
   const nomeAluno = req.user ? req.user.name : (req.body.aluno || 'Aluno GGE');
-  const unidadeAluno = req.user ? req.user.unidade : (req.body.unidade || 'Unidade Boa Viagem - Recife');
+  const alunoId = req.user ? req.user.id : null;
+  const alunoEmail = req.user ? req.user.email : null;
 
   const files = req.files || {};
   const uploadedFotos = [...(files.foto || []), ...(files.fotos || [])];
@@ -295,9 +265,11 @@ app.post('/api/tickets', optionalToken, upload.fields([
 
   const novoTicket = {
     id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
+    alunoId,
+    alunoEmail,
     aluno: nomeAluno,
-    unidade: unidadeAluno,
     assunto: assunto || 'Geral',
+    area: area || 'Física',
     tipo: tipo || 'texto',
     fotoUrl: fotoUrls[0] || null,
     fotoUrls: fotoUrls,
@@ -306,6 +278,7 @@ app.post('/api/tickets', optionalToken, upload.fields([
     etapa: 1,
     criadoEm: new Date().toISOString(),
     resposta: null,
+    avaliacao: null,
     questaoFixacao: null
   };
 
@@ -347,6 +320,23 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   };
 
   res.json({ success: true, ticket });
+});
+
+// Endpoint de Avaliação da Explicação pelo Aluno
+app.post('/api/tickets/:id/avaliar', optionalToken, (req, res) => {
+  const { id } = req.params;
+  const { nota, comentario } = req.body;
+
+  const ticket = tickets.find(t => t.id === id);
+  if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
+
+  ticket.avaliacao = {
+    nota: Number(nota) || 5,
+    comentario: comentario || '',
+    avaliadoEm: new Date().toISOString()
+  };
+
+  res.json({ success: true, ticket, mensagem: 'Obrigado por avaliar a explicação do professor!' });
 });
 
 app.post('/api/tickets/:id/entendi', (req, res) => {
@@ -396,26 +386,20 @@ app.get('/api/coordenador/stats', (req, res) => {
     explicados,
     emAndamento: pendentes + explicados,
     taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-    slaAtendimento: '12 min (Meta < 15 min)',
-    slaCumprimento: '98.4%',
-    tempoMedioMinutos: 12,
-    resolutividadePedagogica: '94.2%',
+    tempoMedioResposta: '12 min (Meta < 15 min)',
+    metaRespostaCumprida: '98.4%',
+    taxaResolucaoPedagogica: '94.2%',
     precisaoIA: '96.5%',
-    satisfacaoAlunos: '4.9 / 5.0 ★',
-    porUnidade: [
-      { unidade: 'Boa Viagem', chamados: tickets.filter(t => t.unidade.includes('Boa Viagem')).length, sla: '11 min' },
-      { unidade: 'Benfica', chamados: tickets.filter(t => t.unidade.includes('Benfica')).length, sla: '14 min' },
-      { unidade: 'Parnamirim', chamados: tickets.filter(t => t.unidade.includes('Parnamirim')).length, sla: '10 min' }
-    ]
+    satisfacaoAlunos: '4.9 / 5.0 ★'
   });
 });
 
 app.get('/api/coordenador/dashboards', (req, res) => {
-  const { professor, unidade, periodo } = req.query;
+  const { professor, area, periodo } = req.query;
 
   let filtered = [...tickets];
-  if (unidade && unidade !== 'todas') {
-    filtered = filtered.filter(t => t.unidade.toLowerCase().includes(unidade.toLowerCase()));
+  if (area && area !== 'todas') {
+    filtered = filtered.filter(t => (t.area || '').toLowerCase().includes(area.toLowerCase()));
   }
   if (professor && professor !== 'todos') {
     filtered = filtered.filter(t => t.resposta && t.resposta.monitor.toLowerCase().includes(professor.toLowerCase()));
@@ -430,72 +414,59 @@ app.get('/api/coordenador/dashboards', (req, res) => {
     {
       id: 'USR-03',
       name: 'Prof. Ricardo Mendes',
-      disciplina: 'Física & Matemática',
-      unidade: 'GGE Recife',
+      disciplina: 'Física',
+      area: 'Física',
       atendidos: tickets.filter(t => t.resposta?.monitor.includes('Ricardo')).length || 14,
-      tempoMedio: '11 min',
-      resolutividade: '96.2%',
-      csat: '4.9 ★',
-      statusSla: 'No Prazo'
+      tempoMedioResposta: '11 min',
+      resolucaoPedagogica: '96.2%',
+      satisfacaoAlunos: '4.9 ★',
+      statusResposta: 'No Prazo'
     },
     {
       id: 'USR-05',
       name: 'Prof. Ana Clara Vilela',
       disciplina: 'Química & Biologia',
-      unidade: 'Unidade Boa Viagem',
+      area: 'Química',
       atendidos: 19,
-      tempoMedio: '13 min',
-      resolutividade: '94.8%',
-      csat: '4.8 ★',
-      statusSla: 'No Prazo'
+      tempoMedioResposta: '13 min',
+      resolucaoPedagogica: '94.8%',
+      satisfacaoAlunos: '4.8 ★',
+      statusResposta: 'No Prazo'
     },
     {
       id: 'USR-06',
       name: 'Prof. Carlos Eduardo',
-      disciplina: 'Redação & Gramática',
-      unidade: 'Unidade Benfica',
+      disciplina: 'Matemática',
+      area: 'Matemática',
       atendidos: 22,
-      tempoMedio: '10 min',
-      resolutividade: '98.0%',
-      csat: '5.0 ★',
-      statusSla: 'No Prazo'
+      tempoMedioResposta: '10 min',
+      resolucaoPedagogica: '98.0%',
+      satisfacaoAlunos: '5.0 ★',
+      statusResposta: 'No Prazo'
     }
   ];
 
-  const unidadesStats = [
-    { unidade: 'Unidade Boa Viagem', chamados: tickets.filter(t => t.unidade.includes('Boa Viagem')).length + 18, sla: '11 min', resolutividade: '95.5%' },
-    { unidade: 'Unidade Benfica', chamados: tickets.filter(t => t.unidade.includes('Benfica')).length + 12, sla: '14 min', resolutividade: '93.2%' },
-    { unidade: 'Unidade Parnamirim', chamados: tickets.filter(t => t.unidade.includes('Parnamirim')).length + 15, sla: '10 min', resolutividade: '97.0%' }
-  ];
-
   const materiasStats = [
-    { materia: 'Física', total: 18, resolvidas: 16, sla: '12 min' },
-    { materia: 'Matemática', total: 24, resolvidas: 22, sla: '11 min' },
-    { materia: 'Química', total: 14, resolvidas: 13, sla: '14 min' },
-    { materia: 'Biologia', total: 15, resolvidas: 14, sla: '10 min' },
-    { materia: 'Redação', total: 20, resolvidas: 19, sla: '09 min' }
+    { materia: 'Física', total: 18, resolvidas: 16, tempoResposta: '12 min' },
+    { materia: 'Matemática', total: 24, resolvidas: 22, tempoResposta: '11 min' },
+    { materia: 'Química', total: 14, resolvidas: 13, tempoResposta: '14 min' },
+    { materia: 'Biologia', total: 15, resolvidas: 14, tempoResposta: '10 min' },
+    { materia: 'Linguagens', total: 20, resolvidas: 19, tempoResposta: '09 min' }
   ];
 
   const evolucaoSemanal = [
-    { dia: 'Seg', duvidas: 12, slaMin: 14 },
-    { dia: 'Ter', duvidas: 19, slaMin: 11 },
-    { dia: 'Qua', duvidas: 15, slaMin: 12 },
-    { dia: 'Qui', duvidas: 22, slaMin: 10 },
-    { dia: 'Sex', duvidas: 18, slaMin: 13 },
-    { dia: 'Sáb', duvidas: 8,  slaMin: 9 },
-    { dia: 'Dom', duvidas: 5,  slaMin: 8 }
-  ];
-
-  const statusDistribuição = [
-    { label: 'Dominado', pct: 65, cor: '#34d399' },
-    { label: 'Fixação IA', pct: 20, cor: '#C8102E' },
-    { label: 'Explicado', pct: 10, cor: '#38bdf8' },
-    { label: 'Pendente', pct: 5, cor: '#f59e0b' }
+    { dia: 'Seg', duvidas: 12, tempoMin: 14 },
+    { dia: 'Ter', duvidas: 19, tempoMin: 11 },
+    { dia: 'Qua', duvidas: 15, tempoMin: 12 },
+    { dia: 'Qui', duvidas: 22, tempoMin: 10 },
+    { dia: 'Sex', duvidas: 18, tempoMin: 13 },
+    { dia: 'Sáb', duvidas: 8,  tempoMin: 9 },
+    { dia: 'Dom', duvidas: 5,  tempoMin: 8 }
   ];
 
   res.json({
     success: true,
-    filtrosAplicados: { professor: professor || 'todos', unidade: unidade || 'todas', periodo: periodo || '7d' },
+    filtrosAplicados: { professor: professor || 'todos', area: area || 'todas', periodo: periodo || '7d' },
     resumo: {
       totalChamados: total,
       aprovados,
@@ -503,23 +474,21 @@ app.get('/api/coordenador/dashboards', (req, res) => {
       explicados,
       emAndamento: pendentes + explicados,
       taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-      slaMedio: '11.8 min',
-      slaAlvo: '< 15 min',
-      slaCumprimento: '98.5%',
-      resolutividade: '95.4%',
+      tempoMedioResposta: '11.8 min',
+      metaTempoResposta: '< 15 min',
+      cumprimentoMetaTempo: '98.5%',
+      taxaResolucaoPedagogica: '95.4%',
       precisaoIA: '96.5%',
-      csatGeral: '4.9 / 5.0 ★'
+      satisfacaoAlunosGeral: '4.9 / 5.0 ★'
     },
     evolucaoSemanal,
-    statusDistribuição,
     monitores: monitoresStats,
-    unidades: unidadesStats,
     materias: materiasStats
   });
 });
 
 app.listen(PORT, () => {
   console.log(`\n========================================================`);
-  console.log(`🚀 SERVIDOR MONITORIA MULTIDISCIPLINAR GGE ONLINE EM http://localhost:${PORT}`);
+  console.log(`🚀 SERVIDOR MONITORIA GGE ONLINE EM http://localhost:${PORT}`);
   console.log(`========================================================\n`);
 });

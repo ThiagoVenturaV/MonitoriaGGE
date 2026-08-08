@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================================================
-   MONITORIA GGE — SISTEMA DE DESIGN DE ALTA LEGIBILIDADE & CORES OFICIAIS
+   MONITORIA GGE — SISTEMA DE DESIGN PREMIUM & CORES OFICIAIS
    Vermelho Oficial: #E30612 | Azul-Marinho: #14387E | Branco: #FFFFFF
    ============================================================================ */
 
@@ -264,6 +264,214 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================================
+   TELA DE LOGIN SWEET LOOK — 2 COLUNAS DE ALTA DENSIDADE E VISUAL LIMPO
+   ============================================================================ */
+
+.gge-login-wrapper {
+  min-height: 100vh;
+  background-color: var(--background);
+  display: flex;
+  flex-direction: column;
+}
+
+.gge-login-grid {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .gge-login-grid {
+    grid-template-columns: 1.15fr 1fr;
+  }
+}
+
+.gge-login-hero {
+  background: linear-gradient(135deg, #0a1628 0%, #14387E 100%);
+  color: #FFFFFF;
+  padding: 2.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 4px solid #E30612;
+}
+
+@media (min-width: 768px) {
+  .gge-login-hero {
+    padding: 3.5rem 3rem;
+  }
+}
+
+.gge-login-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.gge-login-hero-logo-img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+}
+
+.gge-login-hero-brand-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+}
+
+.gge-login-hero-brand-sub {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gge-login-hero-main {
+  margin: 2.5rem 0;
+  max-width: 520px;
+}
+
+.gge-login-hero-title {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .gge-login-hero-title {
+    font-size: 2.85rem;
+  }
+}
+
+.gge-login-hero-desc {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.gge-login-demo-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gge-login-demo-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gge-login-demo-card:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateX(4px);
+}
+
+.gge-login-demo-icon {
+  color: #E30612;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.gge-login-demo-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  display: block;
+}
+
+.gge-login-demo-sub {
+  font-size: 0.825rem;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+}
+
+.gge-login-hero-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.825rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gge-login-form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  background-color: var(--background);
+}
+
+.gge-login-card {
+  width: 100%;
+  max-width: 440px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.gge-login-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.gge-login-card-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #14387E;
+}
+
+.gge-login-card-sub {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+}
+
+.gge-tabs-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background-color: var(--muted);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+}
+
+.gge-tab-btn {
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.gge-tab-btn.active {
+  background-color: #FFFFFF;
+  color: #14387E;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================================
    ESTILOS PREMIUM PARA FORMULÁRIOS, SELECTS E TEXTAREAS EXPANSÍVEIS
    ============================================================================ */
 
@@ -371,6 +579,189 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #14387E;
   background-color: #F1F5F9;
   transform: translateY(-1px);
+}
+
+.gge-submit-btn {
+  width: 100%;
+  height: 2.85rem;
+  background-color: #E30612;
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.gge-submit-btn:hover {
+  background-color: #c4040e;
+  transform: translateY(-1px);
+}
+
+.gge-demo-logins-box {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.gge-demo-logins-title {
+  font-size: 0.825rem;
+  color: var(--muted-foreground);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.gge-demo-logins-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.gge-demo-btn {
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background-color: #FFFFFF;
+  color: #14387E;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.gge-demo-btn:hover {
+  background-color: var(--muted);
+  border-color: #14387E;
+}
+
+/* ============================================================================
+   CARD DE DÚVIDA SELECIONADA (PREVIEW COMPLETO PARA MONITOR)
+   ============================================================================ */
+
+.gge-selected-doubt-preview {
+  background-color: #F0F4FA;
+  border: 1.5px solid #14387E;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.gge-selected-doubt-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #14387E;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gge-selected-doubt-text {
+  font-size: 0.95rem;
+  color: #0f172a;
+  line-height: 1.6;
+  background-color: #FFFFFF;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid #CBD5E1;
+  margin-top: 0.5rem;
+}
+
+/* ============================================================================
+   LIGHTBOX / VISUALIZADOR DE FOTOS E IMPRESSÃO/DOWNLOAD
+   ============================================================================ */
+
+.gge-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(10, 22, 40, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.gge-lightbox-card {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.gge-lightbox-img {
+  max-width: 80vw;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid #E2E8F0;
+}
+
+.gge-lightbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+/* ============================================================================
+   SISTEMA DE AVALIAÇÃO COM ESTRELAS ⭐⭐⭐⭐⭐
+   ============================================================================ */
+
+.gge-rating-card {
+  background-color: #FFFBEB;
+  border: 1.5px solid #FCD34D;
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  margin-top: 1rem;
+}
+
+.gge-rating-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #B45309;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gge-stars-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+}
+
+.gge-star-btn {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #D1D5DB;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.gge-star-btn.active {
+  color: #F59E0B;
+}
+
+.gge-star-btn:hover {
+  color: #F59E0B;
 }
 
 /* ============================================================================
