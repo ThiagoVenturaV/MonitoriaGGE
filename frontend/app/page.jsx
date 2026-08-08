@@ -578,34 +578,7 @@ export default function PlataformaMonitoriaGGE() {
                 </button>
               </form>
 
-              <div className="gge-demo-logins-box">
-                <div className="gge-demo-logins-title">
-                  Logins de demonstração rápida:
-                </div>
-                <div className="gge-demo-logins-grid">
-                  <button
-                    type="button"
-                    onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
-                    className="gge-demo-btn"
-                  >
-                    Aluno
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFastDemoLogin('professor@gge.com.br')}
-                    className="gge-demo-btn"
-                  >
-                    Monitor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
-                    className="gge-demo-btn"
-                  >
-                    Coordenação
-                  </button>
-                </div>
-              </div>
+
             </div>
           </section>
         </div>
