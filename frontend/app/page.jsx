@@ -161,7 +161,7 @@ export default function PlataformaMonitoriaGGE() {
   };
 
   const handleLogout = async () => {
-    if (token) { try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch (err) {} }
+    if (token) { try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch (err) { } }
     localStorage.removeItem('gge_token'); setToken(null); setUser(null); setShowProfileDropdown(false); alert('Sessão encerrada com sucesso!');
   };
 
@@ -278,13 +278,15 @@ export default function PlataformaMonitoriaGGE() {
   };
 
   const handleAlunoEntendeu = async (ticketId) => {
-    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/entendi`, { method: 'POST' }); const data = await res.json();
+    try {
+      const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/entendi`, { method: 'POST' }); const data = await res.json();
       if (data.success) { alert('Ótimo! Uma Questão de Fixação foi selecionada para validar seu aprendizado.'); carregarDados(); }
     } catch (err) { alert('Erro ao avançar para a questão de fixação.'); }
   };
 
   const handleResponderFixacao = async (ticketId, opcao, teveDuvida = false) => {
-    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/responder-fixacao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respostaSelecionada: opcao, teveDuvida }) });
+    try {
+      const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/responder-fixacao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respostaSelecionada: opcao, teveDuvida }) });
       const data = await res.json(); if (data.success) { alert(data.mensagem); carregarDados(); }
     } catch (err) { alert('Erro ao processar a resposta da questão.'); }
   };
@@ -818,7 +820,7 @@ export default function PlataformaMonitoriaGGE() {
         ) : activeTab === 'dashboards' && currentUserRole === 'coordenador' ? (
           /* ─── ABA 2: DASHBOARDS DA COORDENAÇÃO ─── */
           <main style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            
+
             {/* Header com Filtros do Dashboard */}
             <div className="gge-card">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
@@ -880,7 +882,7 @@ export default function PlataformaMonitoriaGGE() {
             {dashboardsData ? (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px' }}>
-                  
+
                   {/* Card 1: Volume */}
                   <div className="gge-card">
                     <div>
@@ -984,28 +986,6 @@ export default function PlataformaMonitoriaGGE() {
           <>
             {/* ─── LEFT SIDEBAR ─── */}
             <aside className="gge-sidebar">
-
-              {/* Cycle Filter */}
-              <div className="gge-card">
-                <div className="gge-card-header">
-                  <span className="gge-card-title"><Layers size={18} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
-                </div>
-                <div className="gge-filter-buttons-grid">
-                  {[
-                    { id: 'todos', label: 'Todas', count: filteredTickets.length },
-                    { id: 'pendente', label: 'Dúvida Enviada', count: filteredTickets.filter(t => t.status === 'Pendente').length },
-                    { id: 'explicado', label: 'Resposta do Professor', count: filteredTickets.filter(t => t.status === 'Explicado').length },
-                    { id: 'entendido', label: 'Aluno Entendeu', count: filteredTickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
-                    { id: 'praticando', label: 'Fixação com IA', count: filteredTickets.filter(t => t.status === 'Praticando').length },
-                    { id: 'aprovado', label: 'Conteúdo Dominado', count: filteredTickets.filter(t => t.status === 'Aprovado').length },
-                  ].map(f => (
-                    <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
-                      <span>{f.label}</span>
-                      <span className="gge-filter-count">{f.count}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Methodology */}
               <div className="gge-card">
@@ -1177,7 +1157,7 @@ export default function PlataformaMonitoriaGGE() {
                         rows={3}
                       />
                     </div>
-                    
+
                     {/* Formas de Enviar Conteudo (Recursos) */}
                     <div className="gge-resources-box">
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -1230,6 +1210,28 @@ export default function PlataformaMonitoriaGGE() {
                   </form>
                 </div>
               )}
+
+              {/* Cycle Filter */}
+              <div className="gge-card">
+                <div className="gge-card-header">
+                  <span className="gge-card-title"><Layers size={18} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
+                </div>
+                <div className="gge-filter-buttons-grid">
+                  {[
+                    { id: 'todos', label: 'Todas', count: filteredTickets.length },
+                    { id: 'pendente', label: 'Dúvida Enviada', count: filteredTickets.filter(t => t.status === 'Pendente').length },
+                    { id: 'explicado', label: 'Resposta do Professor', count: filteredTickets.filter(t => t.status === 'Explicado').length },
+                    { id: 'entendido', label: 'Aluno Entendeu', count: filteredTickets.filter(t => t.etapa >= 3 && t.etapa < 4).length },
+                    { id: 'praticando', label: 'Fixação com IA', count: filteredTickets.filter(t => t.status === 'Praticando').length },
+                    { id: 'aprovado', label: 'Conteúdo Dominado', count: filteredTickets.filter(t => t.status === 'Aprovado').length },
+                  ].map(f => (
+                    <button key={f.id} onClick={() => setStatusFilter(f.id)} className={`gge-filter-item ${statusFilter === f.id ? 'active' : ''}`}>
+                      <span>{f.label}</span>
+                      <span className="gge-filter-count">{f.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* ─── HISTÓRICO DE DÚVIDAS ─── */}
               <div id="feed-section">
@@ -1307,7 +1309,7 @@ export default function PlataformaMonitoriaGGE() {
                             </span>
                           </div>
                           {ticket.resposta.texto && <p style={{ fontSize: '0.95rem', color: '#1e293b', lineHeight: '1.6', marginBottom: '10px' }}>{ticket.resposta.texto}</p>}
-                          
+
                           {/* Audio */}
                           {ticket.resposta.audioUrl && (
                             <div style={{ marginBottom: '12px' }}>
@@ -1340,7 +1342,7 @@ export default function PlataformaMonitoriaGGE() {
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
                               {(ticket.resposta.pdfUrls && ticket.resposta.pdfUrls.length > 0 ? ticket.resposta.pdfUrls : [ticket.resposta.pdfUrl]).map((url, i) => (
                                 <a key={i} href={`${API_BASE}${url}`} target="_blank" rel="noreferrer" className="gge-btn gge-btn-secondary" style={{ fontSize: '0.85rem' }}>
-                                  <FileText size={16} style={{ color: '#e11d48' }} /> <span>PDF Explicativo {i > 0 ? `#${i+1}` : ''}</span>
+                                  <FileText size={16} style={{ color: '#e11d48' }} /> <span>PDF Explicativo {i > 0 ? `#${i + 1}` : ''}</span>
                                 </a>
                               ))}
                             </div>
