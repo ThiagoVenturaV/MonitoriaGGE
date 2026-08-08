@@ -402,6 +402,11 @@ app.get('/api/coordenador/stats', (req, res) => {
     ? (avaliacoesComNota.reduce((sum, t) => sum + t.avaliacao.nota, 0) / avaliacoesComNota.length).toFixed(1)
     : '5.0';
 
+  const avaliacoesPositivas = avaliacoesComNota.filter(t => t.avaliacao.nota >= 4).length;
+  const taxaAvaliacaoPositiva = avaliacoesComNota.length > 0
+    ? `${Math.round((avaliacoesPositivas / avaliacoesComNota.length) * 100)}%`
+    : '100%';
+
   res.json({
     success: true,
     totalChamados: total,
@@ -413,7 +418,8 @@ app.get('/api/coordenador/stats', (req, res) => {
     tempoMedioResposta: total > 0 ? '12 min' : '0 min',
     metaRespostaCumprida: total > 0 ? '98.4%' : '100%',
     taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '100%',
-    precisaoIA: '96.5%',
+    taxaAvaliacaoPositiva,
+    precisaoIA: taxaAvaliacaoPositiva,
     satisfacaoAlunos: `${mediaSatisfacao} / 5.0 ★`
   });
 });
@@ -492,6 +498,11 @@ app.get('/api/coordenador/dashboards', (req, res) => {
     ? (avaliacoesComNota.reduce((sum, t) => sum + t.avaliacao.nota, 0) / avaliacoesComNota.length).toFixed(1)
     : '5.0';
 
+  const avaliacoesPositivas = avaliacoesComNota.filter(t => t.avaliacao.nota >= 4).length;
+  const taxaAvaliacaoPositiva = avaliacoesComNota.length > 0
+    ? `${Math.round((avaliacoesPositivas / avaliacoesComNota.length) * 100)}%`
+    : '100%';
+
   res.json({
     success: true,
     filtrosAplicados: { professor: professor || 'todos', area: area || 'todas', periodo: periodo || '7d' },
@@ -506,7 +517,8 @@ app.get('/api/coordenador/dashboards', (req, res) => {
       metaTempoResposta: '< 15 min',
       cumprimentoMetaTempo: total > 0 ? '98.5%' : '100%',
       taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '0%',
-      precisaoIA: '96.5%',
+      taxaAvaliacaoPositiva,
+      precisaoIA: taxaAvaliacaoPositiva,
       satisfacaoAlunosGeral: `${mediaSatisfacaoGeral} / 5.0 ★`
     },
     monitores: monitoresStats,
