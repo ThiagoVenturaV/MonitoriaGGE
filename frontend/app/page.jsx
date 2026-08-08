@@ -340,58 +340,330 @@ export default function PlataformaMonitoriaGGE() {
   /* ======================================================================== */
   /* RENDER */
   /* ======================================================================== */
+  if (!user || showAuthModal) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="gge-login-grid">
+          {/* Lado Esquerdo - Hero Navy Sweet Look */}
+          <section className="gge-login-hero">
+            <div className="flex items-center gap-3">
+              <span className="gge-sweet-logo-img-wrapper">
+                <img src="/logo-gge.png" alt="Colégio GGE" className="gge-sweet-logo-img" />
+              </span>
+              <div>
+                <span className="block font-display text-lg font-extrabold uppercase tracking-wide text-white">
+                  Monitoria GGE
+                </span>
+                <span className="block text-xs text-slate-300">
+                  Colégio GGE · Ensino Médio, SSA & ENEM
+                </span>
+              </div>
+            </div>
+
+            <div className="my-10 max-w-lg">
+              <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight text-white mb-4">
+                Sua dúvida vira aprendizado no mesmo dia.
+              </h1>
+              <p className="text-sm sm:text-base text-slate-300 mb-8">
+                Envie a questão por texto ou foto, receba a resolução do professor em vídeo, áudio, PDF ou lousa e feche o ciclo com questões recomendadas pela IA GGE.
+              </p>
+
+              <div className="grid gap-3">
+                <div
+                  onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
+                  className="flex items-start gap-3 rounded-lg bg-slate-800/60 p-4 border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors"
+                >
+                  <UserCheck className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-sm font-bold text-white">Portal do Aluno (Demo)</span>
+                    <span className="block text-xs text-slate-300">Envie dúvidas por texto/foto e pratique com a IA GGE.</span>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => handleFastDemoLogin('professor@gge.com.br')}
+                  className="flex items-start gap-3 rounded-lg bg-slate-800/60 p-4 border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors"
+                >
+                  <BookOpen className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-sm font-bold text-white">Painel do Monitor (Demo)</span>
+                    <span className="block text-xs text-slate-300">Fila por unidade e respostas multimídia.</span>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
+                  className="flex items-start gap-3 rounded-lg bg-slate-800/60 p-4 border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors"
+                >
+                  <BarChart3 className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-sm font-bold text-white">Coordenação Acadêmica (Demo)</span>
+                    <span className="block text-xs text-slate-300">SLAs de atendimento, indicadores e dashboards por unidade.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="flex items-center gap-2 text-xs text-slate-400">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Ambiente demonstrativo oficial de Monitoria Colégio GGE.
+            </p>
+          </section>
+
+          {/* Lado Direito - Card de Acesso / Cadastro */}
+          <section className="gge-login-card-container">
+            <div className="w-full max-w-md gge-sweet-card">
+              {showAuthModal && user && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                  <button onClick={() => setShowAuthModal(false)} className="gge-btn gge-btn-outline gge-btn-sm">
+                    <X size={16} /> Fechar
+                  </button>
+                </div>
+              )}
+
+              <div className="gge-sweet-card-header">
+                <h2 className="gge-sweet-card-title">Acesse a plataforma</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use <strong>lucas@gge.com.br</strong>, <strong>professor@gge.com.br</strong> ou <strong>coordenador@gge.com.br</strong> com a senha <strong>123456</strong>.
+                </p>
+              </div>
+
+              {authError && (
+                <div style={{ background: 'rgba(239,68,68,0.1)', color: '#dc2626', padding: '10px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', marginBottom: '12px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  {authError}
+                </div>
+              )}
+
+              <div className="gge-tabs-list mb-6">
+                <button
+                  type="button"
+                  className={`gge-tab-trigger ${authMode === 'login' ? 'active' : ''}`}
+                  onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                >
+                  Entrar
+                </button>
+                <button
+                  type="button"
+                  className={`gge-tab-trigger ${authMode === 'register' ? 'active' : ''}`}
+                  onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                >
+                  Criar conta
+                </button>
+              </div>
+
+              <form onSubmit={handleAuthSubmit}>
+                {authMode === 'register' && (
+                  <div className="gge-input-group">
+                    <label className="gge-label">Nome Completo</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Seu nome"
+                      value={authForm.name}
+                      onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
+                      className="gge-input"
+                    />
+                  </div>
+                )}
+
+                <div className="gge-input-group">
+                  <label className="gge-label">E-mail institucional</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="seu.email@gge.com.br"
+                    value={authForm.email}
+                    onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+                    className="gge-input"
+                  />
+                </div>
+
+                <div className="gge-input-group">
+                  <label className="gge-label">Senha</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={authForm.password}
+                    onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                    className="gge-input"
+                  />
+                </div>
+
+                {authMode === 'register' && (
+                  <>
+                    <div className="gge-input-group">
+                      <label className="gge-label">Papel / Função</label>
+                      <select
+                        value={authForm.role}
+                        onChange={(e) => setAuthForm({ ...authForm, role: e.target.value })}
+                        className="gge-select"
+                      >
+                        <option value="aluno">Aluno(a)</option>
+                        <option value="monitor">Monitor / Professor</option>
+                        <option value="coordenador">Coordenador Pedagógico</option>
+                      </select>
+                    </div>
+
+                    <div className="gge-input-group">
+                      <label className="gge-label">Unidade GGE</label>
+                      <select
+                        value={authForm.unidade}
+                        onChange={(e) => setAuthForm({ ...authForm, unidade: e.target.value })}
+                        className="gge-select"
+                      >
+                        <option value="Unidade Boa Viagem - Recife">Boa Viagem — Recife</option>
+                        <option value="Unidade Benfica - Recife">Benfica — Recife</option>
+                        <option value="Unidade Parnamirim - Recife">Parnamirim — Recife</option>
+                        <option value="Unidade Caruaru - PE">Caruaru — PE</option>
+                      </select>
+                    </div>
+
+                    {authForm.role === 'aluno' && (
+                      <div className="gge-input-group">
+                        <label className="gge-label">Turma</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: 3º Ano Terceirão - GGE"
+                          value={authForm.turma}
+                          onChange={(e) => setAuthForm({ ...authForm, turma: e.target.value })}
+                          className="gge-input"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="gge-btn gge-btn-primary gge-btn-full mt-4"
+                >
+                  {authLoading ? 'Acessando...' : authMode === 'login' ? 'Entrar na plataforma' : 'Cadastrar conta'}
+                </button>
+              </form>
+
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginBottom: '8px', fontWeight: 600 }}>
+                  Logins de demonstração rápida:
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
+                    className="gge-btn gge-btn-outline gge-btn-sm"
+                    style={{ fontSize: '0.72rem' }}
+                  >
+                    Aluno
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFastDemoLogin('professor@gge.com.br')}
+                    className="gge-btn gge-btn-outline gge-btn-sm"
+                    style={{ fontSize: '0.72rem' }}
+                  >
+                    Monitor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
+                    className="gge-btn gge-btn-outline gge-btn-sm"
+                    style={{ fontSize: '0.72rem' }}
+                  >
+                    Coordenação
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="gge-app-wrapper">
 
-      {/* ─── HEADER ─── */}
-      <header className="gge-header">
-        <div className="gge-header-content">
-          <div className="gge-brand-group">
-            <img src="https://cdn.gge.com.br/web/wp-content/uploads/2023/09/logo-gge.png" alt="Colégio GGE" className="gge-brand-logo-img" />
-            <div className="gge-brand-text">
-              <h1>Monitoria GGE</h1>
-              <p>Ciclo de Aprendizado · Ensino Médio, SSA & ENEM</p>
+      {/* ─── HEADER SWEET LOOK ─── */}
+      <header className="gge-sweet-header">
+        <div className="gge-sweet-header-inner">
+          <div className="gge-sweet-logo-box">
+            <div className="gge-sweet-logo-img-wrapper">
+              <img src="/logo-gge.png" alt="Colégio GGE" className="gge-sweet-logo-img" />
+            </div>
+            <div>
+              <span className="block font-display text-sm font-extrabold uppercase tracking-wide text-white">
+                Monitoria GGE
+              </span>
+              <span className="block text-xs text-slate-300">
+                Ciclo de Aprendizado · {user?.unidade?.split('-')[0]?.trim()}
+              </span>
             </div>
           </div>
-          <div className="gge-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            
-            {/* Usuário Logado */}
-            {user ? (
-              <div className="gge-user-header-badge">
-                <div className="gge-user-info-text">
-                  <div className="name">{user.name}</div>
-                  <div className="unit">{user.unidade?.split('-')[0]?.trim()}</div>
-                </div>
-                <div className="gge-user-avatar">{user.name.charAt(0)}</div>
-              </div>
-            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="gge-btn gge-btn-primary" style={{ fontSize: '0.725rem', padding: '6px 12px' }}>
-                <LogIn size={14} /> <span>Entrar</span>
+
+          <nav className="gge-sweet-nav">
+            <button
+              onClick={() => setActiveTab('atendimento')}
+              className={`gge-sweet-nav-btn ${activeTab === 'atendimento' ? 'active' : ''}`}
+            >
+              <BookOpen size={16} /> <span>Feed de Dúvidas</span>
+            </button>
+
+            {currentUserRole === 'coordenador' && (
+              <button
+                onClick={() => setActiveTab('dashboards')}
+                className={`gge-sweet-nav-btn ${activeTab === 'dashboards' ? 'active' : ''}`}
+              >
+                <BarChart3 size={16} /> <span>Dashboards da Coordenação</span>
               </button>
             )}
 
-            {/* Menu Hambúrguer Único */}
+            <button
+              onClick={() => {
+                const el = document.getElementById('form-duvida');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="gge-sweet-nav-btn"
+            >
+              <PlusCircle size={16} /> <span>Nova Dúvida</span>
+            </button>
+          </nav>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#ffffff' }}>{user?.name}</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(248,250,252,0.7)' }}>
+                {currentUserRole === 'coordenador' ? 'Coordenação' : currentUserRole === 'monitor' ? 'Monitor' : 'Aluno'}
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="gge-btn gge-btn-outline gge-btn-sm"
+              style={{ color: '#ffffff', borderColor: 'rgba(255,255,255,0.2)', padding: '6px 10px' }}
+              title="Encerrar sessão"
+            >
+              <LogOut size={15} /> <span>Sair</span>
+            </button>
+
+            {/* Menu Hambúrguer Mobile */}
             <button
               onClick={() => setShowMenuDrawer(!showMenuDrawer)}
               className="gge-btn-icon"
               style={{
-                background: showMenuDrawer ? 'var(--surface-3)' : 'var(--brand)',
+                background: showMenuDrawer ? 'var(--navy-soft)' : 'var(--primary)',
                 color: '#ffffff',
-                width: '38px',
-                height: '38px',
-                borderRadius: 'var(--r-md)',
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-md)',
                 display: 'flex',
                 alignItems: 'center',
-                justify: 'center',
-                boxShadow: 'var(--shadow-sm)',
+                justifyContent: 'center',
                 border: '1px solid rgba(255,255,255,0.15)',
-                cursor: 'pointer',
-                transition: 'all .2s ease'
+                cursor: 'pointer'
               }}
               title="Menu Principal"
-              aria-label="Abrir Menu Principal"
             >
-              {showMenuDrawer ? <X size={20} /> : <Menu size={20} />}
+              {showMenuDrawer ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
