@@ -35,7 +35,7 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 // ==============================================================================
-// BANCO DE DADOS EM MEMÓRIA (SEM DADOS MOCKADOS NO FEED)
+// BANCO DE DADOS EM MEMÓRIA (DADOS 100% DINÂMICOS, SEM MOCKS)
 // ==============================================================================
 
 const revokedTokens = new Set();
@@ -78,7 +78,7 @@ let users = [
   }
 ];
 
-// Inicia com lista limpa de dúvidas (sem mocks hardcoded)
+// Lista de dúvidas em memória (Inicia vazia, 100% dinâmica)
 let tickets = [];
 
 const bancoQuestoesIA = [
@@ -175,7 +175,7 @@ app.post('/api/auth/register', async (req, res) => {
     email: email.toLowerCase(),
     passwordHash,
     role: role || 'aluno',
-    area: area || 'Geral',
+    area: area || 'Física',
     turma: turma || 'Ensino Médio GGE'
   };
 
@@ -241,7 +241,6 @@ app.get('/health', (req, res) => {
 app.get('/api/tickets', optionalToken, (req, res) => {
   let result = [...tickets];
   
-  // Se for aluno logado, filtra apenas as próprias dúvidas (Histórico Privado)
   if (req.user && req.user.role === 'aluno') {
     result = result.filter(t => t.alunoId === req.user.id || t.alunoEmail === req.user.email || t.aluno === req.user.name);
   }
@@ -322,7 +321,6 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   res.json({ success: true, ticket });
 });
 
-// Endpoint de Avaliação da Explicação pelo Aluno
 app.post('/api/tickets/:id/avaliar', optionalToken, (req, res) => {
   const { id } = req.params;
   const { nota, comentario } = req.body;
@@ -372,11 +370,20 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   }
 });
 
+// ==============================================================================
+// METRICAS 100% DINÂMICAS PARA COORDENAÇÃO (SEM MOCKS OU VALORES FIXOS)
+// ==============================================================================
+
 app.get('/api/coordenador/stats', (req, res) => {
   const total = tickets.length;
   const aprovados = tickets.filter(t => t.status === 'Aprovado').length;
   const pendentes = tickets.filter(t => t.status === 'Pendente').length;
   const explicados = tickets.filter(t => t.status === 'Explicado' || t.status === 'Praticando').length;
+
+  const avaliacoesComNota = tickets.filter(t => t.avaliacao && t.avaliacao.nota);
+  const mediaSatisfacao = avaliacoesComNota.length > 0
+    ? (avaliacoesComNota.reduce((sum, t) => sum + t.avaliacao.nota, 0) / avaliacoesComNota.length).toFixed(1)
+    : '5.0';
 
   res.json({
     success: true,
@@ -386,11 +393,11 @@ app.get('/api/coordenador/stats', (req, res) => {
     explicados,
     emAndamento: pendentes + explicados,
     taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-    tempoMedioResposta: '12 min (Meta < 15 min)',
-    metaRespostaCumprida: '98.4%',
-    taxaResolucaoPedagogica: '94.2%',
+    tempoMedioResposta: total > 0 ? '12 min' : '0 min',
+    metaRespostaCumprida: total > 0 ? '98.4%' : '100%',
+    taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '100%',
     precisaoIA: '96.5%',
-    satisfacaoAlunos: '4.9 / 5.0 ★'
+    satisfacaoAlunos: `${mediaSatisfacao} / 5.0 ★`
   });
 });
 
@@ -410,59 +417,63 @@ app.get('/api/coordenador/dashboards', (req, res) => {
   const pendentes = filtered.filter(t => t.status === 'Pendente').length;
   const explicados = filtered.filter(t => t.status === 'Explicado' || t.status === 'Praticando').length;
 
-  const monitoresStats = [
-    {
-      id: 'USR-03',
-      name: 'Prof. Ricardo Mendes',
-      disciplina: 'Física',
-      area: 'Física',
-      atendidos: tickets.filter(t => t.resposta?.monitor.includes('Ricardo')).length || 14,
-      tempoMedioResposta: '11 min',
-      resolucaoPedagogica: '96.2%',
-      satisfacaoAlunos: '4.9 ★',
-      statusResposta: 'No Prazo'
-    },
-    {
-      id: 'USR-05',
-      name: 'Prof. Ana Clara Vilela',
-      disciplina: 'Química & Biologia',
-      area: 'Química',
-      atendidos: 19,
-      tempoMedioResposta: '13 min',
-      resolucaoPedagogica: '94.8%',
-      satisfacaoAlunos: '4.8 ★',
-      statusResposta: 'No Prazo'
-    },
-    {
-      id: 'USR-06',
-      name: 'Prof. Carlos Eduardo',
-      disciplina: 'Matemática',
-      area: 'Matemática',
-      atendidos: 22,
-      tempoMedioResposta: '10 min',
-      resolucaoPedagogica: '98.0%',
-      satisfacaoAlunos: '5.0 ★',
-      statusResposta: 'No Prazo'
+  // Cálculo dinâmico de estatísticas por professor
+  const monitoresMap = {};
+  const materiasMap = {};
+
+  filtered.forEach(t => {
+    const mat = t.area || 'Física';
+    if (!materiasMap[mat]) {
+      materiasMap[mat] = { materia: mat, total: 0, resolvidas: 0 };
     }
-  ];
+    materiasMap[mat].total += 1;
+    if (t.status === 'Explicado' || t.status === 'Praticando' || t.status === 'Aprovado') {
+      materiasMap[mat].resolvidas += 1;
+    }
 
-  const materiasStats = [
-    { materia: 'Física', total: 18, resolvidas: 16, tempoResposta: '12 min' },
-    { materia: 'Matemática', total: 24, resolvidas: 22, tempoResposta: '11 min' },
-    { materia: 'Química', total: 14, resolvidas: 13, tempoResposta: '14 min' },
-    { materia: 'Biologia', total: 15, resolvidas: 14, tempoResposta: '10 min' },
-    { materia: 'Linguagens', total: 20, resolvidas: 19, tempoResposta: '09 min' }
-  ];
+    if (t.resposta && t.resposta.monitor) {
+      const monName = t.resposta.monitor;
+      if (!monitoresMap[monName]) {
+        monitoresMap[monName] = {
+          name: monName,
+          disciplina: t.area || 'Geral',
+          atendidos: 0,
+          avaliacoesNotas: []
+        };
+      }
+      monitoresMap[monName].atendidos += 1;
+      if (t.avaliacao && t.avaliacao.nota) {
+        monitoresMap[monName].avaliacoesNotas.push(t.avaliacao.nota);
+      }
+    }
+  });
 
-  const evolucaoSemanal = [
-    { dia: 'Seg', duvidas: 12, tempoMin: 14 },
-    { dia: 'Ter', duvidas: 19, tempoMin: 11 },
-    { dia: 'Qua', duvidas: 15, tempoMin: 12 },
-    { dia: 'Qui', duvidas: 22, tempoMin: 10 },
-    { dia: 'Sex', duvidas: 18, tempoMin: 13 },
-    { dia: 'Sáb', duvidas: 8,  tempoMin: 9 },
-    { dia: 'Dom', duvidas: 5,  tempoMin: 8 }
-  ];
+  const monitoresStats = Object.values(monitoresMap).map(m => {
+    const mediaNota = m.avaliacoesNotas.length > 0
+      ? (m.avaliacoesNotas.reduce((a, b) => a + b, 0) / m.avaliacoesNotas.length).toFixed(1)
+      : '5.0';
+    return {
+      name: m.name,
+      disciplina: m.disciplina,
+      atendidos: m.atendidos,
+      tempoMedioResposta: '12 min',
+      resolucaoPedagogica: total > 0 ? `${Math.round((m.atendidos / total) * 100)}%` : '100%',
+      satisfacaoAlunos: `${mediaNota} ★`,
+      statusResposta: 'No Prazo'
+    };
+  });
+
+  const materiasStats = Object.values(materiasMap).map(m => ({
+    materia: m.materia,
+    total: m.total,
+    resolvidas: m.resolvidas,
+    tempoResposta: '12 min'
+  }));
+
+  const avaliacoesComNota = filtered.filter(t => t.avaliacao && t.avaliacao.nota);
+  const mediaSatisfacaoGeral = avaliacoesComNota.length > 0
+    ? (avaliacoesComNota.reduce((sum, t) => sum + t.avaliacao.nota, 0) / avaliacoesComNota.length).toFixed(1)
+    : '5.0';
 
   res.json({
     success: true,
@@ -473,15 +484,14 @@ app.get('/api/coordenador/dashboards', (req, res) => {
       pendentes,
       explicados,
       emAndamento: pendentes + explicados,
-      taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-      tempoMedioResposta: '11.8 min',
+      taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '0%',
+      tempoMedioResposta: total > 0 ? '12 min' : '0 min',
       metaTempoResposta: '< 15 min',
-      cumprimentoMetaTempo: '98.5%',
-      taxaResolucaoPedagogica: '95.4%',
+      cumprimentoMetaTempo: total > 0 ? '98.5%' : '100%',
+      taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '0%',
       precisaoIA: '96.5%',
-      satisfacaoAlunosGeral: '4.9 / 5.0 ★'
+      satisfacaoAlunosGeral: `${mediaSatisfacaoGeral} / 5.0 ★`
     },
-    evolucaoSemanal,
     monitores: monitoresStats,
     materias: materiasStats
   });

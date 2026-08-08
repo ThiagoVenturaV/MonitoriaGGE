@@ -625,15 +625,17 @@ export default function PlataformaMonitoriaGGE() {
               </button>
             )}
 
-            <button
-              onClick={() => {
-                const el = document.getElementById('form-duvida');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="gge-official-nav-btn"
-            >
-              <PlusCircle size={16} /> <span>Nova Dúvida</span>
-            </button>
+            {currentUserRole === 'aluno' && (
+              <button
+                onClick={() => {
+                  const el = document.getElementById('form-duvida');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="gge-official-nav-btn"
+              >
+                <PlusCircle size={16} /> <span>Nova Dúvida</span>
+              </button>
+            )}
           </nav>
 
           <div className="gge-official-user-area">
@@ -686,9 +688,9 @@ export default function PlataformaMonitoriaGGE() {
                   </label>
                   <select value={filterProfessor} onChange={(e) => setFilterProfessor(e.target.value)} className="gge-select">
                     <option value="todos">Todos os Professores</option>
-                    <option value="Ricardo">Prof. Ricardo Mendes</option>
-                    <option value="Ana Clara">Prof. Ana Clara Vilela</option>
-                    <option value="Carlos">Prof. Carlos Eduardo</option>
+                    {dashboardsData?.monitores?.map((m, idx) => (
+                      <option key={idx} value={m.name}>{m.name}</option>
+                    ))}
                   </select>
                 </div>
 
