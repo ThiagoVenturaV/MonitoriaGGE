@@ -347,9 +347,7 @@ export default function PlataformaMonitoriaGGE() {
           {/* Lado Esquerdo - Hero Navy Sweet Look */}
           <section className="gge-login-hero">
             <div className="gge-login-hero-header">
-              <div className="gge-login-hero-logo-box">
-                <img src="/logo-gge.png" alt="Colégio GGE" className="gge-login-hero-logo-img" />
-              </div>
+              <img src="/logo-gge-official.png" alt="Colégio GGE" className="gge-login-hero-logo-img" />
               <div>
                 <span className="gge-login-hero-brand-title">
                   Monitoria GGE
@@ -581,27 +579,24 @@ export default function PlataformaMonitoriaGGE() {
   return (
     <div className="gge-app-wrapper">
 
-      {/* ─── HEADER SWEET LOOK GGE ─── */}
-      <header className="gge-sweet-header">
-        <div className="gge-sweet-header-inner">
-          <div className="gge-sweet-logo-box">
-            <div className="gge-sweet-logo-img-wrapper">
-              <img src="/logo-gge.png" alt="Colégio GGE" className="gge-sweet-logo-img" />
-            </div>
-            <div>
-              <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '0.04em', color: '#FFFFFF' }}>
-                Monitoria GGE
-              </span>
-              <span style={{ display: 'block', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.75)' }}>
-                Ciclo de Aprendizado · {user?.unidade?.split('-')[0]?.trim()}
-              </span>
-            </div>
+      {/* ─── HEADER OFICIAL GGE (ESTILO DO SITE GGE.COM.BR) ─── */}
+      <div className="gge-top-bar">
+        <div className="gge-top-bar-inner">
+          <span>Colégio GGE · Preparação para a Vida · SSA & ENEM</span>
+          <span>Portal Oficial de Monitoria Pedagógica</span>
+        </div>
+      </div>
+
+      <header className="gge-official-header">
+        <div className="gge-official-header-inner">
+          <div className="gge-official-logo-box">
+            <img src="/logo-gge-official.png" alt="Colégio GGE" className="gge-official-logo-img" />
           </div>
 
-          <nav className="gge-sweet-nav">
+          <nav className="gge-official-nav">
             <button
               onClick={() => setActiveTab('atendimento')}
-              className={`gge-sweet-nav-btn ${activeTab === 'atendimento' ? 'active' : ''}`}
+              className={`gge-official-nav-btn ${activeTab === 'atendimento' ? 'active' : ''}`}
             >
               <BookOpen size={16} /> <span>Feed de Dúvidas</span>
             </button>
@@ -609,7 +604,7 @@ export default function PlataformaMonitoriaGGE() {
             {currentUserRole === 'coordenador' && (
               <button
                 onClick={() => setActiveTab('dashboards')}
-                className={`gge-sweet-nav-btn ${activeTab === 'dashboards' ? 'active' : ''}`}
+                className={`gge-official-nav-btn ${activeTab === 'dashboards' ? 'active' : ''}`}
               >
                 <BarChart3 size={16} /> <span>Dashboards da Coordenação</span>
               </button>
@@ -620,24 +615,23 @@ export default function PlataformaMonitoriaGGE() {
                 const el = document.getElementById('form-duvida');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="gge-sweet-nav-btn"
+              className="gge-official-nav-btn"
             >
               <PlusCircle size={16} /> <span>Nova Dúvida</span>
             </button>
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div className="gge-user-header-text">
-              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#FFFFFF' }}>{user?.name}</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.75)' }}>
-                {currentUserRole === 'coordenador' ? 'Coordenação' : currentUserRole === 'monitor' ? 'Monitor' : 'Aluno'}
+          <div className="gge-official-user-area">
+            <div className="gge-official-user-info">
+              <div className="gge-official-user-name">{user?.name}</div>
+              <div className="gge-official-user-sub">
+                {currentUserRole === 'coordenador' ? 'Coordenação Pedagógica' : currentUserRole === 'monitor' ? 'Monitor' : 'Aluno GGE'} · {user?.unidade?.split('-')[0]?.trim()}
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="gge-btn gge-btn-outline"
-              style={{ color: '#FFFFFF', borderColor: 'rgba(255, 255, 255, 0.3)', padding: '5px 10px', fontSize: '0.775rem' }}
+              className="gge-official-logout-btn"
               title="Encerrar sessão"
             >
               <LogOut size={14} /> <span>Sair</span>

@@ -1,56 +1,86 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================================================
-   MONITORIA GGE — CORES OFICIAIS & SWEET LOOK DESIGN SYSTEM
+   MONITORIA GGE — CORES OFICIAIS & HEADER OFICIAL COLÉGIO GGE
    Vermelho Oficial: #E30612 | Azul-Marinho: #14387E | Branco: #FFFFFF
    ============================================================================ */
 
 :root {
-  /* GGE Official Colors */
+  /* GGE Official Colors (Requested by User) */
   --gge-red: #E30612;
   --gge-red-hover: #c4040e;
   --gge-navy: #14387E;
   --gge-navy-soft: #1d4a9f;
-  --gge-navy-dark: #0d285c;
+  --gge-navy-dark: #0a1628;
   --gge-white: #FFFFFF;
 
-  /* Design Tokens */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
+  /* Theme Mapping */
+  --primary: #E30612;
+  --primary-foreground: #FFFFFF;
+  --navy: #14387E;
+  --navy-foreground: #FFFFFF;
 
   --background: #F4F6FA;
   --foreground: #14387E;
   --card: #FFFFFF;
   --card-foreground: #1e293b;
-  
-  --primary: #E30612;
-  --primary-foreground: #FFFFFF;
   --secondary: #F1F5F9;
   --secondary-foreground: #14387E;
-  
-  --navy: #14387E;
-  --navy-foreground: #FFFFFF;
-  --navy-soft: #1d4a9f;
 
+  /* Surfaces for Dashboards and Components */
+  --surface-0: #F4F6FA;
+  --surface-1: #FFFFFF;
+  --surface-2: #F8FAFC;
+  --surface-3: #F1F5F9;
+  --surface-4: #E2E8F0;
+  --surface-glass: rgba(255, 255, 255, 0.9);
+
+  /* Brand Tokens */
+  --brand: #E30612;
+  --brand-soft: #ff2d55;
+  --brand-glow: rgba(227, 6, 18, 0.25);
+  --brand-ghost: rgba(227, 6, 18, 0.05);
+
+  /* Typography & Colors */
+  --text-0: #14387E;
+  --text-1: #334155;
+  --text-2: #64748B;
+  --text-3: #94A3B8;
+
+  /* Accent Palette */
+  --amber: #D97706;
+  --sky: #0284C7;
+  --emerald: #059669;
+  --violet: #7E22CE;
+
+  /* Borders & Shadows */
   --border: #E2E8F0;
-  --border-brand: rgba(227, 6, 18, 0.25);
+  --border-subtle: #F1F5F9;
+  --border-default: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --border-brand: rgba(227, 6, 18, 0.3);
   --input: #CBD5E1;
   --muted: #F1F5F9;
   --muted-foreground: #64748B;
 
-  /* Status Colors */
-  --status-pendente: #D97706;
-  --status-explicado: #14387E;
-  --status-praticando: #7E22CE;
-  --status-aprovado: #059669;
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(20, 56, 126, 0.08);
-  --shadow-md: 0 4px 12px rgba(20, 56, 126, 0.12);
-  --shadow-lg: 0 12px 28px rgba(20, 56, 126, 0.16);
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(20, 56, 126, 0.04);
+  --shadow-sm: 0 2px 8px rgba(20, 56, 126, 0.06);
+  --shadow-md: 0 6px 16px rgba(20, 56, 126, 0.1);
+  --shadow-lg: 0 12px 28px rgba(20, 56, 126, 0.14);
 
   /* Fonts */
   --font-sans: 'Barlow', ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -85,12 +115,155 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--gge-navy);
 }
 
-/* Typography Utility Classes */
 .font-display { font-family: var(--font-display); }
 .font-sans { font-family: var(--font-sans); }
 
 /* ============================================================================
-   TELA DE LOGIN SWEET LOOK (RESPONSIVA E SEM BUG DE TAILWIND)
+   HEADER OFICIAL INSPIRADO NO SITE DO COLÉGIO GGE (FUNDO BRANCO, LOGO SEM QUADRADO)
+   ============================================================================ */
+
+.gge-top-bar {
+  background-color: #0a1628;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  padding: 0.35rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gge-top-bar-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gge-official-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: #FFFFFF;
+  border-bottom: 3.5px solid #E30612;
+  box-shadow: 0 4px 14px rgba(20, 56, 126, 0.08);
+}
+
+.gge-official-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.625rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.gge-official-logo-box {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  text-decoration: none;
+}
+
+.gge-official-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.gge-official-nav {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .gge-official-nav {
+    display: flex;
+  }
+}
+
+/* Botões da Navegação: Azul Marinho por padrão, Vermelho + Texto Branco quando ATIVO (igual site GGE) */
+.gge-official-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 0.825rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #14387E;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.gge-official-nav-btn:hover {
+  background-color: rgba(227, 6, 18, 0.08);
+  color: #E30612;
+}
+
+.gge-official-nav-btn.active {
+  background-color: #E30612 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(227, 6, 18, 0.35);
+}
+
+.gge-official-user-area {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.gge-official-user-info {
+  text-align: right;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .gge-official-user-info {
+    display: block;
+  }
+}
+
+.gge-official-user-name {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #14387E;
+}
+
+.gge-official-user-sub {
+  font-size: 0.725rem;
+  color: #64748B;
+}
+
+.gge-official-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #E30612;
+  background-color: rgba(227, 6, 18, 0.08);
+  border: 1px solid rgba(227, 6, 18, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gge-official-logout-btn:hover {
+  background-color: #E30612;
+  color: #FFFFFF;
+}
+
+/* ============================================================================
+   TELA DE LOGIN SWEET LOOK
    ============================================================================ */
 
 .gge-login-wrapper {
@@ -112,15 +285,14 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Coluna Esquerda - Navy Hero */
 .gge-login-hero {
-  background: linear-gradient(135deg, var(--gge-navy-dark) 0%, var(--gge-navy) 100%);
+  background: linear-gradient(135deg, #0a1628 0%, #14387E 100%);
   color: #FFFFFF;
   padding: 2.5rem 1.75rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-right: 4px solid var(--gge-red);
+  border-right: 4px solid #E30612;
 }
 
 @media (min-width: 768px) {
@@ -135,23 +307,11 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.875rem;
 }
 
-.gge-login-hero-logo-box {
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-md);
-  background-color: #FFFFFF;
-  padding: 0.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  flex-shrink: 0;
-}
-
 .gge-login-hero-logo-img {
-  width: 100%;
-  height: 100%;
+  height: 52px;
+  width: auto;
   object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .gge-login-hero-brand-title {
@@ -195,7 +355,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 2rem;
 }
 
-/* Cards de Perfil na Hero */
 .gge-login-demo-cards {
   display: flex;
   flex-direction: column;
@@ -221,7 +380,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-login-demo-icon {
-  color: var(--gge-red);
+  color: #E30612;
   flex-shrink: 0;
   margin-top: 0.15rem;
 }
@@ -247,7 +406,6 @@ h1, h2, h3, h4, h5, h6 {
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Coluna Direita - Card de Acesso */
 .gge-login-form-section {
   display: flex;
   align-items: center;
@@ -274,7 +432,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--gge-navy);
+  color: #14387E;
 }
 
 .gge-login-card-sub {
@@ -283,7 +441,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0.25rem;
 }
 
-/* Abas no Form */
 .gge-tabs-header {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -310,11 +467,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-tab-btn.active {
   background-color: #FFFFFF;
-  color: var(--gge-navy);
+  color: #14387E;
   box-shadow: var(--shadow-sm);
 }
 
-/* Controles de Formulário */
 .gge-form-group {
   display: flex;
   flex-direction: column;
@@ -325,7 +481,7 @@ h1, h2, h3, h4, h5, h6 {
 .gge-form-label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--gge-navy);
+  color: #14387E;
 }
 
 .gge-form-input {
@@ -343,7 +499,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-form-input:focus {
-  border-color: var(--gge-red);
+  border-color: #E30612;
   box-shadow: 0 0 0 3px rgba(227, 6, 18, 0.15);
 }
 
@@ -362,13 +518,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-form-select:focus {
-  border-color: var(--gge-red);
+  border-color: #E30612;
 }
 
 .gge-submit-btn {
   width: 100%;
   height: 2.75rem;
-  background-color: var(--gge-red);
+  background-color: #E30612;
   color: #FFFFFF;
   font-family: var(--font-sans);
   font-size: 0.95rem;
@@ -381,7 +537,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-submit-btn:hover {
-  background-color: var(--gge-red-hover);
+  background-color: #c4040e;
   transform: translateY(-1px);
 }
 
@@ -410,7 +566,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.75rem;
   font-weight: 700;
   background-color: #FFFFFF;
-  color: var(--gge-navy);
+  color: #14387E;
   border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -419,110 +575,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-demo-btn:hover {
   background-color: var(--muted);
-  border-color: var(--gge-navy);
+  border-color: #14387E;
 }
 
 /* ============================================================================
-   HEADER PRINCIPAL SWEET LOOK DA PLATAFORMA
-   ============================================================================ */
-
-.gge-sweet-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background-color: var(--gge-navy);
-  color: #FFFFFF;
-  border-bottom: 3.5px solid var(--gge-red);
-  box-shadow: var(--shadow-md);
-}
-
-.gge-sweet-header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0.75rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.gge-sweet-logo-box {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: inherit;
-}
-
-.gge-sweet-logo-img-wrapper {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: var(--radius-md);
-  background-color: #FFFFFF;
-  padding: 0.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  flex-shrink: 0;
-}
-
-.gge-sweet-logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.gge-sweet-nav {
-  display: none;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-@media (min-width: 768px) {
-  .gge-sweet-nav {
-    display: flex;
-  }
-}
-
-.gge-sweet-nav-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.gge-sweet-nav-btn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
-}
-
-.gge-sweet-nav-btn.active {
-  background-color: var(--gge-red);
-  color: #FFFFFF;
-}
-
-.gge-user-header-text {
-  text-align: right;
-  display: none;
-}
-
-@media (min-width: 640px) {
-  .gge-user-header-text {
-    display: block;
-  }
-}
-
-/* ============================================================================
-   CARDS DE CONTEÚDO E COMPONENTES
+   ESTILOS PARA CARDS E TELAS DA PLATAFORMA (ALUNO, MONITOR, COORDENAÇÃO)
    ============================================================================ */
 
 .gge-app-wrapper {
@@ -574,7 +631,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .gge-badge-explicado {
   background-color: rgba(20, 56, 126, 0.1);
-  color: var(--gge-navy);
+  color: #14387E;
   border: 1px solid rgba(20, 56, 126, 0.25);
 }
 
@@ -607,17 +664,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gge-btn-primary {
-  background-color: var(--gge-red);
+  background-color: #E30612;
   color: #FFFFFF;
 }
 
 .gge-btn-primary:hover {
-  background-color: var(--gge-red-hover);
+  background-color: #c4040e;
 }
 
 .gge-btn-outline {
   background-color: transparent;
-  color: var(--gge-navy);
+  color: #14387E;
   border: 1px solid var(--border);
 }
 
