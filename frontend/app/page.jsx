@@ -110,9 +110,14 @@ export default function PlataformaMonitoriaGGE() {
       const ticketsData = await ticketsRes.json();
       if (ticketsData.success) {
         setTickets(ticketsData.tickets);
-        if (ticketsData.tickets.length > 0 && !respostaMonitor.ticketId) {
-          setRespostaMonitor(prev => ({ ...prev, ticketId: ticketsData.tickets[0].id }));
-        }
+        const pendingTicketsData = ticketsData.tickets.filter(ticket => ticket.status === 'Pendente');
+        setRespostaMonitor(prev => {
+          const selectedTicketIsStillPending = pendingTicketsData.some(ticket => ticket.id === prev.ticketId);
+          return {
+            ...prev,
+            ticketId: selectedTicketIsStillPending ? prev.ticketId : (pendingTicketsData[0]?.id || '')
+          };
+        });
       }
       const statsRes = await fetch(`${API_BASE}/api/coordenador/stats`);
       const statsData = await statsRes.json();
@@ -278,7 +283,7 @@ export default function PlataformaMonitoriaGGE() {
         setMonitorFotos([]);
         setMonitorVideos([]);
         clearAudio();
-        carregarDados();
+        await carregarDados();
       }
     } catch (err) { alert('Erro ao enviar a resposta.'); }
   };
@@ -362,7 +367,8 @@ export default function PlataformaMonitoriaGGE() {
   });
 
   const currentUserRole = user ? user.role : 'aluno';
-  const selectedTicketForMonitor = tickets.find(t => t.id === respostaMonitor.ticketId);
+  const pendingTickets = tickets.filter(ticket => ticket.status === 'Pendente');
+  const selectedTicketForMonitor = pendingTickets.find(ticket => ticket.id === respostaMonitor.ticketId);
 
   const statusBadge = (ticket) => {
     if (ticket.status === 'Aprovado') return <span className="gge-badge gge-badge-aprovado">Conteúdo Dominado ✓</span>;
@@ -923,7 +929,14 @@ export default function PlataformaMonitoriaGGE() {
                     </div>
                     <div style={{ marginTop: '12px' }}>
                       <div style={{ fontSize: '0.8rem', color: '#475569' }}>
-                        Meta de Resposta: <strong style={{ color: '#059669' }}>{dashboardsData.resumo.metaTempoResposta} ✓</strong>
+                        Meta de Resposta:{' '}
+                        <strong style={{ color: dashboardsData.resumo.respostasCalculadas === 0 ? '#64748B' : dashboardsData.resumo.metaTempoRespostaCumprida ? '#059669' : '#DC2626' }}>
+                          {dashboardsData.resumo.metaTempoResposta}{' '}
+                          {dashboardsData.resumo.respostasCalculadas === 0 ? '—' : dashboardsData.resumo.metaTempoRespostaCumprida ? '✓' : '⚠'}
+                        </strong>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
+                        Base: {dashboardsData.resumo.respostasCalculadas} {dashboardsData.resumo.respostasCalculadas === 1 ? 'resposta' : 'respostas'} no período
                       </div>
                     </div>
                   </div>
@@ -984,7 +997,15 @@ export default function PlataformaMonitoriaGGE() {
                             <td style={{ padding: '14px 12px', color: '#059669', fontWeight: '600' }}>{m.resolucaoPedagogica}</td>
                             <td style={{ padding: '14px 12px', color: '#D97706', fontWeight: '600' }}>{m.satisfacaoAlunos}</td>
                             <td style={{ padding: '14px 12px' }}>
-                              <span className="gge-badge gge-badge-aprovado">{m.statusResposta} ✓</span>
+                              <span
+                                className="gge-badge"
+                                style={{
+                                  color: m.statusResposta === 'Sem respostas' ? '#64748B' : m.metaTempoCumprida ? '#047857' : '#B91C1C',
+                                  background: m.statusResposta === 'Sem respostas' ? '#F1F5F9' : m.metaTempoCumprida ? '#D1FAE5' : '#FEE2E2'
+                                }}
+                              >
+                                {m.statusResposta} {m.statusResposta === 'Sem respostas' ? '—' : m.metaTempoCumprida ? '✓' : '⚠'}
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -1114,13 +1135,22 @@ export default function PlataformaMonitoriaGGE() {
                       value={respostaMonitor.ticketId}
                       onChange={(e) => setRespostaMonitor({ ...respostaMonitor, ticketId: e.target.value })}
                       className="gge-select"
+                      disabled={pendingTickets.length === 0}
                     >
-                      <option value="">-- Escolha um chamado da fila --</option>
-                      {tickets.map(t => (
+                      <option value="">
+                        {pendingTickets.length === 0 ? '-- Nenhuma dúvida pendente --' : '-- Escolha uma dúvida pendente --'}
+                      </option>
+                      {pendingTickets.map(t => (
                         <option key={t.id} value={t.id}>[{t.id}] {t.aluno} — {t.assunto} ({t.status})</option>
                       ))}
                     </select>
                   </div>
+
+                  {pendingTickets.length === 0 && (
+                    <div style={{ padding: '14px 16px', marginBottom: '16px', borderRadius: '10px', background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#047857', fontSize: '0.875rem', fontWeight: '700' }}>
+                      Todas as dúvidas foram atendidas. Não há questões pendentes no momento.
+                    </div>
+                  )}
 
                   {/* PREVIEW COMPLETO DA DÚVIDA SELEIONADA PELO MONITOR */}
                   {selectedTicketForMonitor && (

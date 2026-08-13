@@ -13,6 +13,79 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'gge-monitoria-secret-key-2026';
+const RESPONSE_TARGET_MINUTES = 15;
+const RESPONSE_TARGET_MS = RESPONSE_TARGET_MINUTES * 60 * 1000;
+
+const toTimestamp = (value) => {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : null;
+};
+
+const getResponseTimeMs = (ticket) => {
+  if (!ticket?.resposta) return null;
+
+  const rawStoredDuration = ticket.resposta.tempoRespostaMs;
+  const storedDuration = rawStoredDuration === null || rawStoredDuration === undefined
+    ? Number.NaN
+    : Number(rawStoredDuration);
+  if (Number.isFinite(storedDuration) && storedDuration >= 0) return storedDuration;
+
+  const startedAt = toTimestamp(ticket.resposta.iniciadoEm || ticket.criadoEm);
+  const respondedAt = toTimestamp(ticket.resposta.respondidoEm);
+  if (startedAt === null || respondedAt === null || respondedAt < startedAt) return null;
+
+  return respondedAt - startedAt;
+};
+
+const formatResponseTime = (durationMs) => {
+  if (!Number.isFinite(durationMs)) return '0 min';
+  if (durationMs < 60 * 1000) return '< 1 min';
+
+  const totalMinutes = Math.round(durationMs / (60 * 1000));
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+};
+
+const calculateResponseMetrics = (ticketList) => {
+  const durations = ticketList
+    .map(getResponseTimeMs)
+    .filter(duration => Number.isFinite(duration));
+
+  if (durations.length === 0) {
+    return {
+      answeredCount: 0,
+      averageMs: null,
+      averageLabel: '0 min',
+      withinTargetPercentage: 0,
+      targetMet: false
+    };
+  }
+
+  const averageMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+  const withinTarget = durations.filter(duration => duration < RESPONSE_TARGET_MS).length;
+
+  return {
+    answeredCount: durations.length,
+    averageMs,
+    averageLabel: formatResponseTime(averageMs),
+    withinTargetPercentage: Math.round((withinTarget / durations.length) * 100),
+    targetMet: averageMs < RESPONSE_TARGET_MS
+  };
+};
+
+const getPeriodStart = (period) => {
+  const now = Date.now();
+  if (period === '30d') return now - (30 * 24 * 60 * 60 * 1000);
+  if (period === 'semestre') {
+    const currentDate = new Date(now);
+    const semesterStartMonth = currentDate.getMonth() < 6 ? 0 : 6;
+    return new Date(currentDate.getFullYear(), semesterStartMonth, 1).getTime();
+  }
+  return now - (7 * 24 * 60 * 60 * 1000);
+};
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -295,6 +368,7 @@ app.post('/api/tickets', optionalToken, upload.fields([
     status: 'Pendente',
     etapa: 1,
     criadoEm: new Date().toISOString(),
+    pendenteDesde: new Date().toISOString(),
     resposta: null,
     avaliacao: null,
     questaoFixacao: null
@@ -321,9 +395,17 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   const fotoFiles = files.foto || [];
   const videoFiles = files.video || [];
   const audioFile = files.audio ? files.audio[0] : null;
+  const respondidoEm = new Date().toISOString();
+  const iniciadoEm = ticket.pendenteDesde || ticket.criadoEm;
+  const inicioTimestamp = toTimestamp(iniciadoEm);
+  const respostaTimestamp = toTimestamp(respondidoEm);
+  const tempoRespostaMs = inicioTimestamp !== null && respostaTimestamp >= inicioTimestamp
+    ? respostaTimestamp - inicioTimestamp
+    : null;
 
   ticket.status = 'Explicado';
   ticket.etapa = 2;
+  ticket.pendenteDesde = null;
   ticket.resposta = {
     monitor: monitor || 'Prof. Ricardo Mendes (Equipe GGE)',
     texto: texto || 'Explicação elaborada pelo professor.',
@@ -334,7 +416,10 @@ app.post('/api/tickets/:id/resposta', upload.fields([
     fotoUrl: fotoFiles[0] ? `/uploads/${fotoFiles[0].filename}` : null,
     videoUrl: videoFiles[0] ? `/uploads/${videoFiles[0].filename}` : null,
     audioUrl: audioFile ? `/uploads/${audioFile.filename}` : null,
-    respondidoEm: new Date().toISOString()
+    iniciadoEm,
+    respondidoEm,
+    tempoRespostaMs,
+    tempoRespostaMinutos: tempoRespostaMs === null ? null : Number((tempoRespostaMs / (60 * 1000)).toFixed(2))
   };
 
   res.json({ success: true, ticket });
@@ -380,6 +465,7 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   if (teveDuvida || (ticket.questaoFixacao && respostaSelecionada !== ticket.questaoFixacao.respostaCorreta)) {
     ticket.status = 'Pendente';
     ticket.etapa = 1;
+    ticket.pendenteDesde = new Date().toISOString();
     ticket.duvidaTexto = `[Nova dúvida na questão de fixação ${ticket.questaoFixacao?.id}]: Marquei ${respostaSelecionada || 'opção incorreta'} mas fiquei em dúvida na resolução.`;
     res.json({ success: true, resultado: 'REINICIADO', mensagem: 'Dúvida enviada de volta para o professor no ciclo de aprendizado!', ticket });
   } else {
@@ -408,6 +494,7 @@ app.get('/api/coordenador/stats', (req, res) => {
   const taxaAvaliacaoPositiva = avaliacoesComNota.length > 0
     ? `${Math.round((avaliacoesPositivas / avaliacoesComNota.length) * 100)}%`
     : '100%';
+  const responseMetrics = calculateResponseMetrics(tickets);
 
   res.json({
     success: true,
@@ -417,8 +504,9 @@ app.get('/api/coordenador/stats', (req, res) => {
     explicados,
     emAndamento: pendentes + explicados,
     taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-    tempoMedioResposta: total > 0 ? '12 min' : '0 min',
-    metaRespostaCumprida: total > 0 ? '98.4%' : '100%',
+    tempoMedioResposta: responseMetrics.averageLabel,
+    respostasCalculadas: responseMetrics.answeredCount,
+    metaRespostaCumprida: `${responseMetrics.withinTargetPercentage}%`,
     taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '100%',
     taxaAvaliacaoPositiva,
     precisaoIA: taxaAvaliacaoPositiva,
@@ -430,6 +518,11 @@ app.get('/api/coordenador/dashboards', (req, res) => {
   const { professor, area, periodo } = req.query;
 
   let filtered = [...tickets];
+  const periodStart = getPeriodStart(periodo);
+  filtered = filtered.filter(t => {
+    const createdAt = toTimestamp(t.criadoEm);
+    return createdAt !== null && createdAt >= periodStart;
+  });
   if (area && area !== 'todas') {
     filtered = filtered.filter(t => (t.area || '').toLowerCase().includes(area.toLowerCase()));
   }
@@ -449,11 +542,15 @@ app.get('/api/coordenador/dashboards', (req, res) => {
   filtered.forEach(t => {
     const mat = t.area || 'Física';
     if (!materiasMap[mat]) {
-      materiasMap[mat] = { materia: mat, total: 0, resolvidas: 0 };
+      materiasMap[mat] = { materia: mat, total: 0, resolvidas: 0, temposRespostaMs: [] };
     }
     materiasMap[mat].total += 1;
     if (t.status === 'Explicado' || t.status === 'Praticando' || t.status === 'Aprovado') {
       materiasMap[mat].resolvidas += 1;
+    }
+    const ticketResponseTimeMs = getResponseTimeMs(t);
+    if (ticketResponseTimeMs !== null) {
+      materiasMap[mat].temposRespostaMs.push(ticketResponseTimeMs);
     }
 
     if (t.resposta && t.resposta.monitor) {
@@ -463,10 +560,14 @@ app.get('/api/coordenador/dashboards', (req, res) => {
           name: monName,
           disciplina: t.area || 'Geral',
           atendidos: 0,
-          avaliacoesNotas: []
+          avaliacoesNotas: [],
+          temposRespostaMs: []
         };
       }
       monitoresMap[monName].atendidos += 1;
+      if (ticketResponseTimeMs !== null) {
+        monitoresMap[monName].temposRespostaMs.push(ticketResponseTimeMs);
+      }
       if (t.avaliacao && t.avaliacao.nota) {
         monitoresMap[monName].avaliacoesNotas.push(t.avaliacao.nota);
       }
@@ -477,14 +578,20 @@ app.get('/api/coordenador/dashboards', (req, res) => {
     const mediaNota = m.avaliacoesNotas.length > 0
       ? (m.avaliacoesNotas.reduce((a, b) => a + b, 0) / m.avaliacoesNotas.length).toFixed(1)
       : '5.0';
+    const responseMetrics = calculateResponseMetrics(
+      m.temposRespostaMs.map(tempoRespostaMs => ({ resposta: { tempoRespostaMs } }))
+    );
     return {
       name: m.name,
       disciplina: m.disciplina,
       atendidos: m.atendidos,
-      tempoMedioResposta: '12 min',
+      tempoMedioResposta: responseMetrics.averageLabel,
       resolucaoPedagogica: total > 0 ? `${Math.round((m.atendidos / total) * 100)}%` : '100%',
       satisfacaoAlunos: `${mediaNota} ★`,
-      statusResposta: 'No Prazo'
+      statusResposta: responseMetrics.answeredCount === 0
+        ? 'Sem respostas'
+        : responseMetrics.targetMet ? 'No Prazo' : 'Fora da Meta',
+      metaTempoCumprida: responseMetrics.targetMet
     };
   });
 
@@ -492,7 +599,9 @@ app.get('/api/coordenador/dashboards', (req, res) => {
     materia: m.materia,
     total: m.total,
     resolvidas: m.resolvidas,
-    tempoResposta: '12 min'
+    tempoResposta: calculateResponseMetrics(
+      m.temposRespostaMs.map(tempoRespostaMs => ({ resposta: { tempoRespostaMs } }))
+    ).averageLabel
   }));
 
   const avaliacoesComNota = filtered.filter(t => t.avaliacao && t.avaliacao.nota);
@@ -504,6 +613,7 @@ app.get('/api/coordenador/dashboards', (req, res) => {
   const taxaAvaliacaoPositiva = avaliacoesComNota.length > 0
     ? `${Math.round((avaliacoesPositivas / avaliacoesComNota.length) * 100)}%`
     : '100%';
+  const responseMetrics = calculateResponseMetrics(filtered);
 
   res.json({
     success: true,
@@ -515,9 +625,11 @@ app.get('/api/coordenador/dashboards', (req, res) => {
       explicados,
       emAndamento: pendentes + explicados,
       taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '0%',
-      tempoMedioResposta: total > 0 ? '12 min' : '0 min',
-      metaTempoResposta: '< 15 min',
-      cumprimentoMetaTempo: total > 0 ? '98.5%' : '100%',
+      tempoMedioResposta: responseMetrics.averageLabel,
+      respostasCalculadas: responseMetrics.answeredCount,
+      metaTempoResposta: `< ${RESPONSE_TARGET_MINUTES} min`,
+      metaTempoRespostaCumprida: responseMetrics.targetMet,
+      cumprimentoMetaTempo: `${responseMetrics.withinTargetPercentage}%`,
       taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '0%',
       taxaAvaliacaoPositiva,
       precisaoIA: taxaAvaliacaoPositiva,
