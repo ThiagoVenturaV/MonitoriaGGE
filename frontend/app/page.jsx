@@ -1250,9 +1250,13 @@ export default function PlataformaMonitoriaGGE() {
             )}
 
             {/* ─── CICLO DE APRENDIZADO (POSICIONADO ABAIXO DE RESPONDER DÚVIDA E ACIMA DO FEED DE DÚVIDAS) ─── */}
-            <div className="gge-card">
-              <div className="gge-card-header">
-                <span className="gge-card-title"><Layers size={18} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
+            <div className="gge-card gge-learning-cycle">
+              <div className="gge-card-header gge-learning-cycle-header">
+                <div>
+                  <span className="gge-card-title"><Layers size={20} style={{ color: '#E30612' }} /> Ciclo de Aprendizado</span>
+                  <p className="gge-learning-cycle-description">Acompanhe cada dúvida desde o envio até o domínio do conteúdo.</p>
+                </div>
+                <span className="gge-learning-total">{filteredTickets.length} {filteredTickets.length === 1 ? 'dúvida' : 'dúvidas'}</span>
               </div>
               <div className="gge-filter-buttons-grid">
                 {[
@@ -1272,13 +1276,16 @@ export default function PlataformaMonitoriaGGE() {
             </div>
 
             {/* ─── HISTÓRICO / FILA GERAL DE DÚVIDAS ─── */}
-            <div id="feed-section">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#14387E', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div id="feed-section" className="gge-feed-section">
+              <div className="gge-feed-header">
+                <div>
+                  <h2 className="gge-feed-title">
                   <BookOpen size={20} style={{ color: '#E30612' }} />
                   {user?.role === 'aluno' ? 'Seu Histórico Privado de Dúvidas' : 'Fila Geral de Dúvidas'}
-                </h2>
-                <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}>
+                  </h2>
+                  <p className="gge-feed-description">Questões organizadas por etapa, com anexos e respostas em um só lugar.</p>
+                </div>
+                <span className="gge-feed-count">
                   {filteredTickets.length} {filteredTickets.length === 1 ? 'chamado' : 'chamados'}
                 </span>
               </div>
@@ -1296,44 +1303,44 @@ export default function PlataformaMonitoriaGGE() {
                 </div>
               ) : (
                 filteredTickets.map(ticket => (
-                  <div key={ticket.id} className="gge-ticket-card">
+                  <article key={ticket.id} className={`gge-ticket-card gge-ticket-card-${ticket.status.toLowerCase()}`}>
 
                     {/* Ticket header */}
                     <div className="gge-ticket-header">
-                      <div style={{ minWidth: 0 }}>
-                        <div className="gge-ticket-id">{ticket.id} · {ticket.area || 'Física'}</div>
+                      <div className="gge-ticket-heading">
+                        <div className="gge-ticket-labels">
+                          <span className="gge-ticket-id">{ticket.id}</span>
+                          <span className="gge-ticket-area">{ticket.area || 'Física'}</span>
+                        </div>
                         <div className="gge-ticket-subject">{ticket.assunto}</div>
-                        <div className="gge-ticket-meta">por <strong>{ticket.aluno}</strong> · {new Date(ticket.criadoEm).toLocaleDateString('pt-BR')}</div>
+                        <div className="gge-ticket-meta">
+                          <span>Enviada por <strong>{ticket.aluno}</strong></span>
+                          <span className="gge-ticket-meta-divider">•</span>
+                          <span>{new Date(ticket.criadoEm).toLocaleDateString('pt-BR')}</span>
+                        </div>
                       </div>
                       {statusBadge(ticket)}
                     </div>
 
                     {/* Doubt text */}
                     <div className="gge-ticket-body">
-                      {ticket.duvidaTexto}
+                      {ticket.duvidaTexto && <p className="gge-ticket-question">{ticket.duvidaTexto}</p>}
                       {ticket.fotoUrls && ticket.fotoUrls.length > 0 ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: ticket.fotoUrls.length > 1 ? 'repeat(auto-fit, minmax(180px, 1fr))' : '1fr', gap: '10px', marginTop: '12px' }}>
+                        <div className="gge-ticket-media-grid">
                           {ticket.fotoUrls.map((url, idx) => (
-                            <img
-                              key={idx}
-                              src={`${API_BASE}${url}`}
-                              alt={`Foto da Questão ${idx + 1}`}
-                              onClick={() => setSelectedImage(`${API_BASE}${url}`)}
-                              className="gge-ticket-image"
-                              style={{ cursor: 'pointer' }}
-                              title="Clique para ampliar e baixar foto"
-                            />
+                            <button key={idx} type="button" className="gge-ticket-image-button" onClick={() => setSelectedImage(`${API_BASE}${url}`)} title="Clique para ampliar e baixar foto">
+                              <img src={`${API_BASE}${url}`} alt={`Foto da Questão ${idx + 1}`} className="gge-ticket-image" />
+                              <span className="gge-ticket-image-action"><Eye size={14} /> Ampliar imagem</span>
+                            </button>
                           ))}
                         </div>
                       ) : ticket.fotoUrl ? (
-                        <img
-                          src={`${API_BASE}${ticket.fotoUrl}`}
-                          alt="Foto da Questão"
-                          onClick={() => setSelectedImage(`${API_BASE}${ticket.fotoUrl}`)}
-                          className="gge-ticket-image"
-                          style={{ cursor: 'pointer' }}
-                          title="Clique para ampliar e baixar foto"
-                        />
+                        <div className="gge-ticket-media-grid">
+                          <button type="button" className="gge-ticket-image-button" onClick={() => setSelectedImage(`${API_BASE}${ticket.fotoUrl}`)} title="Clique para ampliar e baixar foto">
+                            <img src={`${API_BASE}${ticket.fotoUrl}`} alt="Foto da Questão" className="gge-ticket-image" />
+                            <span className="gge-ticket-image-action"><Eye size={14} /> Ampliar imagem</span>
+                          </button>
+                        </div>
                       ) : null}
                     </div>
 
@@ -1455,7 +1462,7 @@ export default function PlataformaMonitoriaGGE() {
                         )}
                       </div>
                     )}
-                  </div>
+                  </article>
                 ))
               )}
             </div>

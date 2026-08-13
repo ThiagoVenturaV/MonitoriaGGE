@@ -1008,6 +1008,347 @@ h1, h2, h3, h4, h5, h6 {
   color: #FFFFFF;
 }
 
+/* Ciclo e fila de dúvidas — layout editorial e responsivo */
+.gge-learning-cycle {
+  padding: 1.4rem 1.5rem;
+  overflow: hidden;
+  border-color: #DCE4F0;
+}
+
+.gge-learning-cycle-header {
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.gge-learning-cycle-description,
+.gge-feed-description {
+  margin: 0.35rem 0 0;
+  color: #64748B;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.gge-learning-total,
+.gge-feed-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: #EEF3FB;
+  color: #14387E;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.gge-learning-cycle .gge-filter-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0;
+}
+
+.gge-learning-cycle .gge-filter-item {
+  justify-content: space-between;
+  min-height: 3rem;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #D6DFEC;
+  border-radius: 0.8rem;
+  background: #FAFCFF;
+  box-shadow: none;
+}
+
+.gge-learning-cycle .gge-filter-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(20, 56, 126, 0.08);
+}
+
+.gge-feed-section {
+  margin-top: 0.25rem;
+}
+
+.gge-feed-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.gge-feed-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: #14387E;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.gge-ticket-card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: #FFFFFF;
+  border: 1px solid #DCE4F0;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.gge-ticket-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #E30612;
+}
+
+.gge-ticket-card-explicado::before { background: #0284C7; }
+.gge-ticket-card-praticando::before { background: #7C3AED; }
+.gge-ticket-card-aprovado::before { background: #059669; }
+
+.gge-ticket-card:hover {
+  border-color: #C5D2E5;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+  transform: translateY(-1px);
+}
+
+.gge-ticket-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem 1rem 1.5rem;
+  border-bottom: 1px solid #E8EDF5;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
+}
+
+.gge-ticket-heading { min-width: 0; }
+
+.gge-ticket-labels {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.gge-ticket-id,
+.gge-ticket-area {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gge-ticket-id {
+  background: #14387E;
+  color: #FFFFFF;
+  letter-spacing: 0.02em;
+}
+
+.gge-ticket-area {
+  background: #EEF3FB;
+  color: #14387E;
+}
+
+.gge-ticket-subject {
+  overflow-wrap: anywhere;
+  color: #0F2454;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.gge-ticket-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  color: #64748B;
+  font-size: 0.8rem;
+}
+
+.gge-ticket-meta strong { color: #334155; }
+.gge-ticket-meta-divider { color: #CBD5E1; }
+
+.gge-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 1.8rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.gge-badge-pendente { background: #FFF1F2; color: #BE123C; }
+.gge-badge-explicado { background: #E0F2FE; color: #0369A1; }
+.gge-badge-praticando { background: #F3E8FF; color: #7E22CE; }
+.gge-badge-aprovado { background: #D1FAE5; color: #047857; }
+
+.gge-ticket-body {
+  padding: 1.15rem 1.35rem 1.35rem 1.5rem;
+  background: #FFFFFF;
+}
+
+.gge-ticket-question {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.75rem;
+  background: #F8FAFC;
+  color: #26364F;
+  font-size: 0.94rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.gge-ticket-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 260px));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.gge-ticket-image-button {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 1px solid #D8E1ED;
+  border-radius: 0.8rem;
+  background: #F3F6FA;
+  cursor: pointer;
+}
+
+.gge-ticket-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.gge-ticket-image-button:hover .gge-ticket-image { transform: scale(1.025); }
+
+.gge-ticket-image-action {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(15, 36, 84, 0.9);
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+}
+
+.gge-response-box {
+  margin: 0 1.35rem 1.35rem 1.5rem;
+  padding: 1rem;
+  border: 1px solid #BAE6FD;
+  border-radius: 0.85rem;
+  background: #F0F9FF;
+}
+
+.gge-response-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  color: #075985;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.gge-response-box > div .gge-ticket-image {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: contain;
+  border: 1px solid #BAE6FD;
+  border-radius: 0.7rem;
+  background: #FFFFFF;
+}
+
+@media (max-width: 1100px) {
+  .gge-learning-cycle .gge-filter-buttons-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .gge-learning-cycle,
+  .gge-ticket-header,
+  .gge-ticket-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .gge-learning-cycle .gge-filter-buttons-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+    scrollbar-width: thin;
+  }
+
+  .gge-learning-cycle .gge-filter-item {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .gge-learning-total,
+  .gge-learning-cycle-description,
+  .gge-feed-description {
+    display: none;
+  }
+
+  .gge-feed-header,
+  .gge-ticket-header {
+    align-items: flex-start;
+  }
+
+  .gge-ticket-header {
+    flex-direction: column;
+  }
+
+  .gge-ticket-media-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gge-ticket-image-button { max-width: 100%; }
+
+  .gge-response-box {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+}
+
 /* Generic Buttons */
 .gge-btn {
   display: inline-flex;
