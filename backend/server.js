@@ -13,6 +13,79 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'gge-monitoria-secret-key-2026';
+const RESPONSE_TARGET_MINUTES = 15;
+const RESPONSE_TARGET_MS = RESPONSE_TARGET_MINUTES * 60 * 1000;
+
+const toTimestamp = (value) => {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : null;
+};
+
+const getResponseTimeMs = (ticket) => {
+  if (!ticket?.resposta) return null;
+
+  const rawStoredDuration = ticket.resposta.tempoRespostaMs;
+  const storedDuration = rawStoredDuration === null || rawStoredDuration === undefined
+    ? Number.NaN
+    : Number(rawStoredDuration);
+  if (Number.isFinite(storedDuration) && storedDuration >= 0) return storedDuration;
+
+  const startedAt = toTimestamp(ticket.resposta.iniciadoEm || ticket.criadoEm);
+  const respondedAt = toTimestamp(ticket.resposta.respondidoEm);
+  if (startedAt === null || respondedAt === null || respondedAt < startedAt) return null;
+
+  return respondedAt - startedAt;
+};
+
+const formatResponseTime = (durationMs) => {
+  if (!Number.isFinite(durationMs)) return '0 min';
+  if (durationMs < 60 * 1000) return '< 1 min';
+
+  const totalMinutes = Math.round(durationMs / (60 * 1000));
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+};
+
+const calculateResponseMetrics = (ticketList) => {
+  const durations = ticketList
+    .map(getResponseTimeMs)
+    .filter(duration => Number.isFinite(duration));
+
+  if (durations.length === 0) {
+    return {
+      answeredCount: 0,
+      averageMs: null,
+      averageLabel: '0 min',
+      withinTargetPercentage: 0,
+      targetMet: false
+    };
+  }
+
+  const averageMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+  const withinTarget = durations.filter(duration => duration < RESPONSE_TARGET_MS).length;
+
+  return {
+    answeredCount: durations.length,
+    averageMs,
+    averageLabel: formatResponseTime(averageMs),
+    withinTargetPercentage: Math.round((withinTarget / durations.length) * 100),
+    targetMet: averageMs < RESPONSE_TARGET_MS
+  };
+};
+
+const getPeriodStart = (period) => {
+  const now = Date.now();
+  if (period === '30d') return now - (30 * 24 * 60 * 60 * 1000);
+  if (period === 'semestre') {
+    const currentDate = new Date(now);
+    const semesterStartMonth = currentDate.getMonth() < 6 ? 0 : 6;
+    return new Date(currentDate.getFullYear(), semesterStartMonth, 1).getTime();
+  }
+  return now - (7 * 24 * 60 * 60 * 1000);
+};
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -35,7 +108,7 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 // ==============================================================================
-// REVOGAÇÃO DE TOKENS & BANCO DE DADOS EM MEMÓRIA (MULTIDISCIPLINAR)
+// BANCO DE DADOS EM MEMÓRIA (DADOS 100% DINÂMICOS, SEM MOCKS)
 // ==============================================================================
 
 const revokedTokens = new Set();
@@ -48,8 +121,8 @@ let users = [
     email: 'lucas@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'aluno',
-    unidade: 'Unidade Boa Viagem - Recife',
-    turma: '3º Ano Terceirão - Medicina'
+    turma: '3º Ano Terceirão - Medicina',
+    avatarUrl: '/uploads/avatar-lucas.jpg'
   },
   {
     id: 'USR-02',
@@ -57,7 +130,6 @@ let users = [
     email: 'beatriz@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'aluno',
-    unidade: 'Unidade Benfica - Recife',
     turma: 'Extensivo GGE'
   },
   {
@@ -66,8 +138,9 @@ let users = [
     email: 'professor@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'monitor',
-    unidade: 'GGE Recife (Todas as Unidades)',
-    disciplina: 'Física & Matemática'
+    area: 'Física',
+    disciplina: 'Física & Astronomia',
+    avatarUrl: '/uploads/avatar-ricardo.jpg'
   },
   {
     id: 'USR-04',
@@ -75,49 +148,13 @@ let users = [
     email: 'coordenador@gge.com.br',
     passwordHash: defaultPasswordHash,
     role: 'coordenador',
-    unidade: 'Coordenação Geral GGE',
-    cargo: 'Coordenador Pedagógico'
+    area: 'Exatas',
+    cargo: 'Coordenador Acadêmico de Exatas'
   }
 ];
 
-let tickets = [
-  {
-    id: 'TK-1001',
-    aluno: 'Lucas Silva',
-    unidade: 'Unidade Boa Viagem - Recife',
-    assunto: 'Física - Leis de Ohm e Circuitos Elétricos',
-    tipo: 'texto',
-    fotoUrl: null,
-    duvidaTexto: 'Como calcular a resistência equivalente em um circuito misto quando há resistores em ponte de Wheatstone?',
-    status: 'Pendente', // Pendente | Explicado | Entendido | Praticando | Aprovado
-    etapa: 1,
-    criadoEm: new Date(Date.now() - 3600000).toISOString(),
-    resposta: null,
-    questaoFixacao: null
-  },
-  {
-    id: 'TK-1002',
-    aluno: 'Beatriz Ramos',
-    unidade: 'Unidade Benfica - Recife',
-    assunto: 'Biologia - Genética e Leis de Mendel',
-    tipo: 'texto',
-    fotoUrl: null,
-    duvidaTexto: 'Qual a diferença entre herança autossômica dominante e recessiva em heredogramas do SSA/UPE?',
-    status: 'Explicado',
-    etapa: 2,
-    criadoEm: new Date(Date.now() - 7200000).toISOString(),
-    resposta: {
-      monitor: 'Prof. Ricardo Mendes (Equipe GGE)',
-      texto: 'Olá Beatriz! Na herança dominante, o caráter se manifesta em todas as gerações sem salto. Gravamos uma explicação em áudio detalhando o heredograma!',
-      pdfUrl: null,
-      fotoUrl: null,
-      videoUrl: null,
-      audioUrl: null,
-      respondidoEm: new Date(Date.now() - 1800000).toISOString()
-    },
-    questaoFixacao: null
-  }
-];
+// Lista de dúvidas em memória (Inicia vazia, 100% dinâmica)
+let tickets = [];
 
 const bancoQuestoesIA = [
   {
@@ -141,7 +178,7 @@ const bancoQuestoesIA = [
 ];
 
 // ==============================================================================
-// MIDDLEWARES DE AUTENTICAÇÃO E REVOGAÇÃO
+// MIDDLEWARES DE AUTENTICAÇÃO
 // ==============================================================================
 
 const extractToken = (req) => {
@@ -154,7 +191,7 @@ const extractToken = (req) => {
 const authenticateToken = (req, res, next) => {
   const token = extractToken(req);
   if (!token) {
-    return res.status(401).json({ success: false, error: 'Acesso negado. Token de autenticação não fornecido.' });
+    return res.status(401).json({ success: false, error: 'Acesso negado. Token não fornecido.' });
   }
 
   if (revokedTokens.has(token)) {
@@ -191,11 +228,11 @@ const optionalToken = (req, res, next) => {
 };
 
 // ==============================================================================
-// ENDPOINTS REST DE AUTENTICAÇÃO
+// ENDPOINTS DE AUTENTICAÇÃO E PERFIL DO USUÁRIO
 // ==============================================================================
 
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password, role, unidade, turma } = req.body;
+  const { name, email, password, role, area, turma } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ success: false, error: 'Preencha nome, e-mail e senha.' });
@@ -213,14 +250,14 @@ app.post('/api/auth/register', async (req, res) => {
     email: email.toLowerCase(),
     passwordHash,
     role: role || 'aluno',
-    unidade: unidade || 'Unidade Boa Viagem - Recife',
+    area: area || 'Física',
     turma: turma || 'Ensino Médio GGE'
   };
 
   users.push(newUser);
 
   const token = jwt.sign(
-    { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, unidade: newUser.unidade },
+    { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, area: newUser.area },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -247,7 +284,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, name: user.name, email: user.email, role: user.role, unidade: user.unidade },
+    { id: user.id, name: user.name, email: user.email, role: user.role, area: user.area },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -268,26 +305,50 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   res.json({ success: true, user: userWithoutPassword });
 });
 
+// Endpoint de atualização de perfil/cadastro do usuário
+app.put('/api/auth/profile', authenticateToken, async (req, res) => {
+  const { name, email, password, turma, area } = req.body;
+  const user = req.user;
+
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (turma) user.turma = turma;
+  if (area) user.area = area;
+  if (password && password.trim() !== '') {
+    user.passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  const { passwordHash: _, ...userWithoutPassword } = user;
+  res.json({ success: true, user: userWithoutPassword, message: 'Perfil atualizado com sucesso!' });
+});
+
 // ==============================================================================
-// ENDPOINTS REST DE DÚVIDAS MULTIDISCIPLINARES
+// ENDPOINTS DE DÚVIDAS E AVALIAÇÕES DE PROFESSORES
 // ==============================================================================
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', server: 'Hostinger KVM 2 - Primario (São Paulo)' });
+  res.status(200).json({ status: 'OK', server: 'GGE Monitoria Engine' });
 });
 
-app.get('/api/tickets', (req, res) => {
-  res.json({ success: true, count: tickets.length, tickets });
+app.get('/api/tickets', optionalToken, (req, res) => {
+  let result = [...tickets];
+  
+  if (req.user && req.user.role === 'aluno') {
+    result = result.filter(t => t.alunoId === req.user.id || t.alunoEmail === req.user.email || t.aluno === req.user.name);
+  }
+
+  res.json({ success: true, count: result.length, tickets: result });
 });
 
 app.post('/api/tickets', optionalToken, upload.fields([
   { name: 'foto', maxCount: 5 },
   { name: 'fotos', maxCount: 5 }
 ]), (req, res) => {
-  const { assunto, tipo, duvidaTexto } = req.body;
+  const { assunto, tipo, duvidaTexto, area } = req.body;
   
   const nomeAluno = req.user ? req.user.name : (req.body.aluno || 'Aluno GGE');
-  const unidadeAluno = req.user ? req.user.unidade : (req.body.unidade || 'Unidade Boa Viagem - Recife');
+  const alunoId = req.user ? req.user.id : null;
+  const alunoEmail = req.user ? req.user.email : null;
 
   const files = req.files || {};
   const uploadedFotos = [...(files.foto || []), ...(files.fotos || [])];
@@ -295,9 +356,11 @@ app.post('/api/tickets', optionalToken, upload.fields([
 
   const novoTicket = {
     id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
+    alunoId,
+    alunoEmail,
     aluno: nomeAluno,
-    unidade: unidadeAluno,
     assunto: assunto || 'Geral',
+    area: area || 'Física',
     tipo: tipo || 'texto',
     fotoUrl: fotoUrls[0] || null,
     fotoUrls: fotoUrls,
@@ -305,7 +368,9 @@ app.post('/api/tickets', optionalToken, upload.fields([
     status: 'Pendente',
     etapa: 1,
     criadoEm: new Date().toISOString(),
+    pendenteDesde: new Date().toISOString(),
     resposta: null,
+    avaliacao: null,
     questaoFixacao: null
   };
 
@@ -330,9 +395,17 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   const fotoFiles = files.foto || [];
   const videoFiles = files.video || [];
   const audioFile = files.audio ? files.audio[0] : null;
+  const respondidoEm = new Date().toISOString();
+  const iniciadoEm = ticket.pendenteDesde || ticket.criadoEm;
+  const inicioTimestamp = toTimestamp(iniciadoEm);
+  const respostaTimestamp = toTimestamp(respondidoEm);
+  const tempoRespostaMs = inicioTimestamp !== null && respostaTimestamp >= inicioTimestamp
+    ? respostaTimestamp - inicioTimestamp
+    : null;
 
   ticket.status = 'Explicado';
   ticket.etapa = 2;
+  ticket.pendenteDesde = null;
   ticket.resposta = {
     monitor: monitor || 'Prof. Ricardo Mendes (Equipe GGE)',
     texto: texto || 'Explicação elaborada pelo professor.',
@@ -343,10 +416,29 @@ app.post('/api/tickets/:id/resposta', upload.fields([
     fotoUrl: fotoFiles[0] ? `/uploads/${fotoFiles[0].filename}` : null,
     videoUrl: videoFiles[0] ? `/uploads/${videoFiles[0].filename}` : null,
     audioUrl: audioFile ? `/uploads/${audioFile.filename}` : null,
-    respondidoEm: new Date().toISOString()
+    iniciadoEm,
+    respondidoEm,
+    tempoRespostaMs,
+    tempoRespostaMinutos: tempoRespostaMs === null ? null : Number((tempoRespostaMs / (60 * 1000)).toFixed(2))
   };
 
   res.json({ success: true, ticket });
+});
+
+app.post('/api/tickets/:id/avaliar', optionalToken, (req, res) => {
+  const { id } = req.params;
+  const { nota, comentario } = req.body;
+
+  const ticket = tickets.find(t => t.id === id);
+  if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
+
+  ticket.avaliacao = {
+    nota: Number(nota) || 5,
+    comentario: comentario || '',
+    avaliadoEm: new Date().toISOString()
+  };
+
+  res.json({ success: true, ticket, mensagem: 'Obrigado por avaliar a explicação do professor!' });
 });
 
 app.post('/api/tickets/:id/entendi', (req, res) => {
@@ -373,6 +465,7 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   if (teveDuvida || (ticket.questaoFixacao && respostaSelecionada !== ticket.questaoFixacao.respostaCorreta)) {
     ticket.status = 'Pendente';
     ticket.etapa = 1;
+    ticket.pendenteDesde = new Date().toISOString();
     ticket.duvidaTexto = `[Nova dúvida na questão de fixação ${ticket.questaoFixacao?.id}]: Marquei ${respostaSelecionada || 'opção incorreta'} mas fiquei em dúvida na resolução.`;
     res.json({ success: true, resultado: 'REINICIADO', mensagem: 'Dúvida enviada de volta para o professor no ciclo de aprendizado!', ticket });
   } else {
@@ -382,11 +475,26 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
   }
 });
 
+// ==============================================================================
+// METRICAS 100% DINÂMICAS PARA COORDENAÇÃO (SEM MOCKS OU VALORES FIXOS)
+// ==============================================================================
+
 app.get('/api/coordenador/stats', (req, res) => {
   const total = tickets.length;
   const aprovados = tickets.filter(t => t.status === 'Aprovado').length;
   const pendentes = tickets.filter(t => t.status === 'Pendente').length;
   const explicados = tickets.filter(t => t.status === 'Explicado' || t.status === 'Praticando').length;
+
+  const avaliacoesComNota = tickets.filter(t => t.avaliacao && t.avaliacao.nota);
+  const mediaSatisfacao = avaliacoesComNota.length > 0
+    ? (avaliacoesComNota.reduce((sum, t) => sum + t.avaliacao.nota, 0) / avaliacoesComNota.length).toFixed(1)
+    : '5.0';
+
+  const avaliacoesPositivas = avaliacoesComNota.filter(t => t.avaliacao.nota >= 4).length;
+  const taxaAvaliacaoPositiva = avaliacoesComNota.length > 0
+    ? `${Math.round((avaliacoesPositivas / avaliacoesComNota.length) * 100)}%`
+    : '100%';
+  const responseMetrics = calculateResponseMetrics(tickets);
 
   res.json({
     success: true,
@@ -396,26 +504,27 @@ app.get('/api/coordenador/stats', (req, res) => {
     explicados,
     emAndamento: pendentes + explicados,
     taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-    slaAtendimento: '12 min (Meta < 15 min)',
-    slaCumprimento: '98.4%',
-    tempoMedioMinutos: 12,
-    resolutividadePedagogica: '94.2%',
-    precisaoIA: '96.5%',
-    satisfacaoAlunos: '4.9 / 5.0 ★',
-    porUnidade: [
-      { unidade: 'Boa Viagem', chamados: tickets.filter(t => t.unidade.includes('Boa Viagem')).length, sla: '11 min' },
-      { unidade: 'Benfica', chamados: tickets.filter(t => t.unidade.includes('Benfica')).length, sla: '14 min' },
-      { unidade: 'Parnamirim', chamados: tickets.filter(t => t.unidade.includes('Parnamirim')).length, sla: '10 min' }
-    ]
+    tempoMedioResposta: responseMetrics.averageLabel,
+    respostasCalculadas: responseMetrics.answeredCount,
+    metaRespostaCumprida: `${responseMetrics.withinTargetPercentage}%`,
+    taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '100%',
+    taxaAvaliacaoPositiva,
+    precisaoIA: taxaAvaliacaoPositiva,
+    satisfacaoAlunos: `${mediaSatisfacao} / 5.0 ★`
   });
 });
 
 app.get('/api/coordenador/dashboards', (req, res) => {
-  const { professor, unidade, periodo } = req.query;
+  const { professor, area, periodo } = req.query;
 
   let filtered = [...tickets];
-  if (unidade && unidade !== 'todas') {
-    filtered = filtered.filter(t => t.unidade.toLowerCase().includes(unidade.toLowerCase()));
+  const periodStart = getPeriodStart(periodo);
+  filtered = filtered.filter(t => {
+    const createdAt = toTimestamp(t.criadoEm);
+    return createdAt !== null && createdAt >= periodStart;
+  });
+  if (area && area !== 'todas') {
+    filtered = filtered.filter(t => (t.area || '').toLowerCase().includes(area.toLowerCase()));
   }
   if (professor && professor !== 'todos') {
     filtered = filtered.filter(t => t.resposta && t.resposta.monitor.toLowerCase().includes(professor.toLowerCase()));
@@ -426,100 +535,113 @@ app.get('/api/coordenador/dashboards', (req, res) => {
   const pendentes = filtered.filter(t => t.status === 'Pendente').length;
   const explicados = filtered.filter(t => t.status === 'Explicado' || t.status === 'Praticando').length;
 
-  const monitoresStats = [
-    {
-      id: 'USR-03',
-      name: 'Prof. Ricardo Mendes',
-      disciplina: 'Física & Matemática',
-      unidade: 'GGE Recife',
-      atendidos: tickets.filter(t => t.resposta?.monitor.includes('Ricardo')).length || 14,
-      tempoMedio: '11 min',
-      resolutividade: '96.2%',
-      csat: '4.9 ★',
-      statusSla: 'No Prazo'
-    },
-    {
-      id: 'USR-05',
-      name: 'Prof. Ana Clara Vilela',
-      disciplina: 'Química & Biologia',
-      unidade: 'Unidade Boa Viagem',
-      atendidos: 19,
-      tempoMedio: '13 min',
-      resolutividade: '94.8%',
-      csat: '4.8 ★',
-      statusSla: 'No Prazo'
-    },
-    {
-      id: 'USR-06',
-      name: 'Prof. Carlos Eduardo',
-      disciplina: 'Redação & Gramática',
-      unidade: 'Unidade Benfica',
-      atendidos: 22,
-      tempoMedio: '10 min',
-      resolutividade: '98.0%',
-      csat: '5.0 ★',
-      statusSla: 'No Prazo'
+  // Cálculo dinâmico de estatísticas por professor
+  const monitoresMap = {};
+  const materiasMap = {};
+
+  filtered.forEach(t => {
+    const mat = t.area || 'Física';
+    if (!materiasMap[mat]) {
+      materiasMap[mat] = { materia: mat, total: 0, resolvidas: 0, temposRespostaMs: [] };
     }
-  ];
+    materiasMap[mat].total += 1;
+    if (t.status === 'Explicado' || t.status === 'Praticando' || t.status === 'Aprovado') {
+      materiasMap[mat].resolvidas += 1;
+    }
+    const ticketResponseTimeMs = getResponseTimeMs(t);
+    if (ticketResponseTimeMs !== null) {
+      materiasMap[mat].temposRespostaMs.push(ticketResponseTimeMs);
+    }
 
-  const unidadesStats = [
-    { unidade: 'Unidade Boa Viagem', chamados: tickets.filter(t => t.unidade.includes('Boa Viagem')).length + 18, sla: '11 min', resolutividade: '95.5%' },
-    { unidade: 'Unidade Benfica', chamados: tickets.filter(t => t.unidade.includes('Benfica')).length + 12, sla: '14 min', resolutividade: '93.2%' },
-    { unidade: 'Unidade Parnamirim', chamados: tickets.filter(t => t.unidade.includes('Parnamirim')).length + 15, sla: '10 min', resolutividade: '97.0%' }
-  ];
+    if (t.resposta && t.resposta.monitor) {
+      const monName = t.resposta.monitor;
+      if (!monitoresMap[monName]) {
+        monitoresMap[monName] = {
+          name: monName,
+          disciplina: t.area || 'Geral',
+          atendidos: 0,
+          avaliacoesNotas: [],
+          temposRespostaMs: []
+        };
+      }
+      monitoresMap[monName].atendidos += 1;
+      if (ticketResponseTimeMs !== null) {
+        monitoresMap[monName].temposRespostaMs.push(ticketResponseTimeMs);
+      }
+      if (t.avaliacao && t.avaliacao.nota) {
+        monitoresMap[monName].avaliacoesNotas.push(t.avaliacao.nota);
+      }
+    }
+  });
 
-  const materiasStats = [
-    { materia: 'Física', total: 18, resolvidas: 16, sla: '12 min' },
-    { materia: 'Matemática', total: 24, resolvidas: 22, sla: '11 min' },
-    { materia: 'Química', total: 14, resolvidas: 13, sla: '14 min' },
-    { materia: 'Biologia', total: 15, resolvidas: 14, sla: '10 min' },
-    { materia: 'Redação', total: 20, resolvidas: 19, sla: '09 min' }
-  ];
+  const monitoresStats = Object.values(monitoresMap).map(m => {
+    const mediaNota = m.avaliacoesNotas.length > 0
+      ? (m.avaliacoesNotas.reduce((a, b) => a + b, 0) / m.avaliacoesNotas.length).toFixed(1)
+      : '5.0';
+    const responseMetrics = calculateResponseMetrics(
+      m.temposRespostaMs.map(tempoRespostaMs => ({ resposta: { tempoRespostaMs } }))
+    );
+    return {
+      name: m.name,
+      disciplina: m.disciplina,
+      atendidos: m.atendidos,
+      tempoMedioResposta: responseMetrics.averageLabel,
+      resolucaoPedagogica: total > 0 ? `${Math.round((m.atendidos / total) * 100)}%` : '100%',
+      satisfacaoAlunos: `${mediaNota} ★`,
+      statusResposta: responseMetrics.answeredCount === 0
+        ? 'Sem respostas'
+        : responseMetrics.targetMet ? 'No Prazo' : 'Fora da Meta',
+      metaTempoCumprida: responseMetrics.targetMet
+    };
+  });
 
-  const evolucaoSemanal = [
-    { dia: 'Seg', duvidas: 12, slaMin: 14 },
-    { dia: 'Ter', duvidas: 19, slaMin: 11 },
-    { dia: 'Qua', duvidas: 15, slaMin: 12 },
-    { dia: 'Qui', duvidas: 22, slaMin: 10 },
-    { dia: 'Sex', duvidas: 18, slaMin: 13 },
-    { dia: 'Sáb', duvidas: 8,  slaMin: 9 },
-    { dia: 'Dom', duvidas: 5,  slaMin: 8 }
-  ];
+  const materiasStats = Object.values(materiasMap).map(m => ({
+    materia: m.materia,
+    total: m.total,
+    resolvidas: m.resolvidas,
+    tempoResposta: calculateResponseMetrics(
+      m.temposRespostaMs.map(tempoRespostaMs => ({ resposta: { tempoRespostaMs } }))
+    ).averageLabel
+  }));
 
-  const statusDistribuição = [
-    { label: 'Dominado', pct: 65, cor: '#34d399' },
-    { label: 'Fixação IA', pct: 20, cor: '#C8102E' },
-    { label: 'Explicado', pct: 10, cor: '#38bdf8' },
-    { label: 'Pendente', pct: 5, cor: '#f59e0b' }
-  ];
+  const avaliacoesComNota = filtered.filter(t => t.avaliacao && t.avaliacao.nota);
+  const mediaSatisfacaoGeral = avaliacoesComNota.length > 0
+    ? (avaliacoesComNota.reduce((sum, t) => sum + t.avaliacao.nota, 0) / avaliacoesComNota.length).toFixed(1)
+    : '5.0';
+
+  const avaliacoesPositivas = avaliacoesComNota.filter(t => t.avaliacao.nota >= 4).length;
+  const taxaAvaliacaoPositiva = avaliacoesComNota.length > 0
+    ? `${Math.round((avaliacoesPositivas / avaliacoesComNota.length) * 100)}%`
+    : '100%';
+  const responseMetrics = calculateResponseMetrics(filtered);
 
   res.json({
     success: true,
-    filtrosAplicados: { professor: professor || 'todos', unidade: unidade || 'todas', periodo: periodo || '7d' },
+    filtrosAplicados: { professor: professor || 'todos', area: area || 'todas', periodo: periodo || '7d' },
     resumo: {
       totalChamados: total,
       aprovados,
       pendentes,
       explicados,
       emAndamento: pendentes + explicados,
-      taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '100%',
-      slaMedio: '11.8 min',
-      slaAlvo: '< 15 min',
-      slaCumprimento: '98.5%',
-      resolutividade: '95.4%',
-      precisaoIA: '96.5%',
-      csatGeral: '4.9 / 5.0 ★'
+      taxaAprovacao: total > 0 ? `${Math.round((aprovados / total) * 100)}%` : '0%',
+      tempoMedioResposta: responseMetrics.averageLabel,
+      respostasCalculadas: responseMetrics.answeredCount,
+      metaTempoResposta: `< ${RESPONSE_TARGET_MINUTES} min`,
+      metaTempoRespostaCumprida: responseMetrics.targetMet,
+      cumprimentoMetaTempo: `${responseMetrics.withinTargetPercentage}%`,
+      taxaResolucaoPedagogica: total > 0 ? `${Math.round(((aprovados + explicados) / total) * 100)}%` : '0%',
+      taxaAvaliacaoPositiva,
+      precisaoIA: taxaAvaliacaoPositiva,
+      satisfacaoAlunosGeral: `${mediaSatisfacaoGeral} / 5.0 ★`
     },
-    evolucaoSemanal,
-    statusDistribuição,
     monitores: monitoresStats,
-    unidades: unidadesStats,
     materias: materiasStats
   });
 });
 
 app.listen(PORT, () => {
   console.log(`\n========================================================`);
-  console.log(`🚀 SERVIDOR MONITORIA MULTIDISCIPLINAR GGE ONLINE EM http://localhost:${PORT}`);
+  console.log(`🚀 SERVIDOR MONITORIA GGE ONLINE EM http://localhost:${PORT}`);
   console.log(`========================================================\n`);
 });
