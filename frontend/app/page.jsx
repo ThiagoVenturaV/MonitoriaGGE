@@ -9,7 +9,7 @@ import {
   TrendingUp, Award, Check, Eye
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 
 export default function PlataformaMonitoriaGGE() {
   const [user, setUser] = useState(null);
@@ -56,9 +56,10 @@ export default function PlataformaMonitoriaGGE() {
   const [dashboardsData, setDashboardsData] = useState(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('gge_token');
-    if (savedToken) { setToken(savedToken); validarSessaoToken(savedToken); }
-    carregarDados();
+    localStorage.removeItem('gge_token');
+    const savedToken = sessionStorage.getItem('gge_token');
+    if (savedToken) validarSessaoToken(savedToken);
+    else setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -80,9 +81,12 @@ export default function PlataformaMonitoriaGGE() {
   }, [activeTab, filterProfessor, filterArea, filterPeriodo]);
 
   const carregarDashboards = async () => {
+    if (!token || user?.role !== 'coordenador') return;
     try {
       const query = `professor=${encodeURIComponent(filterProfessor)}&area=${encodeURIComponent(filterArea)}&periodo=${encodeURIComponent(filterPeriodo)}`;
-      const res = await fetch(`${API_BASE}/api/coordenador/dashboards?${query}`);
+      const res = await fetch(`${API_BASE}/api/coordenador/dashboards?${query}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       if (data.success) {
         setDashboardsData(data);
@@ -96,16 +100,25 @@ export default function PlataformaMonitoriaGGE() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { 'Authorization': `Bearer ${authToken}` } });
       const data = await res.json();
-      if (data.success) { setUser(data.user); }
-      else { localStorage.removeItem('gge_token'); setToken(null); setUser(null); }
-    } catch (err) { console.error('Erro ao validar sessão:', err); }
+      if (data.success) {
+        setToken(authToken);
+        setUser(data.user);
+        carregarDados(authToken, data.user);
+      } else { sessionStorage.removeItem('gge_token'); setToken(null); setUser(null); setLoading(false); }
+    } catch (err) {
+      sessionStorage.removeItem('gge_token');
+      setToken(null);
+      setUser(null);
+      setLoading(false);
+    }
   };
 
-  const carregarDados = async () => {
+  const carregarDados = async (authToken = token, currentUser = user) => {
+    if (!authToken) { setLoading(false); return; }
     setLoading(true);
     try {
       const headers = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = `Bearer ${authToken}`;
       const ticketsRes = await fetch(`${API_BASE}/api/tickets`, { headers });
       const ticketsData = await ticketsRes.json();
       if (ticketsData.success) {
@@ -119,9 +132,11 @@ export default function PlataformaMonitoriaGGE() {
           };
         });
       }
-      const statsRes = await fetch(`${API_BASE}/api/coordenador/stats`);
-      const statsData = await statsRes.json();
-      if (statsData.success) setCoordenadorStats(statsData);
+      if (currentUser?.role === 'coordenador') {
+        const statsRes = await fetch(`${API_BASE}/api/coordenador/stats`, { headers });
+        const statsData = await statsRes.json();
+        if (statsData.success) setCoordenadorStats(statsData);
+      }
     } catch (err) { console.error('Erro ao conectar ao serviço GGE:', err); }
     finally { setLoading(false); }
   };
@@ -133,9 +148,9 @@ export default function PlataformaMonitoriaGGE() {
       const res = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(authForm) });
       const data = await res.json();
       if (!data.success) { setAuthError(data.error || 'Falha na autenticação.'); return; }
-      localStorage.setItem('gge_token', data.token); setToken(data.token); setUser(data.user); setShowAuthModal(false);
+      sessionStorage.setItem('gge_token', data.token); setToken(data.token); setUser(data.user); setShowAuthModal(false);
       setAuthForm({ name: '', email: '', password: '', role: 'aluno', area: 'Física', turma: '3º Ano Terceirão - GGE' });
-      carregarDados();
+      carregarDados(data.token, data.user);
     } catch (err) { setAuthError('Erro de conexão com o servidor.'); }
     finally { setAuthLoading(false); }
   };
@@ -191,24 +206,7 @@ export default function PlataformaMonitoriaGGE() {
 
   const handleLogout = async () => {
     if (token) { try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch (err) {} }
-    localStorage.removeItem('gge_token'); setToken(null); setUser(null); setShowProfileDropdown(false); alert('Sessão encerrada com sucesso!');
-  };
-
-  const handleFastDemoLogin = async (demoEmail) => {
-    setAuthLoading(true); setAuthError('');
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: demoEmail, password: '123456' }) });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem('gge_token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        setShowAuthModal(false);
-        carregarDados();
-      }
-      else { setAuthError(data.error); }
-    } catch (err) { setAuthError('Erro no login demo.'); }
-    finally { setAuthLoading(false); }
+    sessionStorage.removeItem('gge_token'); setToken(null); setUser(null); setShowProfileDropdown(false); alert('Sessão encerrada com sucesso!');
   };
 
   const handleAddFotosAluno = (e) => {
@@ -274,7 +272,9 @@ export default function PlataformaMonitoriaGGE() {
     if (audioBlob) formData.append('audio', audioBlob, 'explicacao-audio.webm');
 
     try {
-      const res = await fetch(`${API_BASE}/api/tickets/${respostaMonitor.ticketId}/resposta`, { method: 'POST', body: formData });
+      const res = await fetch(`${API_BASE}/api/tickets/${respostaMonitor.ticketId}/resposta`, {
+        method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
+      });
       const data = await res.json();
       if (data.success) {
         alert('Explicação enviada com sucesso ao aluno!');
@@ -292,7 +292,7 @@ export default function PlataformaMonitoriaGGE() {
     try {
       const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/avaliar`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ nota, comentario })
       });
       const data = await res.json();
@@ -307,13 +307,13 @@ export default function PlataformaMonitoriaGGE() {
   };
 
   const handleAlunoEntendeu = async (ticketId) => {
-    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/entendi`, { method: 'POST' }); const data = await res.json();
+    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/entendi`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); const data = await res.json();
       if (data.success) { alert('Ótimo! Uma Questão de Fixação foi selecionada para validar seu aprendizado.'); carregarDados(); }
     } catch (err) { alert('Erro ao avançar para a questão de fixação.'); }
   };
 
   const handleResponderFixacao = async (ticketId, opcao, teveDuvida = false) => {
-    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/responder-fixacao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ respostaSelecionada: opcao, teveDuvida }) });
+    try { const res = await fetch(`${API_BASE}/api/tickets/${ticketId}/responder-fixacao`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ respostaSelecionada: opcao, teveDuvida }) });
       const data = await res.json(); if (data.success) { alert(data.mensagem); carregarDados(); }
     } catch (err) { alert('Erro ao processar a resposta da questão.'); }
   };
@@ -405,40 +405,6 @@ export default function PlataformaMonitoriaGGE() {
                 Envie a questão por texto ou foto, receba a resolução do professor em vídeo, áudio ou PDF e tire suas dúvidas de forma rápida e individual.
               </p>
 
-              <div className="gge-login-demo-cards">
-                <div
-                  onClick={() => handleFastDemoLogin('lucas@gge.com.br')}
-                  className="gge-login-demo-card"
-                >
-                  <UserCheck className="gge-login-demo-icon" size={20} />
-                  <div>
-                    <span className="gge-login-demo-title">Portal do Aluno (Demo)</span>
-                    <span className="gge-login-demo-sub">Histórico privado e acompanhamento de respostas.</span>
-                  </div>
-                </div>
-
-                <div
-                  onClick={() => handleFastDemoLogin('professor@gge.com.br')}
-                  className="gge-login-demo-card"
-                >
-                  <BookOpen className="gge-login-demo-icon" size={20} />
-                  <div>
-                    <span className="gge-login-demo-title">Painel do Monitor (Demo)</span>
-                    <span className="gge-login-demo-sub">Visualização da dúvida completa e respostas multimídia.</span>
-                  </div>
-                </div>
-
-                <div
-                  onClick={() => handleFastDemoLogin('coordenador@gge.com.br')}
-                  className="gge-login-demo-card"
-                >
-                  <BarChart3 className="gge-login-demo-icon" size={20} />
-                  <div>
-                    <span className="gge-login-demo-title">Coordenação Acadêmica (Demo)</span>
-                    <span className="gge-login-demo-sub">Tempo de resposta, satisfação e métricas por área.</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="gge-login-hero-footer">
@@ -461,7 +427,7 @@ export default function PlataformaMonitoriaGGE() {
               <div className="gge-login-card-header">
                 <h2 className="gge-login-card-title">Acesse a plataforma</h2>
                 <p className="gge-login-card-sub">
-                  Use <strong>lucas@gge.com.br</strong>, <strong>professor@gge.com.br</strong> ou <strong>coordenador@gge.com.br</strong> com a senha <strong>123456</strong>.
+                  Entre com sua conta institucional. Contas de equipe são provisionadas pelo operador do sistema.
                 </p>
               </div>
 
@@ -520,6 +486,7 @@ export default function PlataformaMonitoriaGGE() {
                   <input
                     type="password"
                     required
+                    minLength={12}
                     placeholder="••••••••"
                     value={authForm.password}
                     onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
@@ -530,48 +497,16 @@ export default function PlataformaMonitoriaGGE() {
                 {authMode === 'register' && (
                   <>
                     <div className="gge-form-group">
-                      <label className="gge-form-label">Papel / Função</label>
-                      <select
-                        value={authForm.role}
-                        onChange={(e) => setAuthForm({ ...authForm, role: e.target.value })}
-                        className="gge-form-select"
-                      >
-                        <option value="aluno">Aluno(a)</option>
-                        <option value="monitor">Monitor / Professor</option>
-                        <option value="coordenador">Coordenador Pedagógico</option>
-                      </select>
+                      <label className="gge-form-label">Turma</label>
+                      <input
+                        type="text"
+                        maxLength={100}
+                        placeholder="Ex: 3º Ano Terceirão - GGE"
+                        value={authForm.turma}
+                        onChange={(e) => setAuthForm({ ...authForm, turma: e.target.value })}
+                        className="gge-form-input"
+                      />
                     </div>
-
-                    {(authForm.role === 'coordenador' || authForm.role === 'monitor') && (
-                      <div className="gge-form-group">
-                        <label className="gge-form-label">Área do Conhecimento</label>
-                        <select
-                          value={authForm.area}
-                          onChange={(e) => setAuthForm({ ...authForm, area: e.target.value })}
-                          className="gge-form-select"
-                        >
-                          <option value="Física">Física</option>
-                          <option value="Matemática">Matemática</option>
-                          <option value="Química">Química</option>
-                          <option value="Biologia">Biologia</option>
-                          <option value="Linguagens">Linguagens & Redação</option>
-                          <option value="Ciências Humanas">Ciências Humanas</option>
-                        </select>
-                      </div>
-                    )}
-
-                    {authForm.role === 'aluno' && (
-                      <div className="gge-form-group">
-                        <label className="gge-form-label">Turma</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: 3º Ano Terceirão - GGE"
-                          value={authForm.turma}
-                          onChange={(e) => setAuthForm({ ...authForm, turma: e.target.value })}
-                          className="gge-form-input"
-                        />
-                      </div>
-                    )}
                   </>
                 )}
 
@@ -792,6 +727,7 @@ export default function PlataformaMonitoriaGGE() {
                   <label className="gge-form-label">Alterar Senha (opcional)</label>
                   <input
                     type="password"
+                    minLength={12}
                     placeholder="Preencha apenas se quiser alterar sua senha"
                     value={profileForm.password}
                     onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
@@ -1514,7 +1450,7 @@ export default function PlataformaMonitoriaGGE() {
               </div>
               <div className="gge-form-group">
                 <label className="gge-form-label">Senha</label>
-                <input type="password" required placeholder="••••••••" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} className="gge-form-input" />
+                <input type="password" required minLength={12} placeholder="••••••••" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} className="gge-form-input" />
               </div>
               <button type="submit" className="gge-submit-btn">{authLoading ? 'Acessando...' : authMode === 'login' ? 'Entrar' : 'Cadastrar'}</button>
             </form>
