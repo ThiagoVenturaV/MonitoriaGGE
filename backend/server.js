@@ -6,13 +6,23 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const JWT_SECRET = process.env.JWT_SECRET || 'gge-monitoria-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || Buffer.byteLength(JWT_SECRET) < 32) {
+  throw new Error('JWT_SECRET is required and must contain at least 32 bytes.');
+}
+const JWT_ISSUER = 'monitoria-gge-api';
+const JWT_AUDIENCE = 'monitoria-gge-web';
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
+  .split(',').map(origin => origin.trim()).filter(Boolean);
 const RESPONSE_TARGET_MINUTES = 15;
 const RESPONSE_TARGET_MS = RESPONSE_TARGET_MINUTES * 60 * 1000;
 
@@ -95,63 +105,62 @@ if (!fs.existsSync(uploadsDir)) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname) || (file.mimetype.includes('audio') ? '.webm' : '.bin');
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    const extensions = {
+      'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp',
+      'application/pdf': '.pdf', 'video/mp4': '.mp4',
+      'audio/webm': '.webm', 'audio/mpeg': '.mp3'
+    };
+    const ext = extensions[file.mimetype] || '.bin';
+    cb(null, `${file.fieldname}-${randomUUID()}${ext}`);
   }
 });
 
-const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+const allowedMimeTypes = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
+  'video/mp4', 'audio/webm', 'audio/mpeg'
+]);
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 5 },
+  fileFilter: (_req, file, cb) => cb(null, allowedMimeTypes.has(file.mimetype))
+});
+const imageUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => cb(null, ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype))
+});
 
-app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static(uploadsDir));
+app.disable('x-powered-by');
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
+app.use(cors({ origin: ALLOWED_ORIGINS, credentials: false }));
+app.use(express.json({ limit: '100kb' }));
 
 // ==============================================================================
 // BANCO DE DADOS EM MEMÓRIA (DADOS 100% DINÂMICOS, SEM MOCKS)
 // ==============================================================================
 
 const revokedTokens = new Set();
-const defaultPasswordHash = bcrypt.hashSync('123456', 10);
-
-let users = [
-  {
-    id: 'USR-01',
-    name: 'Lucas Silva',
-    email: 'lucas@gge.com.br',
-    passwordHash: defaultPasswordHash,
-    role: 'aluno',
-    turma: '3º Ano Terceirão - Medicina',
-    avatarUrl: '/uploads/avatar-lucas.jpg'
-  },
-  {
-    id: 'USR-02',
-    name: 'Beatriz Ramos',
-    email: 'beatriz@gge.com.br',
-    passwordHash: defaultPasswordHash,
-    role: 'aluno',
-    turma: 'Extensivo GGE'
-  },
-  {
-    id: 'USR-03',
-    name: 'Prof. Ricardo Mendes',
-    email: 'professor@gge.com.br',
-    passwordHash: defaultPasswordHash,
-    role: 'monitor',
-    area: 'Física',
-    disciplina: 'Física & Astronomia',
-    avatarUrl: '/uploads/avatar-ricardo.jpg'
-  },
-  {
-    id: 'USR-04',
-    name: 'Prof. Fernando Santos',
-    email: 'coordenador@gge.com.br',
-    passwordHash: defaultPasswordHash,
-    role: 'coordenador',
-    area: 'Exatas',
-    cargo: 'Coordenador Acadêmico de Exatas'
-  }
-];
+const loadBootstrapStaff = () => {
+  if (!process.env.BOOTSTRAP_STAFF_JSON) return [];
+  const configured = JSON.parse(process.env.BOOTSTRAP_STAFF_JSON);
+  if (!Array.isArray(configured)) throw new Error('BOOTSTRAP_STAFF_JSON must be an array.');
+  return configured.map((staff) => {
+    if (!['monitor', 'coordenador'].includes(staff.role) ||
+        typeof staff.email !== 'string' || typeof staff.name !== 'string' ||
+        typeof staff.passwordHash !== 'string' || !staff.passwordHash.startsWith('$2')) {
+      throw new Error('Invalid staff bootstrap entry. Use a bcrypt passwordHash.');
+    }
+    return {
+      id: randomUUID(),
+      name: staff.name.trim().slice(0, 100),
+      email: staff.email.trim().toLowerCase(),
+      passwordHash: staff.passwordHash,
+      role: staff.role,
+      area: typeof staff.area === 'string' ? staff.area.trim().slice(0, 80) : ''
+    };
+  });
+};
+let users = loadBootstrapStaff();
 
 // Lista de dúvidas em memória (Inicia vazia, 100% dinâmica)
 let tickets = [];
@@ -199,7 +208,9 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'], issuer: JWT_ISSUER, audience: JWT_AUDIENCE
+    });
     const user = users.find(u => u.id === decoded.id);
     if (!user) {
       return res.status(401).json({ success: false, error: 'Usuário não encontrado.' });
@@ -212,29 +223,55 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-const optionalToken = (req, res, next) => {
-  const token = extractToken(req);
-  if (token && !revokedTokens.has(token)) {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      const user = users.find(u => u.id === decoded.id);
-      if (user) {
-        req.user = user;
-        req.token = token;
-      }
-    } catch (e) {}
-  }
-  next();
+const authorizeRoles = (...roles) => (req, res, next) =>
+  roles.includes(req.user?.role)
+    ? next()
+    : res.status(403).json({ success: false, error: 'Permissão insuficiente.' });
+
+const canAccessTicket = (user, ticket) =>
+  user.role !== 'aluno' || ticket.alunoId === user.id;
+
+const signMediaUrl = (mediaPath) => {
+  const expires = Math.floor(Date.now() / 1000) + 300;
+  const signature = createHmac('sha256', JWT_SECRET)
+    .update(`${mediaPath}:${expires}`)
+    .digest('hex');
+  return `${mediaPath}?expires=${expires}&signature=${signature}`;
 };
+
+const serializeTicket = (ticket) => JSON.parse(JSON.stringify(ticket, (_key, value) =>
+  typeof value === 'string' && value.startsWith('/api/uploads/') ? signMediaUrl(value) : value
+));
+const serializeUser = (user) => {
+  const { passwordHash: _passwordHash, ...safeUser } = user;
+  if (safeUser.avatarUrl?.startsWith('/api/uploads/')) {
+    safeUser.avatarUrl = signMediaUrl(safeUser.avatarUrl);
+  }
+  return safeUser;
+};
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const signToken = (user) => jwt.sign(
+  { id: user.id, name: user.name, email: user.email, role: user.role, area: user.area },
+  JWT_SECRET,
+  { algorithm: 'HS256', issuer: JWT_ISSUER, audience: JWT_AUDIENCE, expiresIn: '15m' }
+);
 
 // ==============================================================================
 // ENDPOINTS DE AUTENTICAÇÃO E PERFIL DO USUÁRIO
 // ==============================================================================
 
-app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password, role, area, turma } = req.body;
+app.post('/api/auth/register', authLimiter, async (req, res) => {
+  const { name, email, password, turma } = req.body;
 
-  if (!email || !password || !name) {
+  if (typeof email !== 'string' || typeof password !== 'string' || typeof name !== 'string' ||
+      name.trim().length < 3 || name.length > 100 || email.length > 255 || password.length < 12 || password.length > 128) {
     return res.status(400).json({ success: false, error: 'Preencha nome, e-mail e senha.' });
   }
 
@@ -245,28 +282,23 @@ app.post('/api/auth/register', async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const newUser = {
-    id: `USR-${Math.floor(100 + Math.random() * 900)}`,
-    name,
-    email: email.toLowerCase(),
+    id: randomUUID(),
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
     passwordHash,
-    role: role || 'aluno',
-    area: area || 'Física',
-    turma: turma || 'Ensino Médio GGE'
+    role: 'aluno',
+    area: 'Física',
+    turma: typeof turma === 'string' ? turma.trim().slice(0, 100) : 'Ensino Médio GGE'
   };
 
   users.push(newUser);
 
-  const token = jwt.sign(
-    { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, area: newUser.area },
-    JWT_SECRET,
-    { expiresIn: '24h' }
-  );
+  const token = signToken(newUser);
 
-  const { passwordHash: _, ...userWithoutPassword } = newUser;
-  res.status(201).json({ success: true, token, user: userWithoutPassword });
+  res.status(201).json({ success: true, token, user: serializeUser(newUser) });
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -274,23 +306,15 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (!user) {
+  const dummyHash = '$2b$10$C6UzMDM.H6dfI/f/IKcEe.4QHSdO3AfITVByLMs2CLzT6xsC17yy.';
+  const match = await bcrypt.compare(password, user?.passwordHash || dummyHash);
+  if (!user || !match) {
     return res.status(401).json({ success: false, error: 'E-mail ou senha incorretos.' });
   }
 
-  const match = await bcrypt.compare(password, user.passwordHash);
-  if (!match) {
-    return res.status(401).json({ success: false, error: 'E-mail ou senha incorretos.' });
-  }
+  const token = signToken(user);
 
-  const token = jwt.sign(
-    { id: user.id, name: user.name, email: user.email, role: user.role, area: user.area },
-    JWT_SECRET,
-    { expiresIn: '24h' }
-  );
-
-  const { passwordHash: _, ...userWithoutPassword } = user;
-  res.json({ success: true, token, user: userWithoutPassword });
+  res.json({ success: true, token, user: serializeUser(user) });
 });
 
 app.post('/api/auth/logout', authenticateToken, (req, res) => {
@@ -301,8 +325,7 @@ app.post('/api/auth/logout', authenticateToken, (req, res) => {
 });
 
 app.get('/api/auth/me', authenticateToken, (req, res) => {
-  const { passwordHash: _, ...userWithoutPassword } = req.user;
-  res.json({ success: true, user: userWithoutPassword });
+  res.json({ success: true, user: serializeUser(req.user) });
 });
 
 // Endpoint de atualização de perfil/cadastro do usuário
@@ -310,16 +333,30 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
   const { name, email, password, turma, area } = req.body;
   const user = req.user;
 
-  if (name) user.name = name;
-  if (email) user.email = email;
-  if (turma) user.turma = turma;
-  if (area) user.area = area;
+  if (typeof name === 'string' && name.trim().length >= 3) user.name = name.trim().slice(0, 100);
+  if (typeof email === 'string' && email.length <= 255) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (users.some(candidate => candidate.id !== user.id && candidate.email === normalizedEmail)) {
+      return res.status(409).json({ success: false, error: 'E-mail já cadastrado.' });
+    }
+    user.email = normalizedEmail;
+  }
+  if (typeof turma === 'string') user.turma = turma.trim().slice(0, 100);
+  if (typeof area === 'string') user.area = area.trim().slice(0, 80);
   if (password && password.trim() !== '') {
+    if (typeof password !== 'string' || password.length < 12 || password.length > 128) {
+      return res.status(400).json({ success: false, error: 'A senha deve ter entre 12 e 128 caracteres.' });
+    }
     user.passwordHash = await bcrypt.hash(password, 10);
   }
 
-  const { passwordHash: _, ...userWithoutPassword } = user;
-  res.json({ success: true, user: userWithoutPassword, message: 'Perfil atualizado com sucesso!' });
+  res.json({ success: true, user: serializeUser(user), message: 'Perfil atualizado com sucesso!' });
+});
+
+app.post('/api/auth/profile/avatar', authenticateToken, imageUpload.single('avatar'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, error: 'Imagem inválida.' });
+  req.user.avatarUrl = `/api/uploads/${req.file.filename}`;
+  res.json({ success: true, user: serializeUser(req.user) });
 });
 
 // ==============================================================================
@@ -330,32 +367,50 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', server: 'GGE Monitoria Engine' });
 });
 
-app.get('/api/tickets', optionalToken, (req, res) => {
+app.get('/api/uploads/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const publicPath = `/api/uploads/${filename}`;
+  const expires = Number(req.query.expires);
+  const provided = typeof req.query.signature === 'string' ? req.query.signature : '';
+  const expected = createHmac('sha256', JWT_SECRET).update(`${publicPath}:${expires}`).digest('hex');
+  const validSignature = provided.length === expected.length &&
+    timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+  if (!Number.isInteger(expires) || expires < Math.floor(Date.now() / 1000) || !validSignature) {
+    return res.status(403).json({ success: false, error: 'Link expirado ou inválido.' });
+  }
+  res.sendFile(path.join(uploadsDir, filename));
+});
+
+app.get('/api/tickets', authenticateToken, (req, res) => {
   let result = [...tickets];
   
   if (req.user && req.user.role === 'aluno') {
     result = result.filter(t => t.alunoId === req.user.id || t.alunoEmail === req.user.email || t.aluno === req.user.name);
   }
 
-  res.json({ success: true, count: result.length, tickets: result });
+  res.json({ success: true, count: result.length, tickets: result.map(serializeTicket) });
 });
 
-app.post('/api/tickets', optionalToken, upload.fields([
+app.post('/api/tickets', authenticateToken, authorizeRoles('aluno'), upload.fields([
   { name: 'foto', maxCount: 5 },
   { name: 'fotos', maxCount: 5 }
 ]), (req, res) => {
   const { assunto, tipo, duvidaTexto, area } = req.body;
   
-  const nomeAluno = req.user ? req.user.name : (req.body.aluno || 'Aluno GGE');
-  const alunoId = req.user ? req.user.id : null;
-  const alunoEmail = req.user ? req.user.email : null;
+  if (typeof assunto !== 'string' || assunto.trim().length < 2 || assunto.length > 120 ||
+      (duvidaTexto && (typeof duvidaTexto !== 'string' || duvidaTexto.length > 4000))) {
+    return res.status(400).json({ success: false, error: 'Dados do chamado inválidos.' });
+  }
+  const nomeAluno = req.user.name;
+  const alunoId = req.user.id;
+  const alunoEmail = req.user.email;
 
   const files = req.files || {};
   const uploadedFotos = [...(files.foto || []), ...(files.fotos || [])];
-  const fotoUrls = uploadedFotos.map(f => `/uploads/${f.filename}`);
+  const fotoUrls = uploadedFotos.map(f => `/api/uploads/${f.filename}`);
 
   const novoTicket = {
-    id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
+    id: randomUUID(),
     alunoId,
     alunoEmail,
     aluno: nomeAluno,
@@ -375,10 +430,10 @@ app.post('/api/tickets', optionalToken, upload.fields([
   };
 
   tickets.unshift(novoTicket);
-  res.status(201).json({ success: true, ticket: novoTicket });
+  res.status(201).json({ success: true, ticket: serializeTicket(novoTicket) });
 });
 
-app.post('/api/tickets/:id/resposta', upload.fields([
+app.post('/api/tickets/:id/resposta', authenticateToken, authorizeRoles('monitor', 'coordenador'), upload.fields([
   { name: 'pdf', maxCount: 5 },
   { name: 'foto', maxCount: 5 },
   { name: 'video', maxCount: 5 },
@@ -407,44 +462,51 @@ app.post('/api/tickets/:id/resposta', upload.fields([
   ticket.etapa = 2;
   ticket.pendenteDesde = null;
   ticket.resposta = {
-    monitor: monitor || 'Prof. Ricardo Mendes (Equipe GGE)',
-    texto: texto || 'Explicação elaborada pelo professor.',
-    pdfUrls: pdfFiles.map(f => `/uploads/${f.filename}`),
-    fotoUrls: fotoFiles.map(f => `/uploads/${f.filename}`),
-    videoUrls: videoFiles.map(f => `/uploads/${f.filename}`),
-    pdfUrl: pdfFiles[0] ? `/uploads/${pdfFiles[0].filename}` : null,
-    fotoUrl: fotoFiles[0] ? `/uploads/${fotoFiles[0].filename}` : null,
-    videoUrl: videoFiles[0] ? `/uploads/${videoFiles[0].filename}` : null,
-    audioUrl: audioFile ? `/uploads/${audioFile.filename}` : null,
+    monitor: req.user.name,
+    texto: typeof texto === 'string' ? texto.trim().slice(0, 8000) : 'Explicação elaborada pelo professor.',
+    pdfUrls: pdfFiles.map(f => `/api/uploads/${f.filename}`),
+    fotoUrls: fotoFiles.map(f => `/api/uploads/${f.filename}`),
+    videoUrls: videoFiles.map(f => `/api/uploads/${f.filename}`),
+    pdfUrl: pdfFiles[0] ? `/api/uploads/${pdfFiles[0].filename}` : null,
+    fotoUrl: fotoFiles[0] ? `/api/uploads/${fotoFiles[0].filename}` : null,
+    videoUrl: videoFiles[0] ? `/api/uploads/${videoFiles[0].filename}` : null,
+    audioUrl: audioFile ? `/api/uploads/${audioFile.filename}` : null,
     iniciadoEm,
     respondidoEm,
     tempoRespostaMs,
     tempoRespostaMinutos: tempoRespostaMs === null ? null : Number((tempoRespostaMs / (60 * 1000)).toFixed(2))
   };
 
-  res.json({ success: true, ticket });
+  res.json({ success: true, ticket: serializeTicket(ticket) });
 });
 
-app.post('/api/tickets/:id/avaliar', optionalToken, (req, res) => {
+app.post('/api/tickets/:id/avaliar', authenticateToken, authorizeRoles('aluno'), (req, res) => {
   const { id } = req.params;
   const { nota, comentario } = req.body;
 
   const ticket = tickets.find(t => t.id === id);
   if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
+  if (!canAccessTicket(req.user, ticket)) return res.status(403).json({ success: false, error: 'Permissão insuficiente.' });
+
+  const numericRating = Number(nota);
+  if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+    return res.status(400).json({ success: false, error: 'A nota deve estar entre 1 e 5.' });
+  }
 
   ticket.avaliacao = {
-    nota: Number(nota) || 5,
-    comentario: comentario || '',
+    nota: numericRating,
+    comentario: typeof comentario === 'string' ? comentario.trim().slice(0, 1000) : '',
     avaliadoEm: new Date().toISOString()
   };
 
-  res.json({ success: true, ticket, mensagem: 'Obrigado por avaliar a explicação do professor!' });
+  res.json({ success: true, ticket: serializeTicket(ticket), mensagem: 'Obrigado por avaliar a explicação do professor!' });
 });
 
-app.post('/api/tickets/:id/entendi', (req, res) => {
+app.post('/api/tickets/:id/entendi', authenticateToken, authorizeRoles('aluno'), (req, res) => {
   const { id } = req.params;
   const ticket = tickets.find(t => t.id === id);
   if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
+  if (!canAccessTicket(req.user, ticket)) return res.status(403).json({ success: false, error: 'Permissão insuficiente.' });
 
   const questao = bancoQuestoesIA.find(q => q.assunto.toLowerCase().includes(ticket.assunto.toLowerCase())) || bancoQuestoesIA[0];
 
@@ -452,26 +514,27 @@ app.post('/api/tickets/:id/entendi', (req, res) => {
   ticket.etapa = 4;
   ticket.questaoFixacao = questao;
 
-  res.json({ success: true, ticket, questao });
+  res.json({ success: true, ticket: serializeTicket(ticket), questao });
 });
 
-app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
+app.post('/api/tickets/:id/responder-fixacao', authenticateToken, authorizeRoles('aluno'), (req, res) => {
   const { id } = req.params;
   const { respostaSelecionada, teveDuvida } = req.body;
 
   const ticket = tickets.find(t => t.id === id);
   if (!ticket) return res.status(404).json({ success: false, error: 'Chamado não encontrado' });
+  if (!canAccessTicket(req.user, ticket)) return res.status(403).json({ success: false, error: 'Permissão insuficiente.' });
 
   if (teveDuvida || (ticket.questaoFixacao && respostaSelecionada !== ticket.questaoFixacao.respostaCorreta)) {
     ticket.status = 'Pendente';
     ticket.etapa = 1;
     ticket.pendenteDesde = new Date().toISOString();
     ticket.duvidaTexto = `[Nova dúvida na questão de fixação ${ticket.questaoFixacao?.id}]: Marquei ${respostaSelecionada || 'opção incorreta'} mas fiquei em dúvida na resolução.`;
-    res.json({ success: true, resultado: 'REINICIADO', mensagem: 'Dúvida enviada de volta para o professor no ciclo de aprendizado!', ticket });
+    res.json({ success: true, resultado: 'REINICIADO', mensagem: 'Dúvida enviada de volta para o professor no ciclo de aprendizado!', ticket: serializeTicket(ticket) });
   } else {
     ticket.status = 'Aprovado';
     ticket.etapa = 5;
-    res.json({ success: true, resultado: 'APROVADO', mensagem: 'Parabéns! Conteúdo dominado e aprovado com sucesso!', ticket });
+    res.json({ success: true, resultado: 'APROVADO', mensagem: 'Parabéns! Conteúdo dominado e aprovado com sucesso!', ticket: serializeTicket(ticket) });
   }
 });
 
@@ -479,7 +542,7 @@ app.post('/api/tickets/:id/responder-fixacao', (req, res) => {
 // METRICAS 100% DINÂMICAS PARA COORDENAÇÃO (SEM MOCKS OU VALORES FIXOS)
 // ==============================================================================
 
-app.get('/api/coordenador/stats', (req, res) => {
+app.get('/api/coordenador/stats', authenticateToken, authorizeRoles('coordenador'), (req, res) => {
   const total = tickets.length;
   const aprovados = tickets.filter(t => t.status === 'Aprovado').length;
   const pendentes = tickets.filter(t => t.status === 'Pendente').length;
@@ -514,7 +577,7 @@ app.get('/api/coordenador/stats', (req, res) => {
   });
 });
 
-app.get('/api/coordenador/dashboards', (req, res) => {
+app.get('/api/coordenador/dashboards', authenticateToken, authorizeRoles('coordenador'), (req, res) => {
   const { professor, area, periodo } = req.query;
 
   let filtered = [...tickets];
@@ -638,6 +701,14 @@ app.get('/api/coordenador/dashboards', (req, res) => {
     monitores: monitoresStats,
     materias: materiasStats
   });
+});
+
+app.use((error, _req, res, _next) => {
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({ success: false, error: 'Upload inválido ou acima do limite.' });
+  }
+  console.error('Request failed:', error?.name || 'Error');
+  return res.status(500).json({ success: false, error: 'Erro interno.' });
 });
 
 app.listen(PORT, () => {
