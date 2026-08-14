@@ -80,6 +80,8 @@ cd MonitoriaGGE
 
 ### 2️⃣ Iniciar o Backend (Porta 8080)
 
+Copie `.env.example` para `.env`, gere um `JWT_SECRET` aleatório com pelo menos 32 bytes e configure `ALLOWED_ORIGINS`. Contas de monitor e coordenador devem ser fornecidas em `BOOTSTRAP_STAFF_JSON` usando apenas hashes bcrypt; não há contas ou senhas padrão.
+
 ```bash
 cd backend
 npm install
@@ -99,6 +101,10 @@ npm install
 npm run dev
 ```
 > 📍 **Interface Web**: `http://localhost:3000`
+
+Quando API e frontend não compartilham a mesma origem, copie `frontend/.env.example` e defina `NEXT_PUBLIC_API_BASE_URL`. Esse valor é público e nunca deve conter segredos.
+
+> Antes de atualizar uma implantação antiga, troque o segredo JWT conhecido, invalide sessões e remova as contas de demonstração. O armazenamento atual é volátil e serve apenas como protótipo; não use dados reais até substituir os arrays em memória por persistência transacional e backups.
 
 ---
 

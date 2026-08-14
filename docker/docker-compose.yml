@@ -22,6 +22,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:?set ALLOWED_ORIGINS}
+      - BOOTSTRAP_STAFF_JSON=${BOOTSTRAP_STAFF_JSON:-}
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
       - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
